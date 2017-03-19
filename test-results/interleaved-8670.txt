@@ -1,0 +1,27 @@
+# Microbenchmark of memory access patterns
+
+## Program input
+
+  - bytesPerLoad = 4
+  - subsetSize = 16
+  - numLoads = 16
+  - N = 234881024
+  - verbose = false
+  - numScanThreads = 32
+  - bytesPerElement = 4 Bytes
+  - bytesPerBlock = 32768 Bytes
+  - blockSize = 512
+  - gridSize = 28672
+  - shMemSize = 2048 Bytes
+  - size = 0.939524 GB
+
+## Program progress
+
+  - launching interleaved copy kernel...
+
+## Program report
+
+  - kernel time = 0.0173989 s
+  - kernel throughput = 107.998 GB/s
+  - num of wrong GPU elements = 0
+
