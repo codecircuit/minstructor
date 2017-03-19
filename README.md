@@ -73,9 +73,9 @@ https://github.com/google/benchmark
 ----------------------------------|---------------------------------------------
 -less predefined range functions  | +predefined numpy like range functions
 -long running jobs (error-prone)  | +independent jobs
-                                  | -many (temporary) output files
-- functions should have already   | + benchmarking and testing
-  been tested                     |
+\                                 | -many (temporary) output files
+-functions should have already    | +benchmarking and testing
+been tested                       |
 + good for real micro benchmarks  | - not fast for benchmarks with
 \                                 |   timings similar to the prog.
 \                                 |   launch overhead
