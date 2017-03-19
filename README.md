@@ -74,23 +74,12 @@ https://github.com/google/benchmark
 -less predefined range functions  | +predefined numpy like range functions
 -long running jobs (error-prone)  | +independent jobs
 \                                 | -many (temporary) output files
--functions should have already    | +benchmarking and testing
- been tested                      |
-+good for real micro benchmarks   | -not fast for benchmarks with
-\                                 |  timings similar to the prog.
-\                                 |  launch overhead
--library dependency               | -prog must also be installed
+-functions should have already been tested  | +benchmarking and testing
++good for real micro benchmarks   | -not fast for benchmarks with timings similar to the prog. launch overhead
+-library dependency               | -`minstructor` must also be installed
 -syntax understanding needs time  | +mainly self explanatory
 -no slurm support                 | +multiple backends (also slurm)
--functions must not have `cout`   | +functions *should* have various
-\                                 |  informative output
--ouput to CSV: every benchmark    |
- must contain every self defined  |
- counter                          |
--time measurement points must be  |
- set manually anyways as in most  |
- cases we do not want to measure  |
- the time of a whole function     |
--strong coupling between your     |
- application and the API of the   |
- library                          |
+-functions must not have `cout`   | +functions *should* have various informative output
+-ouput to CSV: every benchmark must contain every self defined counter | 
+-time measurement points must be set manually anyways as in most cases we do not want to measure  the time of a whole function | 
+-strong coupling between your application and the API of the library | 
