@@ -50,13 +50,13 @@ the `mcollector` could look like this:
 ...
 ```
 
-Now you can collect your results into a CSV table on stdout with
+Now you can collect your results into a CSV table on stdout with  
 `mcollector -d path/to/output/files -k keyword0,keyword1,keyword2,footime,bar-val,no-keyword`. 
 The `mcollector` is able to recognize certain assignment patterns, as they are
 shown above and will extract the words or numeric values after the keywords. It
 is important that the keywords are *only mentioned once* in each output file. If
 there are several .txt-files containing the `stdout` of your application in
-`path/to/output/files` the `mcollector` could generate something like:
+`path/to/output/files`, the `mcollector` could generate something like:
 
 ```
 keyword0,keyword1,keyword2,footime,bar-val,no-keyword
@@ -71,9 +71,9 @@ https://github.com/google/benchmark
 
 **google-benchmark**              | **minstructor**
 ----------------------------------|---------------------------------------------
-- less predefined range functions | + predefined numpy like range functions
-- long running jobs (error-prone) | + independent jobs
-\                                 | - many (temporary) output files
+-less predefined range functions  | +predefined numpy like range functions
+-long running jobs (error-prone)  | +independent jobs
+                                  | -many (temporary) output files
 - functions should have already   | + benchmarking and testing
   been tested                     |
 + good for real micro benchmarks  | - not fast for benchmarks with
