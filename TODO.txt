@@ -3,3 +3,4 @@
 * mcollector can search by itself for key-value pairs, thus giving keywords on the command line can be optional
 * mcollector should take data files as optional parameters without using a command line flag. Thus you should use the mcollector with bash expansion. I removed the ability to give prefixes for the data directory, as this could result in a double read of the data files depending on the UNIX find implementation.
 * mcollector should 'somehow' mention if a file does not contain any keyword at all, as this might be caused by an unknown error
+* add how to install gems and how to setup the PATH variable appropriately in documentation

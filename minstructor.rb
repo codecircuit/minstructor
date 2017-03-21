@@ -364,11 +364,17 @@ def generateCmds(expandedCmds, opath="", backend=:shell)
 		exit
 	end
 
+	puts "COMMAND GENERATOR GOT #{expandedCmds}" if $options.debug
+
 	expandedCmds = combinations(expandedCmds)
 	expandedCmds.map! { |cmd| cmd.join() }
 
+	puts "COMMAND EXPANDED CMDS LIST TO #{expandedCmds}" if $options.debug
+
 	## REPEAT COMMANDS IF WANTED ##
+	puts "Number of repetitions = #{$options.rep}" if $options.debug
 	expandedCmds = expandedCmds * $options.rep
+	puts "COMMANDS AFTER REPETITIONS #{expandedCmds}" if $options.debug
 
 	# OUTPUT FILE NAMING
 	# 1. if /output/path is a directory then name the output files
@@ -394,8 +400,11 @@ def generateCmds(expandedCmds, opath="", backend=:shell)
 		end
 	end
 
+	puts "GENERATED #{outputFiles.length} OUTPUT FILE NAMES" if $options.debug
+
 	## ADJUST COMMANDS FOR BACKEND AND MERGE WITH OUTFILES ##
 	if backend == :slurm
+		puts "BACKEND SLURM!!" if $options.debug
 		expandedCmds.each_with_index do |cmd, i|
 			cmd = "sbatch " + "#{$options.backendArgs} " + '--wrap "' + cmd + '"'
 			cmd << " -o #{outputFiles[i]}" unless outputFiles.empty?
@@ -403,8 +412,9 @@ def generateCmds(expandedCmds, opath="", backend=:shell)
 		end
 	end
 	if backend == :shell
+		puts "BACKEND SHELL!!" if $options.debug
 		outputFiles.each_with_index do |outFile, i|
-			expandedCmds[i] << " > #{outFile}"
+			expandedCmds[i] += " > #{outFile}"
 		end
 	end
 
