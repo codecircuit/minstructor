@@ -8,3 +8,4 @@
 ## Test cases
 ./minstructor -c "./myapp [1,2] -c [3,4]"
 ./minstructor -c "./myapp ~/mayarg0 ~/myarg2" -n 10 -o pth/to/output/prefix
+  - check the generation of more than 30k commands
