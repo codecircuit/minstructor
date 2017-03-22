@@ -228,7 +228,7 @@ $regexOfRangeExpr = {
 # works than as expected. E.g. "[a,b,33]".scan(/\[(.+,)+.+\]/) = [["a,b,"]]
 # which is not what I want. Using the paranthesis with (?:<rest of pattern>)
 # solves the problem. See also `ri Regexp` chapter Grouping
-	:list   => /\[\s*(?:.+\s*,\s*)+.+\s*\]/,
+	:list   => /\[\s*(?:[^,\s]+\s*,\s*)+[^,\s]+\s*\]/,
 	:range1 => /range\(\s*#{integerRegex}\s*\)/,
 	:range2 => /range\(\s*#{integerRegex}\s*,\s*#{integerRegex}\s*\)/,
 	:range3 => /range\(\s*#{integerRegex}\s*,\s*#{integerRegex}\s*,\s*#{integerRegex}\s*\)/,
