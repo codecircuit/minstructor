@@ -126,7 +126,7 @@ def gather(dpath, keywords)
 	end
 	puts "  - my data directory #{dpath}" if $options.debug
 	files = %x(find #{dpath} -type f -name "*.txt").split
-	puts "FILES = #{files}"
+	puts "FILES = #{files}" if $options.debug
 	files = [files[0]] if $options.debug
 
 	if $options.verbose
