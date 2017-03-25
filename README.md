@@ -1,26 +1,30 @@
 # Measurement Instructor
 
+**DISCLAIMER**: The software is currently in an alpha stage, thus not
+all mentioned features are available yet. The Beta-Release is planned
+for the end of April.
+
 If you are tired of writing scripts manually, which instruct
 an application you want to benchmark, this program is what
-you are searching for. You gave lists of commmand line parameter
+you are searching for. You give lists of commmand line parameter
 values to the Measurement Instructor and he executes your
 application with every possible combination of the given parameters.
 
-if you specify a name prefix for the output files on the command line, the
+If you specify a name prefix for the output files on the command line, the
 standard output of your application executions will be saved appropriately.
 Generally you want to save the output files in an *empty* directory, as
 there can be a lot of them.
 
-E.g. `minstructor -c "./binary -k0 foo -k1=range(3) -k2 [a,b]" -o output/file_`
+E.g. `minstructor -c "./binary -k0 foo -k1=range(3) -k2 [a,b]" -o ./results`
 will result in executing the following commands:
 
 ```shell
-  ./binary -k0 foo -k1=0 -k2 a > output/file_0.txt
-  ./binary -k0 foo -k1=0 -k2 b > output/file_1.txt
-  ./binary -k0 foo -k1=1 -k2 a > output/file_2.txt
-  ./binary -k0 foo -k1=1 -k2 b > output/file_3.txt
-  ./binary -k0 foo -k1=2 -k2 a > output/file_4.txt
-  ./binary -k0 foo -k1=2 -k2 b > output/file_5.txt
+  ./binary -k0 foo -k1=0 -k2 a > ./results/out_0.txt
+  ./binary -k0 foo -k1=0 -k2 b > ./results/out_1.txt
+  ./binary -k0 foo -k1=1 -k2 a > ./results/out_2.txt
+  ./binary -k0 foo -k1=1 -k2 b > ./results/out_3.txt
+  ./binary -k0 foo -k1=2 -k2 a > ./results/out_4.txt
+  ./binary -k0 foo -k1=2 -k2 b > ./results/out_5.txt
 ```
 
 You can specify ranges with various patterns:
@@ -35,28 +39,31 @@ You can specify ranges with various patterns:
 ## Collect execution results
 Probably you want to collect certain metrics of your application executions
 and evaluate them. You can use the `mcollector` to achieve that efficiently.
-The `mcollector` expects multiple files, which contain the `stdout` of one
-application run. Your application should output every relevant information,
-e.g. if you execute `./binary -k0 foo -k1=2 -k2 b` a suitable output for
-the `mcollector` could look like this:
+The `mcollector` expects multiple files each containing the `stdout` of one
+application run. Your application should output *every* relevant information.
+E.g. if you execute `./binary -k0 foo -k1=2 -k2 b`, a `stdout` processable 
+by the `mcollector` could look like:
 
 ```shell
 ...
-  - keyword0 -> foo
-  - keyword1 =   2
-  - keyword2 b
+  - key0 -> foo
+  - key1 =   2
+  - key2 b
   - footime: 0.4687 s
   - bar-val = 16547
 ...
 ```
 
-Now you can collect your results into a CSV table on stdout with  
-`mcollector -d path/to/output/files -k keyword0,keyword1,keyword2,footime,bar-val,no-keyword`. 
-The `mcollector` is able to recognize certain assignment patterns, as they are
-shown above and will extract the words or numeric values after the keywords. It
+You can collect your results, which are saved in output files, in a CSV table
+with:
+```
+mcollector -d path/to/output/files -k key0,key1,key2,footime,bar-val,no-key
+``` 
+The `mcollector` is able to recognize certain assignment patterns, like they are
+shown above, and will extract the words or numeric values *after* the keywords. It
 is important that the keywords are *only mentioned once* in each output file. If
-there are several .txt-files containing the `stdout` of your application in
-`path/to/output/files`, the `mcollector` could generate something like:
+there are several `.txt`-files containing the `stdout` of your application in
+`path/to/output/files`, the `mcollector` could generate a CSV table like:
 
 ```
 keyword0,keyword1,keyword2,footime,bar-val,no-keyword
