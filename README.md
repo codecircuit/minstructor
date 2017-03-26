@@ -2,7 +2,7 @@
 
 **DISCLAIMER**: The software is currently in an alpha stage, thus not
 all mentioned features are available yet. The Beta-Release is planned
-for the end of April.
+for the end of April. For the current status take a look into the Wiki.
 
 If you are tired of writing scripts manually, which instruct
 an application you want to benchmark, this program is what
