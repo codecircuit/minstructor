@@ -41,6 +41,7 @@ end
 class TestCLI < Test::Unit::TestCase
 
 	@@dummyScriptFile = "dummy-script.sh"
+	@@defaultOutFilePrefix = "out_"
 
 	def setup # create the dummy executable
 		dummyScriptContent = <<-eos
@@ -157,7 +158,28 @@ echo ""
 		%x(../minstructor.rb -c "./#{@@dummyScriptFile} -key0 [ a,  3] logspace(1,3,3)" -f -n 3 -o .)
 		File.delete("dummy-script-executions.txt")
 		for i in (0...18)
-			outFileName = "./out_#{i}.txt"
+			outFileName = "./#{@@defaultOutFilePrefix}#{i}.txt"
+			assert(File.exist? outFileName)
+			File.delete(outFileName)
+		end
+	end
+
+	def test_outputFilePrefix
+		%x(../minstructor.rb -c "./#{@@dummyScriptFile} -key0 range(2)range(2)" -f -n 3 -o ./myoutputprefix)
+		File.delete("dummy-script-executions.txt")
+		for i in (0...12)
+			outFileName = "./myoutputprefix_#{i}.txt"
+			assert(File.exist? outFileName)
+			File.delete(outFileName)
+		end
+	end
+
+	def test_outputFileNumeration
+		%x(../minstructor.rb -c "./#{@@dummyScriptFile} -key0 range(2)range(2)" -f -n 3 -o .)
+		%x(../minstructor.rb -c "./#{@@dummyScriptFile} -key0 range(2)range(2)" -f -n 3 -o .)
+		File.delete("dummy-script-executions.txt")
+		for i in (0...24)
+			outFileName = "./#{@@defaultOutFilePrefix}#{i}.txt"
 			assert(File.exist? outFileName)
 			File.delete(outFileName)
 		end
