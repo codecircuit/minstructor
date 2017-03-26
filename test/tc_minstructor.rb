@@ -153,6 +153,16 @@ echo ""
 		assert_equal(3, lines.count("-key0 a -imp=1 -blao 0.4"))
 	end
 
+	def test_defaultOutputFileNaming
+		%x(../minstructor.rb -c "./#{@@dummyScriptFile} -key0 [ a,  3] logspace(1,3,3)" -f -n 3 -o .)
+		File.delete("dummy-script-executions.txt")
+		for i in (0...18)
+			outFileName = "./out_#{i}.txt"
+			assert(File.exist? outFileName)
+			File.delete(outFileName)
+		end
+	end
+
 	# delete the temporary created executable
 	def teardown
 		File.delete(@@dummyScriptFile)

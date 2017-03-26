@@ -386,7 +386,7 @@ def generateCmds(expandedCmds, opath="", backend=:shell)
 		expandedCmds.map do |cmd|
 			outputFilePath = String.new(opath)
 			if File.directory?(opath)
-				outputFilePath = outputFilePath.chomp('/') + '/output_' 
+				outputFilePath = outputFilePath.chomp('/') + '/out_' 
 			else # else the user gave a prefix for the output files on the command line
 				outputFilePath << '_'
 			end
