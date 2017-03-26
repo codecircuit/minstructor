@@ -124,8 +124,7 @@ def range(s, e=nil, i=1)
 	return (0..s-1).step(i).to_a if e == nil
 
 	if e <= s
-		puts "ERROR can not expand range, because end is smaller start"
-		exit
+		raise RangeError, "I can not expand range, because end <= start"
 	end
 
 	i = i.round
@@ -135,13 +134,12 @@ end
 # start, end, num values, floating point precision
 # endpoint is always included
 # numpy like linspace
-def linspace(s, e, num=5, precision=6)
-	if num == 0 or e < s
-		puts "ERROR: can not expand linspace"
-		exit
+def linspace(s, e, num=50, precision=12)
+	if num <= 0
+		raise RangeError, "number of logspace values equals to zero"
 	end
 
-	return [s] if s == e
+	return [s] * num if s == e
 
 	res = [s]
 	step = (e - s) / (num - 1.0)
@@ -156,9 +154,9 @@ end
 
 # start, end, number of values, base, floating point precision
 # numpy like logspace
-def logspace(s, e, num=5, base=10.0, precision=6)
-	exponents = linspace(s, e, num, precision)
-	return exponents.map { |exp| base**exp }
+def logspace(s, e, num=50, base=10.0, precision=6)
+	exponents = linspace(s, e, num)
+	return exponents.map { |exp| (base**exp).round(precision) }
 end
 
 ##############################

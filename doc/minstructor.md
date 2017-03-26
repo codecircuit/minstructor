@@ -27,9 +27,9 @@ You can specify ranges on various ways, e.g.:
 
 ```
   [4,a,8,...]           simple lists
-  range(0,20,3)         python-like ranges
-  linspace(0,2,5)       numpy-like linear ranges
-  logspace(1,1000,5,10) numpy-like log ranges
+  range(0,20,3)         python-like ranges (start,end,step)
+  linspace(0,2,5)       numpy-like linear ranges (start,stop,num)
+  logspace(1,1000,5,10) numpy-like log ranges (start,stop,num,base)
 ```
 
 E.g. -c "./binary -k0 foo -k1=range(3) -k2 [a,b]" will be expanded to
