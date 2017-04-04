@@ -1,19 +1,16 @@
 #!/usr/bin/ruby
 
 require 'test/unit'
-require_relative '../mcollector'
 
 # This test should check the functionality of the
 # Command Line Interface by simulating a user interaction
 # with the mcollector.
+# TODO test key="more words" assignments
+# TODO add lorem ipsum
+
+$mcollector = "../mcollector.rb"
 
 class TestCLI < Test::Unit::TestCase
-
-	def setup
-	end
-
-	# TODO test key="more words" assignments
-	# TODO add lorem ipsum
 
 	def test_equalAssignedKeywords
 		dataDir = "data/simple-equal-assignment"
@@ -27,7 +24,7 @@ class TestCLI < Test::Unit::TestCase
 
 		# the mcollector should output the CSV table to stdout
 		# if we do not specify an output file
-		actualResult = %x(../mcollector.rb -d #{dataDir} \
+		actualResult = %x(#{$mcollector} -d #{dataDir} \
 		                  -k important-key7,importantKey8,stringKey,floatKey)
 		assert_equal(head, actualResult.lines()[0].chomp())
 		lines.each do |l|
@@ -47,7 +44,7 @@ class TestCLI < Test::Unit::TestCase
 
 		# the mcollector should output the CSV table to stdout
 		# if we do not specify an output file
-		actualResult = %x(../mcollector.rb -d #{dataDir} \
+		actualResult = %x(#{$mcollector} -d #{dataDir} \
 		                  -k importantKey8,stringKey,important-key7,floatKey)
 		assert_equal(head, actualResult.lines()[0].chomp())
 		lines.each do |l|
@@ -67,7 +64,7 @@ class TestCLI < Test::Unit::TestCase
 
 		# the mcollector should output the CSV table to stdout
 		# if we do not specify an output file
-		actualResult = %x(../mcollector.rb -d #{dataDir} \
+		actualResult = %x(#{$mcollector} -d #{dataDir} \
 		                  -k important-key7,importantKey8,stringKey,floatKey)
 		assert_equal(head, actualResult.lines()[0].chomp())
 		lines.each do |l|
@@ -87,7 +84,7 @@ class TestCLI < Test::Unit::TestCase
 
 		# the mcollector should output the CSV table to stdout
 		# if we do not specify an output file
-		actualResult = %x(../mcollector.rb -d #{dataDir} \
+		actualResult = %x(#{$mcollector} -d #{dataDir} \
 		                  -k important-key7,importantKey8,stringKey,floatKey)
 		assert_equal(head, actualResult.lines()[0].chomp())
 		lines.each do |l|
@@ -95,8 +92,12 @@ class TestCLI < Test::Unit::TestCase
 		end
 	end
 
-	def teardown
-	end
-
 end
 
+
+class TestRegexp < Test::Unit::TestCase
+
+	def test_numReg
+#		puts "num reg = #{numReg}"
+	end
+end
