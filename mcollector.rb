@@ -88,18 +88,41 @@ $options = OptparseExample.parse(ARGV)
 # if debug be also verbose
 $options.verbose = $options.verbose || $options.debug
 
-# You must remove white spaces before using this dictionary
-floatingPointRegex = /[-+]?[[:digit:]]*\.?[[:digit:]]*/
-integerRegex       = /[-+]?[[:digit:]]+/
-wordRegex          = /[[:word:]]+/
-stringRegex        = /".+"/
+def DEBUG(msg)
+	puts msg if $options.debug
+end
 
-unitMaxSize        = 10 # maximum size of a unit, e.g. `Byte` has 4
+def VERBOSE(msg)
+	puts msg if $options.verbose
+end
+
+#########
+# REGEX #
+#########
+# the following variables should be global to test them when
+# including this file from another ruby script
+
+$expReg = /[eE][-+][[:digit:]]+/
+$numReg = /[-+]?[[:digit:]]+(?:\.[[:digit:]]+)?#{$expReg}?/
+#wordRegex          = /[[:word:]]+/ # REMOVE ME
+#stringRegex        = /".+"/ # REMOVE ME
+
 # The unit regex should allow a lot of symbols, e.g. GB/s, foo^4
-unitRegex          = /.{0,#{unitMaxSize}}/
-keywordRegex       = /[-_a-zA-Z0-9]+/
+# It matches everything except space.
+$unitMaxSize        = 10 # maximum size of a unit, e.g. `Byte` has 4
+$unitReg          = /[^\s]{1,#{$unitMaxSize}}/
 
-$regexOfSymbols = [/=/, /-+>/, /=+>/, /:/]
+# regex of assignment symbols
+$linkReg = /=|-+>|=+>|:/ # divided by logical OR
+
+# numerical value
+$quantityReg = /(#{$numReg})#{$unitReg}?/
+
+# quoted value
+$quotationReg = /(".+")/
+
+# general value regex
+$valReg = /#{$quotationReg}|#{$quantityReg}/
 
 ##################
 # GATHER RESULTS #

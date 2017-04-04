@@ -6,4 +6,4 @@
 
 require 'test/unit'
 require './mcollector/regexp.rb'
-require './mcollector/cli.rb'
+#require './mcollector/cli.rb'
