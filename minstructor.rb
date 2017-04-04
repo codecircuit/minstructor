@@ -104,6 +104,10 @@ end  # class OptparseExample
 $options = OptparseExample.parse(ARGV)
 # if debug be also verbose
 $options.verbose = $options.verbose || $options.debug
+# Between submitting jobs the script makes a break
+# of SLURMDELAY seconds. This prevents slurm from
+# rejecting jobs
+$SLURMDELAY = 0.5
 
 def debug(msg)
 	puts "#{msg}" if $options.debug
@@ -428,6 +432,16 @@ def generateCmds(expandedCmds, opath="", backend=:shell)
 
 	linesShowMax = 15
 	if expandedCmds.length() > linesShowMax and not $options.verbose
+		if $options.backend == :slurm
+			estSec = expandedCmds.length() * $SLURMDELAY
+			if estSec / 3600.0 > 24.0
+				puts "Submitting the jobs will take more than 24h."
+			else
+				t = Time.new(0)
+				t += estSec
+				puts "The jobs will approximately be submitted in #{t.strftime("%T")} (hh:mm:ss)"
+			end
+		end
 		puts "Here is an random excerpt of your in total #{expandedCmds.length()} generated commands:"
 		expandedCmds.sample(linesShowMax).each { |cmd| puts cmd }
 	else
@@ -479,7 +493,7 @@ def executeCmds(cmds)
 
 	cmds.each do |cmd|
 		puts "Executing: '#{cmd}'" if $options.verbose
-		%x(sleep 0.5) if $options.backend == :slurm
+		%x(sleep #{$SLURMDELAY}) if $options.backend == :slurm
 		%x(#{cmd}) unless $options.dry
 		pbar.increment() unless $options.verbose
 	end
