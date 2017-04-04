@@ -4,7 +4,7 @@
 require 'test/unit'
 require_relative '../../mcollector.rb'
 
-class TestRegexp < Test::Unit::TestCase
+class TC_regexp < Test::Unit::TestCase
 
 	def test_numReg
 #		puts "num reg = #{numReg}"
