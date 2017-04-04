@@ -108,10 +108,7 @@ def getDataFiles(dpath)
 	# find all files which should be read
 	# up to now we read all files within one directory
 	# system's find command should expand ~ automatically
-	if $options.verbose
-		puts "  - I got the keywords:"
-		keywords.map { |k| puts "    '#{k}'"}
-	end
+
 	puts "  - my data directory #{dpath}" if $options.debug
 	files = %x(find #{dpath} -type f -name "*.txt").split
 	puts "FILES = #{files}" if $options.debug
@@ -145,11 +142,16 @@ end
 #        keyword2 => [0.654,0.468,0.687,0.687,0.687,0.4889] }
 # The mapped values are simply lists and the keys are strings.
 def gather(files, keywords)
-	return nil if dpath == "" or keywords.empty?
+	return nil if files.empty? or keywords.empty?
 
 	## INITIALIZE RETURN DICTIONARY ##
 	res = Hash.new
 	keywords.each { |k| res[k] = [] }
+
+	if $options.verbose
+		puts "  - I got the keywords:"
+		keywords.map { |k| puts "    '#{k}'"}
+	end
 	
 
 	getLineWithKey = ->(str, key) {
@@ -258,6 +260,14 @@ end
 if __FILE__ == $0
 	timestamp = Time.now
 	dataFiles = getDataFiles($options.dpath)
+	if dataFiles.empty?
+		puts "I could not find any .txt files!"
+		exit 1
+	end
+	if $options.keywords.empty?
+		puts "I don't have any keywords to search for!"
+		exit 1
+	end
 	csvDict = gather(dataFiles, $options.keywords)
 	gatherT = Time.now - timestamp
 	puts "  - processing the files took #{gatherT} seconds" if $options.verbose
