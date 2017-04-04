@@ -8,7 +8,7 @@ require 'test/unit'
 # TODO test key="more words" assignments
 # TODO add lorem ipsum
 
-$mcollector = "../mcollector.rb"
+$mcollector = "../../mcollector.rb"
 
 class TestCLI < Test::Unit::TestCase
 
