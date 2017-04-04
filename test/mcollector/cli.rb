@@ -93,11 +93,3 @@ class TestCLI < Test::Unit::TestCase
 	end
 
 end
-
-
-class TestRegexp < Test::Unit::TestCase
-
-	def test_numReg
-#		puts "num reg = #{numReg}"
-	end
-end
