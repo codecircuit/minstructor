@@ -91,32 +91,20 @@ $options.verbose = $options.verbose || $options.debug
 # You must remove white spaces before using this dictionary
 floatingPointRegex = /[-+]?[[:digit:]]*\.?[[:digit:]]*/
 integerRegex       = /[-+]?[[:digit:]]+/
+wordRegex          = /[[:word:]]+/
+stringRegex        = /".+"/
 
 unitMaxSize        = 10 # maximum size of a unit, e.g. `Byte` has 4
+# The unit regex should allow a lot of symbols, e.g. GB/s, foo^4
 unitRegex          = /.{0,#{unitMaxSize}}/
 keywordRegex       = /[-_a-zA-Z0-9]+/
 
-$regexOfSymbols = [/=/, /-+>/, /=+>/]
-
-$regexOfAssignmentExpr = {
-	# EXAMPLE: Time_01  = 3.1654 s
-	:equal => /\s*=\s*#{floatingPointRegex}\s?#{unitRegex}/,
-	# EXAMPLE: Time_01 3.1654 s
-	:space => /\s*#{floatingPointRegex}\s?#{unitRegex}/,
-}
+$regexOfSymbols = [/=/, /-+>/, /=+>/, /:/]
 
 ##################
 # GATHER RESULTS #
 ##################
-
-# Returns a ruby hash (dictionary) which contains the scratched data
-def gather(dpath, keywords)
-	return nil if dpath == "" or keywords.empty?
-
-	## INITIALIZE RETURN DICTIONARY ##
-	res = Hash.new
-	keywords.each { |k| res[k] = [] }
-	
+def getDataFiles(dpath)
 	# find all files which should be read
 	# up to now we read all files within one directory
 	# system's find command should expand ~ automatically
@@ -148,6 +136,21 @@ def gather(dpath, keywords)
 		puts "any file with the search string '#{dpath}'"
 		return nil
 	end
+	return files
+end
+
+# Returns a ruby hash (dictionary) which contains the scratched data
+# E.g. { keyword0 => [0, 1, 2, 3, 2, 1],
+#        keyword1 => [a, b, c, d, e, f],
+#        keyword2 => [0.654,0.468,0.687,0.687,0.687,0.4889] }
+# The mapped values are simply lists and the keys are strings.
+def gather(files, keywords)
+	return nil if dpath == "" or keywords.empty?
+
+	## INITIALIZE RETURN DICTIONARY ##
+	res = Hash.new
+	keywords.each { |k| res[k] = [] }
+	
 
 	getLineWithKey = ->(str, key) {
 		keyInd = str.index(key)
@@ -176,7 +179,7 @@ def gather(dpath, keywords)
 				next
 			end
 			line.gsub!(keyword,'') # remove the keyword
-			$regexOfSymbols.each { |reg| line.gsub!(reg,'') } # delete symbols
+			$regexOfSymbols.each { |reg| line.gsub!(reg,' ') } # delete symbols
 			words = line.split()
 			value = "N/A"    if words.empty?
 			res[keyword].push(words[0]) if not words.empty?
@@ -254,7 +257,8 @@ end
 
 if __FILE__ == $0
 	timestamp = Time.now
-	csvDict = gather($options.dpath, $options.keywords)
+	dataFiles = getDataFiles($options.dpath)
+	csvDict = gather(dataFiles, $options.keywords)
 	gatherT = Time.now - timestamp
 	puts "  - processing the files took #{gatherT} seconds" if $options.verbose
 
