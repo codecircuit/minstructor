@@ -128,8 +128,7 @@ def range(s, e=nil, i=1)
 	return (0..s-1).step(i).to_a if e == nil
 
 	if e <= s
-		puts "ERROR can not expand range, because end is smaller start"
-		exit
+		raise RangeError, "I can not expand range, because end <= start"
 	end
 
 	i = i.round
@@ -139,13 +138,12 @@ end
 # start, end, num values, floating point precision
 # endpoint is always included
 # numpy like linspace
-def linspace(s, e, num=5, precision=6)
-	if num == 0 or e < s
-		puts "ERROR: can not expand linspace"
-		exit
+def linspace(s, e, num=50, precision=12)
+	if num <= 0
+		raise RangeError, "number of logspace values equals to zero"
 	end
 
-	return [s] if s == e
+	return [s] * num if s == e
 
 	res = [s]
 	step = (e - s) / (num - 1.0)
@@ -160,9 +158,9 @@ end
 
 # start, end, number of values, base, floating point precision
 # numpy like logspace
-def logspace(s, e, num=5, base=10.0, precision=6)
-	exponents = linspace(s, e, num, precision)
-	return exponents.map { |exp| base**exp }
+def logspace(s, e, num=50, base=10.0, precision=6)
+	exponents = linspace(s, e, num)
+	return exponents.map { |exp| (base**exp).round(precision) }
 end
 
 ##############################
@@ -355,9 +353,48 @@ end
 ###########
 # BACKEND #
 ###########
-# help function
-def expandTilde(path)
-	return path.gsub(/~/, %x(printf $HOME))
+
+# This class determines the correct output file naming
+# and represents an enumerator, which returns the current output
+# file name
+class OutputFileNameIterator
+	def initialize(opath)
+		debug("OutputFileNameIterator(opath=#{opath})")
+		if opath.empty?
+			@prefix = nil
+			@id = nil
+			return
+		end
+		@prefix = String.new(opath)
+		if File.directory?(opath)
+			@prefix = @prefix.chomp('/') + '/out_' 
+		else # else the user gave a prefix for the output files on the command line
+			outDir = File.dirname(opath)
+			if not File.directory?(outDir)
+				raise IOError, "Your output directory #{outDir} does not exists!"
+			end
+			@prefix << '_'
+		end
+		@prefix = File.expand_path(@prefix)
+		@prefix.freeze()
+		# now search for the first free index
+		i = 0
+		while File.exist?(@prefix + i.to_s() + ".txt")
+			i += 1
+		end
+		@id = i
+	end
+
+	def empty?()
+		return @prefix == nil
+	end
+
+	def next()
+		return "" if @prefix == nil
+		currOutFilePath = @prefix + @id.to_s() + ".txt"
+		@id += 1
+		return currOutFilePath
+	end
 end
 
 def generateCmds(expandedCmds, opath="", backend=:shell)
@@ -382,43 +419,26 @@ def generateCmds(expandedCmds, opath="", backend=:shell)
 
 	# OUTPUT FILE NAMING
 	# 1. if /output/path is a directory then name the output files
-	#    /output/path/output_0.txt, /output/path/output_1.txt,...
+	#    /output/path/out_0.txt, /output/path/out_1.txt,...
 	# 2. if output path = /foo/bar/myprefix and /foo/bar/myprefix does not
 	#    exist, but /foo/bar is a directory then name the output files
 	#    /foo/bar/myprefix_0.txt, /foo/bar/myprefix_1.txt,...
-	outputFiles = []
-	if not opath == ""
-		i = -1 # simply enumerate output files
-		expandedCmds.map do |cmd|
-			outputFilePath = String.new(opath)
-			if File.directory?(opath)
-				outputFilePath = outputFilePath.chomp('/') + '/output_' 
-			else # else the user gave a prefix for the output files on the command line
-				outputFilePath << '_'
-			end
-			i += 1
-			outputFilePath << i.to_s + ".txt"
-			# expand ~ to home directory
-			outputFilePath = expandTilde(outputFilePath)
-			outputFiles.push(outputFilePath)
-		end
-	end
+	outFileName_it = OutputFileNameIterator.new(opath)
 
-	puts "GENERATED #{outputFiles.length} OUTPUT FILE NAMES" if $options.debug
-
-	## ADJUST COMMANDS FOR BACKEND AND MERGE WITH OUTFILES ##
+	## ADJUST COMMANDS FOR BACKEND AND APPEND OUTFILES ##
 	if backend == :slurm
 		puts "BACKEND SLURM!!" if $options.debug
-		expandedCmds.each_with_index do |cmd, i|
+		expandedCmds.map! do |cmd|
 			cmd = "sbatch " + "#{$options.backendArgs} " + '--wrap "' + cmd + '"'
-			cmd << " -o #{outputFiles[i]}" unless outputFiles.empty?
-			expandedCmds[i] = cmd
+			cmd << " -o #{outFileName_it.next()}" unless outFileName_it.empty?
 		end
 	end
 	if backend == :shell
 		puts "BACKEND SHELL!!" if $options.debug
-		outputFiles.each_with_index do |outFile, i|
-			expandedCmds[i] += " > #{outFile}"
+		if not outFileName_it.empty?
+			expandedCmds.map! do |cmd|
+				cmd += " > #{outFileName_it.next()}"
+			end
 		end
 	end
 
@@ -449,27 +469,8 @@ def generateCmds(expandedCmds, opath="", backend=:shell)
 		expandedCmds.each { |cmd| puts cmd }
 	end
 
-
-	# CHECK CONSISTENCY OF OUTPUT FILES
-	promped = false
-	if outputFiles.size != 0
-		if outputFiles.any? { |ofile| File.exists?(ofile) } and not $options.noprompt
-			print "CAUTION: some output files will be overwritten if you proceed. Continue? [y/N]: "
-			answer = gets.chomp
-			if not %w[Yes Y y yes].any? {|key| answer == key}
-				puts "Going to exit..."
-				exit
-			end
-			promped = true
-		end
-		if not File.directory?(outputFiles[0].split('/')[0...-1].join('/'))
-			puts "ERROR: your output directory does not exist! Create it first!"
-			exit
-		end
-	end
-
-	if not promped and not $options.noprompt
-		print "Do you really want to execute the generated commands? [y/N]: "
+	if not $options.noprompt
+		print "Do you want to execute the generated commands? [y/N]: "
 		answer = gets.chomp
 		if not %w[Yes Y y yes].any? {|key| answer == key}
 			puts "Going to exit"
