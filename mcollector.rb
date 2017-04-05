@@ -139,11 +139,20 @@ end
 def getDataFiles(dpath)
 	# find all files which should be read
 	# up to now we read all files within one directory
-	# system's find command should expand ~ automatically
 
-	puts "  - my data directory #{dpath}" if $options.debug
+	dpath = File.expand_path(dpath)
+
+	if not File.directory?(dpath)
+		puts "ERROR: the given data directory does not exists!"
+		exit 1
+	end
+
+	DEBUG("  - my data directory #{dpath}")
+# TODO go on here. Write a class which gives the next data file name.
+# Use Dir.foreach -> enumerator in combination with select to get
+# the files which are ordinary readable files and append the datapath to their name
 	files = %x(find #{dpath} -type f -name "*.txt").split
-	puts "FILES = #{files}" if $options.debug
+	DEBUG("  - files I will look at = #{files}")
 	files = [files[0]] if $options.debug
 
 	if $options.verbose
@@ -162,7 +171,7 @@ def getDataFiles(dpath)
 	end
 	if files.empty?
 		puts "WARNING: I could not gather results, because I could not find"
-		puts "any file with the search string '#{dpath}'"
+		puts "any file in the given data directory '#{dpath}'"
 		return nil
 	end
 	return files
