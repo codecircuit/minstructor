@@ -119,10 +119,19 @@ $linkReg = /=|-+>|=+>|:/ # divided by logical OR
 $quantityReg = /(#{$numReg})#{$unitReg}?/
 
 # quoted value
-$quotationReg = /(".+")/
+$quotationReg = /("[^"]+")/
 
 # general value regex
 $valReg = /#{$quotationReg}|#{$quantityReg}/
+
+# this function returns a regex which matches any
+# <keyword> <space> <link> <space> <value>
+# constellations. Moreover the <value> is captured,
+# thus can be obtained by taking the first non nil
+# capture object
+def getKeyValueReg(keyword)
+	return /#{keyword}\s*#{$linkReg}\s*#{$valReg}/
+end
 
 ##################
 # GATHER RESULTS #
