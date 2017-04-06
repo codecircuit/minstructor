@@ -102,10 +102,8 @@ end
 # the following variables should be global to test them when
 # including this file from another ruby script
 
-$expReg = /[eE][-+][[:digit:]]+/
+$expReg = /[eE][-+]?[[:digit:]]+/
 $numReg = /[-+]?[[:digit:]]+(?:\.[[:digit:]]+)?#{$expReg}?/
-#wordRegex          = /[[:word:]]+/ # REMOVE ME
-#stringRegex        = /".+"/ # REMOVE ME
 
 # The unit regex should allow a lot of symbols, e.g. GB/s, foo^4
 # It matches everything except space.
@@ -121,8 +119,11 @@ $quantityReg = /(#{$numReg})#{$unitReg}?/
 # quoted value
 $quotationReg = /("[^"]+")/
 
+# simple word value
+$wordReg = /([^\s]+)/
+
 # general value regex
-$valReg = /#{$quotationReg}|#{$quantityReg}/
+$valReg = /#{$quotationReg}|#{$quantityReg}|#{$wordReg}/
 
 # this function returns a regex which matches any
 # <keyword> <space> <link> <space> <value>
