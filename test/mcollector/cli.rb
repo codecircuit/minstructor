@@ -71,4 +71,13 @@ class TestCLI < Test::Unit::TestCase
 		end
 	end
 
+	def test_nokeywords
+		dataDir = $dataDirPrefix + "no-keywords"
+		actualResult = %x(#{$mcollector} -d #{dataDir} \
+		                  -k key0,key1)
+		expReg = /(?:N\/A){2},.*\/file[01]\.txt/
+		assert(actualResult.include?("key0,key1"))
+		puts "RESULT = #{actualResult}"
+		md = actualResult.match(expReg)
+	end
 end
