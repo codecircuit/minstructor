@@ -179,90 +179,42 @@ class DataFileIterator
 
 end
 
-# Returns a ruby hash (dictionary) which contains the scratched data
-# E.g. { keyword0 => [0, 1, 2, 3, 2, 1],
-#        keyword1 => [a, b, c, d, e, f],
-#        keyword2 => [0.654,0.468,0.687,0.687,0.687,0.4889] }
-# The mapped values are simply lists and the keys are strings.
-def gather(files, keywords)
-	return nil if files.empty? or keywords.empty?
-
-	## INITIALIZE RETURN DICTIONARY ##
-	res = Hash.new
-	keywords.each { |k| res[k] = [] }
-
-	if $options.verbose
-		puts "  - I got the keywords:"
-		keywords.map { |k| puts "    '#{k}'"}
+# Takes a DataFileIterator iterates over the contents of the
+# files and searches for the values assigned to the keywords
+#
+# Returns: [[<csv first row>], [<csv second row>], ...]
+# which is basically the CSV data without the headline.
+def gather(df_it, keywords)
+	if keywords.empty?
+		STDERR.puts "I got no keywords to search for!"
+		exit 1
 	end
-	
 
-	getLineWithKey = ->(str, key) {
-		keyInd = str.index(key)
-		return "N/A" if keyInd == nil
-		# get the line with the keyword
-		delme = str[keyInd..-1]
-		line = str[keyInd..-1].lines.to_a()[0]
-		return line
+	# take a keyword and a string and search for the first
+	# part, which matches the Regexp. From that match we
+	# want to have the first capture, which is not nil
+	grepValue = ->(key, str) {
+		md = str.match(getKeyValueReg(key))
+		return md.captures.select {|c| c != nil}[0]
 	}
 
-	# if files were found just proceed reading them
-	files.each do |filename|
-		file = File.open(filename)
-		content = file.read
-		if $options.debug
-			puts "THE FILE HAS THE CONTENT:"
-			puts "#{content}"
-			puts "CONTENT END"
+
+	res = []
+	filesProcessed = 0
+
+	df_it.each_content_with_pth do |c, pth|
+		row = [pth] # per default each row starts with the data file path
+		keywords.each do |key|
+			val = grepValue(key, c)
+			row += ["N/A"] if val == nil
+			row += [val]   unless val == nil
 		end
-		file.close
-		keywords.each do |keyword|
-			line = getLineWithKey.call(content, keyword)
-			puts "I found the line with keyword: #{line}" if $options.debug
-			if line == "N/A"
-				res[keyword].push(line) 
-				next
-			end
-			line.gsub!(keyword,'') # remove the keyword
-			$regexOfSymbols.each { |reg| line.gsub!(reg,' ') } # delete symbols
-			words = line.split()
-			value = "N/A"    if words.empty?
-			res[keyword].push(words[0]) if not words.empty?
-		end
+		res += row
+		filesProcessed += 1
 	end
 
+	VERBOSE("  - I processed #{filesProcessed} data files")
 	return res
-end
-
-# converts dictionary with vectors to a string
-# representing the data in a CSV format
-def dictToString(dict)
-
-	res = ""
-
-	if dict.empty?
-		puts "WARNING: no key value pairs found. The output will be empty"
-		return ""
-	end
-
-	# write the CSV header first
-	csvString = CSV.generate do |csv|
-		csv << dict.keys
-	end
-
-	# get the number of rows; here we assume that every vector belonging to a
-	# key has the same length
-	numRows = dict[dict.keys[0]].length
-
-	for r in 0..numRows-1
-		row = []
-		dict.each do |key,val|
-			row.push(dict[key][r])
-		end
-		csvString += CSV.generate { |csv| csv << row }
-	end
-
-	return csvString
 end
 
 # either output to stdout or write to file
