@@ -136,45 +136,29 @@ end
 ##################
 # GATHER RESULTS #
 ##################
-def getDataFiles(dpath)
-	# find all files which should be read
-	# up to now we read all files within one directory
-
-	dpath = File.expand_path(dpath)
-
-	if not File.directory?(dpath)
-		puts "ERROR: the given data directory does not exists!"
-		exit 1
+class DataFileNameIterator
+	# dpath = data path which must be a directory
+	# ext = allowd extension for data files in the given directory, e.g. ".txt"
+	def initialize(dpath, ext)
+		dpath = File.expand_path(dpath)
+		if not File.directory?(dpath)
+			puts "ERROR: the given data directory does not exists!"
+			exit 1
+		end
+		@d = Dir.new(dpath)
+		@ext = ext
 	end
 
-	DEBUG("  - my data directory #{dpath}")
-# TODO go on here. Write a class which gives the next data file name.
-# Use Dir.foreach -> enumerator in combination with select to get
-# the files which are ordinary readable files and append the datapath to their name
-	files = %x(find #{dpath} -type f -name "*.txt").split
-	DEBUG("  - files I will look at = #{files}")
-	files = [files[0]] if $options.debug
-
-	if $options.verbose
-		puts "  - Searching for data in #{files.length} files"
-	end
-
-	if $options.verbose
-		linesShowMax = 15
-		if files.length < linesShowMax
-			puts "  - I will search for keywords in the files:"
-			files.each { |filename| puts "    #{filename}" }
-		else
-			puts "  - Here is an random extract of the file names:"
-			files.sample(linesShowMax).each { |filename| puts "    #{filename}" }
+	def each
+		@d.each do |fname|
+			pth = @d.path + "/" + fname
+			currExt = pth[(-1)*@ext.length()..-1]
+			if File.readable?(pth) and File.file?(pth) and  currExt == @ext
+				yield pth
+			end
 		end
 	end
-	if files.empty?
-		puts "WARNING: I could not gather results, because I could not find"
-		puts "any file in the given data directory '#{dpath}'"
-		return nil
-	end
-	return files
+
 end
 
 # Returns a ruby hash (dictionary) which contains the scratched data
