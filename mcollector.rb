@@ -136,7 +136,7 @@ end
 ##################
 # GATHER RESULTS #
 ##################
-class DataFileNameIterator
+class DataFileIterator
 	# dpath = data path which must be a directory
 	# ext = allowd extension for data files in the given directory, e.g. ".txt"
 	def initialize(dpath, ext)
@@ -149,13 +149,31 @@ class DataFileNameIterator
 		@ext = ext
 	end
 
-	def each
+	# this function can be used to iterate with a block structure over all
+	# available file paths, e.g.
+	# it = DataFileIterator.new(dpath, ".txt")
+	# it.each_path do |filepath|
+	#   puts filepath
+	# end
+	# will print all paths to available data files, which have the wanted
+	# extension and are readable.
+	def each_pth
 		@d.each do |fname|
 			pth = @d.path + "/" + fname
 			currExt = pth[(-1)*@ext.length()..-1]
 			if File.readable?(pth) and File.file?(pth) and  currExt == @ext
 				yield pth
 			end
+		end
+	end
+
+	# same as above but gives also the content of each file
+	def each_content_with_pth
+		each_pth do |fpth|
+			f = File.open(fpth)
+			content = f.read()
+			f.close()
+			yield content, fpth
 		end
 	end
 

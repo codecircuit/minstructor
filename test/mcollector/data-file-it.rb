@@ -4,12 +4,12 @@ require 'test/unit'
 
 require_relative '../../mcollector.rb'
 
-class TestDataFileNameIterator < Test::Unit::TestCase
+class TestDataFileIterator < Test::Unit::TestCase
 
-	def test_iteration
+	def test_pathIteration
 
 		dpath = "mcollector/data/data-file-iterator"
-		it = DataFileNameIterator.new(dpath, ".txt")
+		it = DataFileIterator.new(dpath, ".txt")
 
 		dataFileNames = [
 			"data0.txt",
@@ -18,11 +18,26 @@ class TestDataFileNameIterator < Test::Unit::TestCase
 			"file-b.txt"
 		]
 
-		it.each do |fpth|
+		it.each_pth do |fpth|
 			fname = File.basename(fpth)
 			assert(dataFileNames.include?(fname))
 			dataFileNames.delete(fname)
 		end
 		assert(dataFileNames.empty?)
+
 	end
+
+	def test_contentIteration
+		dpath = "mcollector/data/data-file-iterator"
+		it = DataFileIterator.new(dpath, ".txt")
+
+		it.each_content_with_pth do |c, fpth|
+			f = File.open(fpth)
+			content = f.read()
+			f.close()
+			fname = File.basename(fpth)
+			assert(content == c)
+		end
+	end
+
 end
