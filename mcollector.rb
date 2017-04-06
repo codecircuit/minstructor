@@ -24,6 +24,7 @@ class OptparseExample
 		options.keywords = []
 		options.opath = ""
 		options.debug = false
+		options.sort = false
 
 		opt_parser = OptionParser.new do |opts|
 			opts.banner = "Usage: mcollector.rb [options]"
@@ -54,6 +55,10 @@ class OptparseExample
 			opts.on("-f", "Do not prompt. Be careful with this flag,",
 			        "as it can result in files being overwritten.") do |noprompt|
 				options.noprompt = noprompt
+			end
+
+			opts.on("-s", "--sort", "Sort CSV output") do |sortFlag|
+				options.sort = sortFlag
 			end
 
 			opts.separator ""
@@ -294,8 +299,9 @@ if __FILE__ == $0
 	VERBOSE("  - processing the files took #{gatherT} seconds")
 
 	# OUTPUT THE CSV DATA
+	VERBOSE("  - sorting flag = #{$options.sort}")
 	timestamp = Time.now
-	outputCSV($options.opath, csvRows, $options.keywords)
+	outputCSV($options.opath, csvRows, $options.keywords, $options.sort)
 	csvT = Time.now - timestamp
 	VERBOSE("  - outputting the csv data took #{csvT} seconds")
 end
