@@ -48,6 +48,7 @@ by the `mcollector` could look like:
 ...
   - key0 -> foo
   - key1 =   2
+  - key2: "long string a"
   - footime: 0.4687 s
   - bar-val --> 16547
 ...
@@ -60,15 +61,15 @@ mcollector -d path/to/output/files -k key0,key1,key2,footime,bar-val,no-key
 ``` 
 The `mcollector` is able to recognize certain assignment patterns, like they are
 shown above, and will extract the words or numeric values *after* the keywords. It
-is important that the keywords are *only mentioned once* in each output file. If
+is important that the keywords are *only assigned once* in each output file. If
 there are several `.txt`-files containing the `stdout` of your application in
 `path/to/output/files`, the `mcollector` could generate a CSV table like:
 
 ```
-keyword0,keyword1,keyword2,footime,bar-val,no-keyword
-foo,2,a,0.4687,16547,N/A
-foo,1,b,0.4779,1756,N/A
-foo,0,a,0.4864,1654,N/A
+keyword0,keyword1,keyword2,footime,bar-val,no-keyword,data-file-path
+foo,2,"long string a",0.4687,16547,N/A,/pth/to/file/0.txt
+foo,1,"long string b",0.4779,1756,N/A,/pth/to/file/1.txt
+foo,0,"long string c",0.4864,1654,N/A,/pth/to/file/2.txt
 ```
 
 ## minstructor VS google-benchmark-lib
