@@ -195,21 +195,22 @@ def gather(df_it, keywords)
 	# want to have the first capture, which is not nil
 	grepValue = ->(key, str) {
 		md = str.match(getKeyValueReg(key))
-		return md.captures.select {|c| c != nil}[0]
+		return md.captures.select {|c| c != nil}[0] if md != nil
+		return nil
 	}
-
 
 	res = []
 	filesProcessed = 0
 
 	df_it.each_content_with_pth do |c, pth|
-		row = [pth] # per default each row starts with the data file path
+		row = [] 
 		keywords.each do |key|
-			val = grepValue(key, c)
+			val = grepValue.call(key, c)
 			row += ["N/A"] if val == nil
 			row += [val]   unless val == nil
 		end
-		res += row
+		row += [pth] # per default each row ends with the data file path
+		res += [row] # row must be enclosed to preserve the sublist structure
 		filesProcessed += 1
 	end
 
@@ -218,7 +219,19 @@ def gather(df_it, keywords)
 end
 
 # either output to stdout or write to file
-def outputCSV(opath, csvStr)
+def outputCSV(opath, csvRows, keywords, sortFlag=false)
+
+	csvRows.sort! if sortFlag
+
+	# add the header
+	csvStr = keywords.join(',') + ",data-file-path" + "\n"
+	# we take the index, to prevent the sublists from being expanded
+	DEBUG("  - CSV ROWS = #{csvRows}")
+	csvRows.each_with_index do |row,i|
+		DEBUG("  - ROW = #{row}")
+		DEBUG("  - [*row].join(',') = #{[*row].join(',')}")
+		csvStr << [*row].join(',') << "\n"
+	end
 
 	# WRITE TO STDOUT
 	if opath.empty?
@@ -227,49 +240,61 @@ def outputCSV(opath, csvStr)
 	end
 
 	# WRITE TO FILE
-	## CHECK IF FILE ALREADY EXISTS ##
-	if File.exists?(opath) and not $options.noprompt
-		puts "CAUTION: the file #{opath} does already exists."
-		print "Do you want to replace it? [y/N]:"
-		answer = gets.chomp
-		if not %w[Yes Y y yes].include?(answer)
-			puts "Going to exit..."
-			exit
-		end
-	end
-
-	## CHECK IF DIRECTORY EXISTS ##
-	abs_opath = File.absolute_path(opath)
-	abs_dir = File.dirname(abs_opath)
-	if not File.directory?(abs_dir)
-		puts "ERROR: the directory #{abs_dir} does not exists! Create it first!"
-		exit
-	end
-
-	## WRITE ##
-	f = File.open(abs_opath, mode="w")
+	f = File.open(opath, mode="w")
 	f.write(csvStr)
 	f.close()
 end
 
-if __FILE__ == $0
-	timestamp = Time.now
-	dataFiles = getDataFiles($options.dpath)
-	if dataFiles.empty?
-		puts "I could not find any .txt files!"
-		exit 1
-	end
-	if $options.keywords.empty?
-		puts "I don't have any keywords to search for!"
-		exit 1
-	end
-	csvDict = gather(dataFiles, $options.keywords)
-	gatherT = Time.now - timestamp
-	puts "  - processing the files took #{gatherT} seconds" if $options.verbose
 
+if __FILE__ == $0
+	######################
+	# CHECK INPUT VALUES #
+	###################### 
+
+	if $options.opath != "" # not equal to the default
+
+		# CHECK IF OUTPUT DIRECTORY EXISTS
+		opath = File.expand_path($options.opath)
+		outdir = File.dirname(opath)
+		if not File.directory?(outdir)
+			puts "ERROR: the directory #{outdir} does not exists! Create it first!"
+			exit
+		end
+
+		# CHECK IF OUTPUT FILE ALREADY EXISTS
+		if File.exists?(opath) and not $options.noprompt
+			STDERR.puts "CAUTION: the file #{opath} does already exists."
+			STDERR.print "Do you want to replace it? [y/N]:"
+			answer = gets.chomp
+			if not %w[Yes Y y yes].include?(answer)
+				puts "Going to exit..."
+				exit 0
+			end
+		end
+	end
+
+	# CHECK IF KEYWORDS ARE GIVEN
+	if $options.keywords.empty?
+		STDERR.puts "I don't have any keywords to search for!"
+		exit 1
+	end
+
+	####################
+	# START PROCESSING #
+	####################
+
+	# GET THE DATA FILE ITERATOR
+	df_it = DataFileIterator.new($options.dpath, ".txt")
+
+	# GREP ALL VALUES FROM FILE CONTENTS
 	timestamp = Time.now
-	csvStr = dictToString(csvDict)
-	outputCSV($options.opath, csvStr)
+	csvRows = gather(df_it, $options.keywords)
+	gatherT = Time.now - timestamp
+	VERBOSE("  - processing the files took #{gatherT} seconds")
+
+	# OUTPUT THE CSV DATA
+	timestamp = Time.now
+	outputCSV($options.opath, csvRows, $options.keywords)
 	csvT = Time.now - timestamp
-	puts "  - writing the csv file took #{csvT} seconds" if $options.verbose
+	VERBOSE("  - outputting the csv data took #{csvT} seconds")
 end
