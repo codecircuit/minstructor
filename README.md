@@ -48,9 +48,8 @@ by the `mcollector` could look like:
 ...
   - key0 -> foo
   - key1 =   2
-  - key2 b
   - footime: 0.4687 s
-  - bar-val = 16547
+  - bar-val --> 16547
 ...
 ```
 
