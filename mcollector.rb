@@ -82,7 +82,8 @@ class OptparseExample
 			end
 
 		end
-
+		opt_parser.set_summary_indent("  ")
+		opt_parser.set_summary_width(80)
 		opt_parser.parse!(args)
 		options
 	end  # parse()
