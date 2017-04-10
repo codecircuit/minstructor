@@ -33,7 +33,7 @@ class OptPrs
 			        "* [4,a,8,...]           simple lists",
 			        "* range(0,20,3)         python-like ranges",
 			        "* linspace(0,2,5)       numpy-like linear ranges",
-			        "* logspace(1,1000,5,10) numpy-like log ranges",
+			        "* logspace(1,10,5,10)   numpy-like log ranges",
 			        'E.g. -c "./binary -k0 foo -k1 range(3) -k2 [a,b]"') do |cmd|
 				options.cmd = cmd
 			end
@@ -42,7 +42,7 @@ class OptPrs
 				options.rep = rep.to_i()
 			end
 
-			opts.on("-o", "--output-dir <pth/to/output/personal_prefix_>",
+			opts.on("-o", "--output-dir <pth/to/output>[/personal_prefix_]",
 			        "Directory where all output files, which contain",
 			        "the stdout of your binary, will be saved") do |p|
 				options.opath = p
