@@ -23,7 +23,7 @@ class TestCLI < Test::Unit::TestCase
 
 		# the mcollector should output the CSV table to stdout
 		# if we do not specify an output file
-		actualResult = %x(#{$mcollector} -d #{dataDir} \
+		actualResult = %x(#{$mcollector} #{dataDir}/*.txt\
 		                  -k important-key7,importantKey8,stringKey,floatKey)
 		assert(actualResult.lines()[0].include?(head))
 		lines.each do |l|
@@ -43,7 +43,7 @@ class TestCLI < Test::Unit::TestCase
 
 		# the mcollector should output the CSV table to stdout
 		# if we do not specify an output file
-		actualResult = %x(#{$mcollector} -d #{dataDir} \
+		actualResult = %x(#{$mcollector} #{dataDir}/*.txt\
 		                  -k important-key7,importantKey8,stringKey,floatKey)
 		assert(actualResult.lines()[0].include?(head))
 		lines.each do |l|
@@ -63,7 +63,7 @@ class TestCLI < Test::Unit::TestCase
 
 		# the mcollector should output the CSV table to stdout
 		# if we do not specify an output file
-		actualResult = %x(#{$mcollector} -d #{dataDir} \
+		actualResult = %x(#{$mcollector} #{dataDir}/*.txt\
 		                  -k important-key7,importantKey8,stringKey,floatKey)
 		assert(actualResult.lines()[0].include?(head))
 		lines.each do |l|
@@ -73,7 +73,7 @@ class TestCLI < Test::Unit::TestCase
 
 	def test_nokeywords
 		dataDir = $dataDirPrefix + "no-keywords"
-		actualResult = %x(#{$mcollector} -d #{dataDir} \
+		actualResult = %x(#{$mcollector} #{dataDir}/*.txt\
 		                  -k key0,key1)
 		expReg = /(?:N\/A){2},.*\/file[01]\.txt/
 		assert(actualResult.include?("key0,key1"))
