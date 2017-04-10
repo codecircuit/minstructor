@@ -7,7 +7,7 @@ require 'pp'
 # Install it via ruby gems
 require 'progressbar'
 
-class OptparseExample
+class OptPrs
 
 	def self.parse(args)
 		# The options specified on the command line will be collected in
@@ -103,9 +103,9 @@ class OptparseExample
 		options
 	end  # parse()
 
-end  # class OptparseExample
+end  # class OptPrs
 
-$options = OptparseExample.parse(ARGV)
+$options = OptPrs.parse(ARGV)
 # if debug be also verbose
 $options.verbose = $options.verbose || $options.debug
 # Between submitting jobs the script makes a break
