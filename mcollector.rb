@@ -19,7 +19,6 @@ class OptPrs
 		options = OpenStruct.new
 		options.verbose = false
 		options.dry = false
-		options.dpath = "."
 		options.noprompt = false
 		options.keywords = []
 		options.opath = ""
@@ -41,7 +40,7 @@ class OptPrs
 		options.dfiles = dfiles
 
 		opt_parser = OptionParser.new do |opts|
-			opts.banner = "Usage: mcollector.rb [OPTIONS] [FILE0 FILE1 ...]"
+			opts.banner = "Usage: mcollector.rb [OPTIONS] FILE0 FILE1 ..."
 
 			opts.separator ""
 			opts.separator "Mandatory:"
@@ -52,12 +51,6 @@ class OptPrs
 
 			opts.separator ""
 			opts.separator "Optional:"
-
-			opts.on("-d", "--data-dir <pth/to/data/dir>",
-			        "DEFAULT = current directory",
-			        "All .txt files in this directory will be processed.") do |p|
-				options.dpath = p
-			end
 
 			opts.on("-o", "--output <pth/to/output/file.csv>",
 			        ".csv file to write the collected data",
@@ -158,38 +151,22 @@ end
 # GATHER RESULTS #
 ##################
 class DataFileIterator
-	# dpath = data path which must be a directory
 	# ext = allowd extension for data files in the given directory, e.g. ".txt"
 	# dfiles = array of additional data files,
 	#          e.g. ["pth/to/file0.md", "pth/to/file1.txt"]
-	def initialize(dpath, ext, dfiles=[])
-		dpath = File.expand_path(dpath)
-		if not File.directory?(dpath)
-			puts "ERROR: the given data directory does not exists!"
-			exit 1
-		end
-		@d = Dir.new(dpath)
-		@ext = ext
+	def initialize(dfiles=[])
 		@dfiles = dfiles
 	end
 
 	# this function can be used to iterate with a block structure over all
 	# available file paths, e.g.
-	# it = DataFileIterator.new(dpath, ".txt", ["file1.txt", "file2.txt"])
+	# it = DataFileIterator.new(["./file1.txt", "../file2.txt"])
 	# it.each_path do |filepath|
 	#   puts filepath
 	# end
-	# will print all paths to available data files, which have the wanted
-	# extension and are readable or are given seperately and are readable
+	# will print all *full* paths to available data files, which are readable
 	# ordinary files.
 	def each_pth
-		@d.each do |fname|
-			pth = @d.path + "/" + fname
-			currExt = pth[(-1)*@ext.length()..-1]
-			if File.readable?(pth) and File.file?(pth) and  currExt == @ext
-				yield pth
-			end
-		end
 		@dfiles.each do |fpth|
 			pth = File.expand_path(fpth)
 			if File.readable?(pth) and File.file?(pth)
@@ -309,7 +286,13 @@ if __FILE__ == $0
 
 	# CHECK IF KEYWORDS ARE GIVEN
 	if $options.keywords.empty?
-		STDERR.puts "I don't have any keywords to search for!"
+		STDERR.puts "ERROR: You did not give any keyword!"
+		exit 1
+	end
+
+	# CHECK IF DATA FILES ARE AVAILABLE
+	if $options.dfiles.empty?
+		STDERR.puts "ERROR: You did not give any data file!"
 		exit 1
 	end
 
@@ -318,7 +301,7 @@ if __FILE__ == $0
 	####################
 
 	# GET THE DATA FILE ITERATOR
-	df_it = DataFileIterator.new($options.dpath, ".txt", $options.dfiles)
+	df_it = DataFileIterator.new($options.dfiles)
 
 	# GREP ALL VALUES FROM FILE CONTENTS
 	timestamp = Time.now
