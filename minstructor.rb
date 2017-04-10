@@ -43,8 +43,8 @@ class OptparseExample
 			end
 
 			opts.on("-o", "--output-dir <pth/to/output/personal_prefix_>",
-			        "Directory where all output files, which contain the stdout of",
-			        "your binary, will be saved") do |p|
+			        "Directory where all output files, which contain",
+			        "the stdout of your binary, will be saved") do |p|
 				options.opath = p
 			end
 
@@ -56,10 +56,12 @@ class OptparseExample
 			end
 
 			opts.on("-b", "--backend [slurm|shell]",[:slurm, :shell],
-			        "DEFAULT=shell; Where to execute your binary. E.g. if you want to leave",
-			        "an ssh session after starting the minstructor.rb, you can execute the",
-			        "script within a byobu environment and take the 'shell' backend.",
-			        "In case of the slurm backend, jobs will be sent via sbatch") do |b|
+			        "DEFAULT=shell; Where to execute your binary. E.g.",
+			        "if you want to leave an ssh session after starting",
+			        "the minstructor.rb, you can execute the script",
+			        "within a byobu environment and take the 'shell'",
+			        "backend. In case of the slurm backend, jobs will",
+			        "be sent via sbatch") do |b|
 				options.backend = b
 			end
 
@@ -96,7 +98,7 @@ class OptparseExample
 		end
 
 		opt_parser.set_summary_indent("  ")
-		opt_parser.set_summary_width(80)
+		opt_parser.set_summary_width(20)
 		opt_parser.parse!(args)
 		options
 	end  # parse()
