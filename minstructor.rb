@@ -2,7 +2,6 @@
 
 require 'optparse'
 require 'ostruct'
-require 'pp'
 
 # Install it via ruby gems
 require 'progressbar'
@@ -22,8 +21,22 @@ class OptPrs
 		options.noprompt = false
 		options.rep = 1 # number of command repetitions
 
+		cmds = []
+		foundFlag = false
+		args.each do |arg|
+			if arg[0] == "-"
+				foundFlag = true
+			elsif not foundFlag
+				cmds += [arg]
+				foundFlag = false
+			else
+				foundFlag = false
+			end
+		end
+		options.cmds = cmds
+
 		opt_parser = OptionParser.new do |opts|
-			opts.banner = "Usage: minstructor.rb [options]"
+			opts.banner = 'Usage: minstructor.rb [OPTIONS] "CMD0" "CMD1"'
 
 			opts.separator ""
 			opts.separator "Mandatory:"
