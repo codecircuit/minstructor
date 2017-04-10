@@ -26,8 +26,22 @@ class OptPrs
 		options.debug = false
 		options.sort = false
 
+		dfiles = []
+		foundFlag = false
+		args.each do |arg|
+			if arg[0] == "-"
+				foundFlag = true
+			elsif not foundFlag
+				dfiles += [arg]
+				foundFlag = false
+			else
+				foundFlag = false
+			end
+		end
+		options.dfiles = dfiles
+
 		opt_parser = OptionParser.new do |opts|
-			opts.banner = "Usage: mcollector.rb [options]"
+			opts.banner = "Usage: mcollector.rb [OPTIONS] [FILE0 FILE1 ...]"
 
 			opts.separator ""
 			opts.separator "Mandatory:"
@@ -146,7 +160,9 @@ end
 class DataFileIterator
 	# dpath = data path which must be a directory
 	# ext = allowd extension for data files in the given directory, e.g. ".txt"
-	def initialize(dpath, ext)
+	# dfiles = array of additional data files,
+	#          e.g. ["pth/to/file0.md", "pth/to/file1.txt"]
+	def initialize(dpath, ext, dfiles=[])
 		dpath = File.expand_path(dpath)
 		if not File.directory?(dpath)
 			puts "ERROR: the given data directory does not exists!"
@@ -154,22 +170,32 @@ class DataFileIterator
 		end
 		@d = Dir.new(dpath)
 		@ext = ext
+		@dfiles = dfiles
 	end
 
 	# this function can be used to iterate with a block structure over all
 	# available file paths, e.g.
-	# it = DataFileIterator.new(dpath, ".txt")
+	# it = DataFileIterator.new(dpath, ".txt", ["file1.txt", "file2.txt"])
 	# it.each_path do |filepath|
 	#   puts filepath
 	# end
 	# will print all paths to available data files, which have the wanted
-	# extension and are readable.
+	# extension and are readable or are given seperately and are readable
+	# ordinary files.
 	def each_pth
 		@d.each do |fname|
 			pth = @d.path + "/" + fname
 			currExt = pth[(-1)*@ext.length()..-1]
 			if File.readable?(pth) and File.file?(pth) and  currExt == @ext
 				yield pth
+			end
+		end
+		@dfiles.each do |fpth|
+			pth = File.expand_path(fpth)
+			if File.readable?(pth) and File.file?(pth)
+				yield pth
+			else
+				STDERR.puts "WARNING: given file #{pth} is not readable or an ordinary file. And will be ignored"
 			end
 		end
 	end
@@ -254,6 +280,7 @@ end
 
 
 if __FILE__ == $0
+
 	######################
 	# CHECK INPUT VALUES #
 	###################### 
@@ -291,7 +318,7 @@ if __FILE__ == $0
 	####################
 
 	# GET THE DATA FILE ITERATOR
-	df_it = DataFileIterator.new($options.dpath, ".txt")
+	df_it = DataFileIterator.new($options.dpath, ".txt", $options.dfiles)
 
 	# GREP ALL VALUES FROM FILE CONTENTS
 	timestamp = Time.now
