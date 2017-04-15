@@ -57,19 +57,20 @@ by the `mcollector` could look like:
 You can collect your results, which are saved in output files, in a CSV table
 with:
 ```
-mcollector -d path/to/output/files -k key0,key1,key2,footime,bar-val,no-key
+mcollector -k key0,key1,key2,footime,bar-val,no-key ./results/out_*
 ``` 
 The `mcollector` is able to recognize certain assignment patterns, like they are
-shown above, and will extract the words or numeric values *after* the keywords. It
-is important that the keywords are *only assigned once* in each output file. If
-there are several `.txt`-files containing the `stdout` of your application in
-`/path/to/files`, the `mcollector` could generate a CSV table like:
+shown above, and will extract the words or numerical values *after* the
+keywords. It is important that the keywords are *only assigned once* in each
+output file. E.g. if the shell expansion in the example above results
+in several output files, an example CSV output of the `mcollector` could
+look like:
 
 ```
 keyword0,keyword1,keyword2,footime,bar-val,no-keyword,data-file-path
-foo,2,"long string a",0.4687,16547,N/A,/path/to/files/0.txt
-foo,1,"long string b",0.4779,1756,N/A,/path/to/files/1.txt
-foo,0,"long string c",0.4864,1654,N/A,/path/to/files/2.txt
+foo,2,"long string a",0.4687,16547,N/A,/abs/path/results/out_0.txt
+foo,1,"long string b",0.4779,1756,N/A,/abs/path/results/out_1.txt
+foo,0,"long string c",0.4864,1654,N/A,/abs/path/results/out_2.txt
 ```
 
 ## minstructor VS google-benchmark-lib
