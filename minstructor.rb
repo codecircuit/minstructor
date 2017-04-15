@@ -228,8 +228,8 @@ end
 # replace them with their appropriate expanded lists.
 
 # You must remove white spaces before using this dictionary
-floatingPointRegex = /[-+]?[[:digit:]]*\.?[[:digit:]]*/
-integerRegex       = /[-+]?[[:digit:]]+/
+$floatingPointRegex = /[-+]?[[:digit:]]*\.?[[:digit:]]*/
+$integerRegex       = /[-+]?[[:digit:]]+/
 
 $regexOfRangeExpr = {
 # I want to group without capturing as the String.scan function
@@ -237,14 +237,14 @@ $regexOfRangeExpr = {
 # which is not what I want. Using the paranthesis with (?:<rest of pattern>)
 # solves the problem. See also `ri Regexp` chapter Grouping
 	:list   => /\[\s*(?:[^,\s]+\s*,\s*)+[^,\s]+\s*\]/,
-	:range1 => /range\(\s*#{integerRegex}\s*\)/,
-	:range2 => /range\(\s*#{integerRegex}\s*,\s*#{integerRegex}\s*\)/,
-	:range3 => /range\(\s*#{integerRegex}\s*,\s*#{integerRegex}\s*,\s*#{integerRegex}\s*\)/,
-	:linspace2 => /linspace\(\s*#{floatingPointRegex}\s*,\s*#{floatingPointRegex}\s*\)/,
-	:linspace3 => /linspace\(\s*#{floatingPointRegex},\s*#{floatingPointRegex}\s*,\s*#{floatingPointRegex}\s*\)/,
-	:logspace2 => /logspace\(\s*#{floatingPointRegex}\s*,\s*#{floatingPointRegex}\s*\)/,
-	:logspace3 => /logspace\(\s*#{floatingPointRegex}\s*,\s*#{floatingPointRegex}\s*,\s*#{floatingPointRegex}\s*\)/,
-	:logspace4 => /logspace\(\s*#{floatingPointRegex}\s*,\s*#{floatingPointRegex}\s*,\s*#{floatingPointRegex}\s*,\s*#{floatingPointRegex}\s*\)/,
+	:range1 => /range\(\s*#{$integerRegex}\s*\)/,
+	:range2 => /range\(\s*#{$integerRegex}\s*,\s*#{$integerRegex}\s*\)/,
+	:range3 => /range\(\s*#{$integerRegex}\s*,\s*#{$integerRegex}\s*,\s*#{$integerRegex}\s*\)/,
+	:linspace2 => /linspace\(\s*#{$floatingPointRegex}\s*,\s*#{$floatingPointRegex}\s*\)/,
+	:linspace3 => /linspace\(\s*#{$floatingPointRegex},\s*#{$floatingPointRegex}\s*,\s*#{$floatingPointRegex}\s*\)/,
+	:logspace2 => /logspace\(\s*#{$floatingPointRegex}\s*,\s*#{$floatingPointRegex}\s*\)/,
+	:logspace3 => /logspace\(\s*#{$floatingPointRegex}\s*,\s*#{$floatingPointRegex}\s*,\s*#{$floatingPointRegex}\s*\)/,
+	:logspace4 => /logspace\(\s*#{$floatingPointRegex}\s*,\s*#{$floatingPointRegex}\s*,\s*#{$floatingPointRegex}\s*,\s*#{$floatingPointRegex}\s*\)/,
 }
 
 def identifyRangeExpr(str)
@@ -363,31 +363,52 @@ end
 # file name
 class OutputFileNameIterator
 	def initialize(opath)
-		DEBUG("OutputFileNameIterator(opath=#{opath})")
+		DEBUG("[+] OutputFileNameIterator(opath=#{opath})")
 		if opath.empty?
 			@prefix = nil
 			@id = nil
+			DEBUG("  - created an empty file name iterator object")
+			DEBUG("[-] OutputFileNameIterator()")
 			return
 		end
+
+		## SETTING THE PREFIX ##
 		@prefix = String.new(opath)
 		if File.directory?(opath)
+			outDir = opath
 			@prefix = @prefix.chomp('/') + '/out_' 
+			DEBUG("  - I got a output directory from the CLI")
+			DEBUG("    prefix = #{@prefix}")
 		else # else the user gave a prefix for the output files on the command line
 			outDir = File.dirname(opath)
 			if not File.directory?(outDir)
 				raise IOError, "Your output directory #{outDir} does not exists!"
 			end
-			@prefix << '_'
+			DEBUG("  - I got a prefix for the output file naming on the CLI")
+			DEBUG("    prefix = #{@prefix}")
 		end
+
+		## SETTING THE OUTPUT FILE INDEX ##
+		DEBUG("  - Search for the first free output file index")
+		DEBUG("    to prevent a file overwrite...")
 		@prefix = File.expand_path(@prefix)
 		@prefix.freeze()
-		# now search for the first free index
-		i = 0
-		while File.exist?(@prefix + i.to_s() + ".txt")
-			i += 1
+		outFileReg = /#{File.basename(@prefix)}(#{$integerRegex})\.txt/
+		usedIndices = [-1] # -1 results in default start index of 0
+		Dir.foreach(outDir) do |dirMem|
+			if File.file?(dirMem)
+				DEBUG("    - checking the file = #{dirMem}")
+				md = dirMem.match(outFileReg)
+				if md != nil
+				DEBUG("    - match data = #{md}")
+				usedIndices += [dirMem.match(outFileReg)[1].to_i()]
+				end
+			end
 		end
-		@id = i
-	end
+		@id = usedIndices.max() + 1
+		DEBUG("  - uses start index = #{@id}")
+		DEBUG("[-] OutputFileNameIterator()")
+	end # end initialize
 
 	def empty?()
 		return @prefix == nil
@@ -401,7 +422,7 @@ class OutputFileNameIterator
 	end
 end
 
-def expandCmd(parsedCmds, opath="", backend=:shell)
+def expandCmd(parsedCmds, outFileName_it, backend=:shell)
 	DEBUG(" ")
 	DEBUG("[+] expandCmd()")
 	# Here we generate the commands for the specified backend
@@ -423,13 +444,6 @@ def expandCmd(parsedCmds, opath="", backend=:shell)
 	parsedCmds = parsedCmds * $options.rep
 	DEBUG("  - cmds with repititions = #{parsedCmds}")
 
-	# OUTPUT FILE NAMING
-	# 1. if /output/path is a directory then name the output files
-	#    /output/path/out_0.txt, /output/path/out_1.txt,...
-	# 2. if output path = /foo/bar/myprefix and /foo/bar/myprefix does not
-	#    exist, but /foo/bar is a directory then name the output files
-	#    /foo/bar/myprefix_0.txt, /foo/bar/myprefix_1.txt,...
-	outFileName_it = OutputFileNameIterator.new(opath)
 
 	## ADJUST COMMANDS FOR BACKEND AND APPEND OUTFILES ##
 	if backend == :slurm
@@ -492,9 +506,17 @@ if __FILE__ == $0
 		parsed += [frontend(cmd)]
 	end
 
+	# OUTPUT FILE NAMING
+	# 1. if /output/path is a directory then name the output files
+	#    /output/path/out_0.txt, /output/path/out_1.txt,...
+	# 2. if output path = /foo/bar/myprefix and /foo/bar/myprefix does not
+	#    exist, but /foo/bar is a directory then name the output files
+	#    /foo/bar/myprefix_0.txt, /foo/bar/myprefix_1.txt,...
+	outFileName_it = OutputFileNameIterator.new($options.opath)
+
 	expandedCmds = []
 	parsed.each do |parsedCmd|
-		expandedCmds += [expandCmd([parsedCmd], $options.opath, $options.backend)]
+		expandedCmds += [expandCmd([parsedCmd], outFileName_it, $options.backend)]
 	end
 
 	linesShowMax = 15
