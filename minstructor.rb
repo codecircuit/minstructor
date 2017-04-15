@@ -21,6 +21,8 @@ class OptPrs
 		options.noprompt = false
 		options.rep = 1 # number of command repetitions
 
+		# Parse mandatory arguments, which are given
+		# without any flag
 		cmds = []
 		foundFlag = false
 		args.each do |arg|
@@ -39,17 +41,7 @@ class OptPrs
 			opts.banner = 'Usage: minstructor.rb [OPTIONS] "CMD0" "CMD1"'
 
 			opts.separator ""
-			opts.separator "Mandatory:"
-
-			opts.on("-c", '--cmd "/path/to/binary [<key> {<val>|<range>}]"',
-			        "You can specify ranges on various ways, e.g.:",
-			        "* [4,a,8,...]           simple lists",
-			        "* range(0,20,3)         python-like ranges",
-			        "* linspace(0,2,5)       numpy-like linear ranges",
-			        "* logspace(1,10,5,10)   numpy-like log ranges",
-			        'E.g. -c "./binary -k0 foo -k1 range(3) -k2 [a,b]"') do |cmd|
-				options.cmd = cmd
-			end
+			opts.separator "Options:"
 
 			opts.on("-n <repetitions>", "Number every unique command is repeated") do |rep|
 				options.rep = rep.to_i()
@@ -60,9 +52,6 @@ class OptPrs
 			        "the stdout of your binary, will be saved") do |p|
 				options.opath = p
 			end
-
-			opts.separator ""
-			opts.separator "Optional:"
 
 			opts.on("-f", "Do not prompt. Be careful with this flag!") do |noprompt|
 				options.noprompt = noprompt
@@ -121,18 +110,15 @@ end  # class OptPrs
 $options = OptPrs.parse(ARGV)
 # if debug be also verbose
 $options.verbose = $options.verbose || $options.debug
+
 # Between submitting jobs the script makes a break
 # of SLURMDELAY seconds. This prevents slurm from
 # rejecting jobs
 $SLURMDELAY = 0.5
 
-def debug(msg)
+def DEBUG(msg)
 	puts "#{msg}" if $options.debug
 end
-
-# You must remove white spaces before using this dictionary
-floatingPointRegex = /[-+]?[[:digit:]]*\.?[[:digit:]]*/
-integerRegex       = /[-+]?[[:digit:]]+/
 
 ###################
 # RANGE FUNCTIONS #
@@ -186,7 +172,6 @@ end
 # these functions build all
 # wanted combinations given
 # by the command line args.
-
 
 # takes a list [a, [b, c], 0, [3, 4], d]
 # and returns all possible combinations
@@ -242,6 +227,10 @@ end
 # The task of the frontend is to detect pre-defined range expressions and to
 # replace them with their appropriate expanded lists.
 
+# You must remove white spaces before using this dictionary
+floatingPointRegex = /[-+]?[[:digit:]]*\.?[[:digit:]]*/
+integerRegex       = /[-+]?[[:digit:]]+/
+
 $regexOfRangeExpr = {
 # I want to group without capturing as the String.scan function
 # works than as expected. E.g. "[a,b,33]".scan(/\[(.+,)+.+\]/) = [["a,b,"]]
@@ -292,12 +281,9 @@ end
 # and the frontend returns a list like
 # Output = ["./bin -key0 val -key1 ", [0,1,2], " -key2 ", ['a','b','33'], "foo"]
 def frontend(userInput)
-	debug("ENTERED THE FRONTEND WITH USER INPUT = #{userInput}")
-	if userInput.empty?
-		puts "You have not specified a command!"
-		exit
-	end
-
+	DEBUG(" ")
+	DEBUG("[-] frontend()")
+	DEBUG("  - input = #{userInput}")
 	# First we search for all regex matches and expand them.
 	# The expansion is linked to the match. E.g.
 	# User Input = "-key0 val0 -key1 range(2) -key2 range(4,6) -key3 range(4,6)"
@@ -307,18 +293,18 @@ def frontend(userInput)
 	# while iterating over it, which results in undefined behaviour.
 	matchToExpansion = {}
 	$regexOfRangeExpr.each_pair do |k,reg|
-		debug("CHECKING THE KEY #{k} WITH REGEX #{reg}")
+		DEBUG("CHECKING THE KEY #{k} WITH REGEX #{reg}")
 		if k != :list # lists must be treated separately
 			strRanges = userInput.scan(reg)
-			debug("SCAN PATTERN RESULT #{strRanges}")
+			DEBUG("SCAN PATTERN RESULT #{strRanges}")
 			strRanges.each do |strRange|
-				debug("TRY TO EVAL #{strRange}")
+				DEBUG("TRY TO EVAL #{strRange}")
 				expRange = eval(strRange)
 				matchToExpansion[strRange] = expRange
 			end
 		else # if it is a list
 			strLists = userInput.scan(reg)
-			debug("LISTS I FOUND = #{strLists}")
+			DEBUG("LISTS I FOUND = #{strLists}")
 			strLists.each do |strList|
 				# convert to a real list
 				# e.g. '[a,b,33]' --> ['a','b','33']
@@ -352,7 +338,7 @@ def frontend(userInput)
 		partitioned.map!{ |e|
 			partitionAll.call(e, k)
 		}
-		debug("MATCH TO EXPANSION #{k} => #{v}")
+		DEBUG("MATCH TO EXPANSION #{k} => #{v}")
 		partitioned.replace(partitioned.flatten())
 	}
 
@@ -363,7 +349,8 @@ def frontend(userInput)
 		matchToExpansion.fetch(cmdPart, cmdPart)
 	end
 
-	debug("THE FRONTEND RETURNS #{expanded}")
+	DEBUG("  - Returns = #{expanded}")
+	DEBUG("[-] frontend()")
 	return expanded
 end
 
@@ -376,7 +363,7 @@ end
 # file name
 class OutputFileNameIterator
 	def initialize(opath)
-		debug("OutputFileNameIterator(opath=#{opath})")
+		DEBUG("OutputFileNameIterator(opath=#{opath})")
 		if opath.empty?
 			@prefix = nil
 			@id = nil
@@ -414,7 +401,9 @@ class OutputFileNameIterator
 	end
 end
 
-def generateCmds(expandedCmds, opath="", backend=:shell)
+def expandCmd(parsedCmds, opath="", backend=:shell)
+	DEBUG(" ")
+	DEBUG("[+] expandCmd()")
 	# Here we generate the commands for the specified backend
 	validBackends = [:shell, :slurm]
 	if not (validBackends.include?(backend))
@@ -422,17 +411,17 @@ def generateCmds(expandedCmds, opath="", backend=:shell)
 		exit
 	end
 
-	puts "COMMAND GENERATOR GOT #{expandedCmds}" if $options.debug
+	DEBUG("  - input = #{parsedCmds}")
 
-	expandedCmds = combinations(expandedCmds)
-	expandedCmds.map! { |cmd| cmd.join() }
+	parsedCmds = combinations(parsedCmds)
+	parsedCmds.map! { |cmd| cmd.join() }
 
-	puts "COMMAND EXPANDED CMDS LIST TO #{expandedCmds}" if $options.debug
+	DEBUG("  - cmds after combinations #{parsedCmds}")
 
 	## REPEAT COMMANDS IF WANTED ##
-	puts "Number of repetitions = #{$options.rep}" if $options.debug
-	expandedCmds = expandedCmds * $options.rep
-	puts "COMMANDS AFTER REPETITIONS #{expandedCmds}" if $options.debug
+	DEBUG("  - Number of repetitions = #{$options.rep}")
+	parsedCmds = parsedCmds * $options.rep
+	DEBUG("  - cmds with repititions = #{parsedCmds}")
 
 	# OUTPUT FILE NAMING
 	# 1. if /output/path is a directory then name the output files
@@ -444,58 +433,31 @@ def generateCmds(expandedCmds, opath="", backend=:shell)
 
 	## ADJUST COMMANDS FOR BACKEND AND APPEND OUTFILES ##
 	if backend == :slurm
-		puts "BACKEND SLURM!!" if $options.debug
-		expandedCmds.map! do |cmd|
+		DEBUG("  - you choose the slurm backend")
+		parsedCmds.map! do |cmd|
 			cmd = "sbatch " + "#{$options.backendArgs} " + '--wrap "' + cmd + '"'
 			cmd << " -o #{outFileName_it.next()}" unless outFileName_it.empty?
 		end
 	end
 	if backend == :shell
-		puts "BACKEND SHELL!!" if $options.debug
+		DEBUG("  - you choose the shell backend")
 		if not outFileName_it.empty?
-			expandedCmds.map! do |cmd|
+			parsedCmds.map! do |cmd|
 				cmd += " > #{outFileName_it.next()}"
 			end
 		end
 	end
 
-	if expandedCmds.empty?
-		puts "ERROR: no commands have been created! Check your syntax!"
+	if parsedCmds.empty?
+		STDERR.puts "ERROR: no commands have been created! Check your syntax!"
 		exit 1
 	end
 
 	# REMOVE UNNECESSARY WHITESPACE
-	expandedCmds.map! { |cmd| cmd.squeeze(" ") }
+	parsedCmds.map! { |cmd| cmd.squeeze(" ") }
 
-	linesShowMax = 15
-	if expandedCmds.length() > linesShowMax and not $options.verbose
-		if $options.backend == :slurm
-			estSec = expandedCmds.length() * $SLURMDELAY
-			if estSec / 3600.0 > 24.0
-				puts "Submitting the jobs will take more than 24h."
-			else
-				t = Time.new(0)
-				t += estSec
-				puts "The jobs will approximately be submitted in #{t.strftime("%T")} (hh:mm:ss)"
-			end
-		end
-		puts "Here is an random excerpt of your in total #{expandedCmds.length()} generated commands:"
-		expandedCmds.sample(linesShowMax).each { |cmd| puts cmd }
-	else
-		puts "The Measurement Instructor generated the following commands for you:"
-		expandedCmds.each { |cmd| puts cmd }
-	end
-
-	if not $options.noprompt
-		print "Do you want to execute the generated commands? [y/N]: "
-		answer = gets.chomp
-		if not %w[Yes Y y yes].any? {|key| answer == key}
-			puts "Going to exit"
-			exit
-		end
-	end
-	puts "Continue..."
-	return expandedCmds
+	DEBUG("[-] expandCmd()")
+	return parsedCmds
 end
 
 ##################################
@@ -519,7 +481,53 @@ def executeCmds(cmds)
 end
 
 if __FILE__ == $0
-	cmd = frontend($options.cmd)
-	expanded_cmds = generateCmds([cmd], $options.opath, $options.backend)
-	executeCmds(expanded_cmds)
+
+	if $options.cmds.empty?
+		puts "You have not specified any command!"
+		exit
+	end
+
+	parsed = []
+	$options.cmds.each do |cmd|
+		parsed += [frontend(cmd)]
+	end
+
+	expandedCmds = []
+	parsed.each do |parsedCmd|
+		expandedCmds += [expandCmd([parsedCmd], $options.opath, $options.backend)]
+	end
+
+	linesShowMax = 15
+	if expandedCmds.length() > linesShowMax and not $options.verbose
+		if $options.backend == :slurm
+			estSec = expandedCmds.length() * $SLURMDELAY
+			if estSec / 3600.0 > 24.0
+				puts "Submitting the jobs will take more than 24h."
+			else
+				t = Time.new(0)
+				t += estSec
+				puts "The jobs will approximately be submitted in #{t.strftime("%T")} (hh:mm:ss)"
+			end
+		end
+		puts "Here is an random excerpt of your in total #{expandedCmds.length()} generated commands:"
+		expandedCmds.sample(linesShowMax).each { |cmd| puts cmd }
+	else
+		puts "The Measurement Instructor generated the following commands for you:"
+		expandedCmds.each { |cmd| puts cmd }
+	end
+
+	if not $options.noprompt
+		print "Do you want to execute the generated commands? [y/N]: "
+		# We need to clear the ARGV array, because `gets` does not
+		# query for user input, if the array is still not empty
+		ARGV.clear()
+		answer = gets.chomp
+		if not %w[Yes Y y yes].any? {|key| answer == key}
+			puts "Going to exit"
+			exit
+		end
+		puts "Continue..."
+	end
+
+	executeCmds(expandedCmds.flatten)
 end
