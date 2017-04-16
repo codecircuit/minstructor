@@ -48,17 +48,20 @@ by the `mcollector` could look like:
 ...
   - key0 -> foo
   - key1 =   2
-  - key2: "long string a"
-  - footime: 0.4687 s
+  other words key2: "long string a"
+footime: 0.4687 s
+     you can also mention key2 here
   - bar-val --> 16547
 ...
 ```
 
 You can collect your results, which are saved in output files, in a CSV table
 with:
+
 ```
 mcollector -k key0,key1,key2,footime,bar-val,no-key ./results/out_*
 ``` 
+
 The `mcollector` is able to recognize certain assignment patterns, like they are
 shown above, and will extract the words or numerical values *after* the
 keywords. It is important that the keywords are *only assigned once* in each
