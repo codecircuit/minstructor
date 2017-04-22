@@ -17,7 +17,7 @@ class TestDataFileIterator < Test::Unit::TestCase
 			"file-b.txt"
 		]
 
-		it = DataFileIterator.new(dataFileNames.map { |fn| dpath + "/" + fn })
+		it = DataFileIterator.new(:dfiles => dataFileNames.map { |fn| dpath + "/" + fn })
 
 		it.each_pth do |fpth|
 			fname = File.basename(fpth)
@@ -39,7 +39,7 @@ class TestDataFileIterator < Test::Unit::TestCase
 			"file-b.txt"
 		]
 
-		it = DataFileIterator.new(dataFileNames.map { |fn| dpath + "/" + fn })
+		it = DataFileIterator.new(:dfiles => dataFileNames.map { |fn| dpath + "/" + fn })
 
 		it.each_content_with_pth do |c, fpth|
 			f = File.open(fpth)

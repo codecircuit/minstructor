@@ -8,11 +8,9 @@
 
 require 'optparse'
 require 'ostruct'
-require 'pp'
 require 'csv'
 
 class OptPrs
-
 	def self.parse(args)
 		# The options specified on the command line will be collected in *options*.
 		# We set default values here.
@@ -94,7 +92,6 @@ class OptPrs
 		opt_parser.parse!(args)
 		options
 	end  # parse()
-
 end  # class OptPrs
 
 $options = OptPrs.parse(ARGV)
@@ -115,7 +112,7 @@ end
 # the following variables should be global to test them when
 # including this file from another ruby script
 
-$expReg = /[eE][-+]?[[:digit:]]+/
+$expReg = /[eE][-+]?[[:digit:]]+/ # e.g. e+64 or E-0674
 $numReg = /[-+]?[[:digit:]]+(?:\.[[:digit:]]+)?#{$expReg}?/
 
 # The unit regex should allow a lot of symbols, e.g. GB/s, foo^4
@@ -144,18 +141,20 @@ $valReg = /#{$quotationReg}|#{$quantityReg}|#{$wordReg}/
 # thus can be obtained by taking the first non nil
 # capture object
 def getKeyValueReg(keyword)
-	return /#{keyword}\s*#{$linkReg}\s*#{$valReg}/
+	/#{keyword}\s*#{$linkReg}\s*#{$valReg}/
 end
 
 ##################
 # GATHER RESULTS #
 ##################
 class DataFileIterator
-	# ext = allowd extension for data files in the given directory, e.g. ".txt"
-	# dfiles = array of additional data files,
-	#          e.g. ["pth/to/file0.md", "pth/to/file1.txt"]
-	def initialize(dfiles=[])
-		@dfiles = dfiles
+	# dfiles = array of data files,
+	# e.g. ["pth/to/file0.md", "pth/to/file1.txt"]
+	def initialize(options = {})
+		options = {
+			:dfiles => [],
+		}.merge(options)
+		@dfiles = options[:dfiles]
 	end
 
 	# this function can be used to iterate with a block structure over all
@@ -169,10 +168,11 @@ class DataFileIterator
 	def each_pth
 		@dfiles.each do |fpth|
 			pth = File.expand_path(fpth)
-			if File.readable?(pth) and File.file?(pth)
+			if File.readable?(pth) && File.file?(pth)
 				yield pth
 			else
-				STDERR.puts "WARNING: given file #{pth} is not readable or an ordinary file. And will be ignored"
+				STDERR.puts "WARNING: given file #{pth} is not readable" \
+				            "or an ordinary file. And will be ignored"
 			end
 		end
 	end
@@ -181,17 +181,15 @@ class DataFileIterator
 	def each_content_with_pth
 		each_pth do |fpth|
 			f = File.open(fpth)
-			content = f.read()
-			f.close()
+			content = f.read
+			f.close
 			yield content, fpth
 		end
 	end
-
-end
+end # DataFileIterator
 
 # Takes a DataFileIterator iterates over the contents of the
-# files and searches for the values assigned to the keywords
-#
+# files and searches for the values assigned to the keywords.
 # Returns: [[<csv first row>], [<csv second row>], ...]
 # which is basically the CSV data without the headline.
 def gather(df_it, keywords)
@@ -225,19 +223,23 @@ def gather(df_it, keywords)
 	end
 
 	VERBOSE("  - I processed #{filesProcessed} data files")
-	return res
+	res
 end
 
 # either output to stdout or write to file
-def outputCSV(opath, csvRows, keywords, sortFlag=false)
+def outputCSV(opath, csvRows, keywords, options = {})
 
-	csvRows.sort! if sortFlag
+	options = {
+		:sort => false,
+	}.merge(options)
+
+	csvRows.sort! if options[:sort]
 
 	# add the header
-	csvStr = keywords.join(',') + ",data-file-path" + "\n"
+	csvStr = "#{keywords.join(',')},data-file-path\n"
 	# we take the index, to prevent the sublists from being expanded
 	DEBUG("  - CSV ROWS = #{csvRows}")
-	csvRows.each_with_index do |row,i|
+	csvRows.each_with_index do |row, i|
 		DEBUG("  - ROW = #{row}")
 		DEBUG("  - [*row].join(',') = #{[*row].join(',')}")
 		csvStr << [*row].join(',') << "\n"
@@ -252,7 +254,7 @@ def outputCSV(opath, csvRows, keywords, sortFlag=false)
 	# WRITE TO FILE
 	f = File.open(opath, mode="w")
 	f.write(csvStr)
-	f.close()
+	f.close
 end
 
 
@@ -267,14 +269,15 @@ if __FILE__ == $0
 		# CHECK IF OUTPUT DIRECTORY EXISTS
 		opath = File.expand_path($options.opath)
 		outdir = File.dirname(opath)
-		if not File.directory?(outdir)
-			puts "ERROR: the directory #{outdir} does not exists! Create it first!"
-			exit
+		if !File.directory?(outdir)
+			STDERR.puts "ERROR: the directory #{outdir} does not exists! " \
+			            "Create it first!"
+			exit 1
 		end
 
 		# CHECK IF OUTPUT FILE ALREADY EXISTS
-		if File.exists?(opath) and not $options.noprompt
-			STDERR.puts "CAUTION: the file #{opath} does already exists."
+		if File.exists?(opath) && !$options.noprompt
+			STDERR.puts  "CAUTION: the file #{opath} does already exists."
 			STDERR.print "Do you want to replace it? [y/N]:"
 			answer = gets.chomp
 			if not %w[Yes Y y yes].include?(answer)
@@ -301,7 +304,7 @@ if __FILE__ == $0
 	####################
 
 	# GET THE DATA FILE ITERATOR
-	df_it = DataFileIterator.new($options.dfiles)
+	df_it = DataFileIterator.new(:dfiles => $options.dfiles)
 
 	# GREP ALL VALUES FROM FILE CONTENTS
 	timestamp = Time.now
@@ -312,7 +315,7 @@ if __FILE__ == $0
 	# OUTPUT THE CSV DATA
 	VERBOSE("  - sorting flag = #{$options.sort}")
 	timestamp = Time.now
-	outputCSV($options.opath, csvRows, $options.keywords, $options.sort)
+	outputCSV($options.opath, csvRows, $options.keywords, :sort => $options.sort)
 	csvT = Time.now - timestamp
 	VERBOSE("  - outputting the csv data took #{csvT} seconds")
 end
