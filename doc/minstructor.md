@@ -10,15 +10,24 @@ minstructor - measurement instructor
 
 # SYNOPSIS
 
-**minstructor** [**-o** *path*[*prefix*]] "*cmd0*" "*cmd1*" ...
+**minstructor** [**-n** *repititions*] [**-o** *path*[*prefix*]] [**-b** *backend*] [**-f**] [**-a** "*bargs*"] [**-v**] [**-h**] [**-d**] [**--dry-run**] "*cmd0*" "*cmd1*" ...
 
 # DESCRIPTION
 
-If you are tired of writing scripts manually, which instruct
-an application you want to benchmark, this program is what
-you are searching for. You gave lists of commmand line parameter
-values to the Measurement Instructor and he executes your
-application with every possible combination of the given parameters.
+You give command patterns *cmd* to the measurement instructor each describing
+the execution of a program over multiple command line arguments. A *cmd* might
+contain expressions that will be parsed and interpreted as a set of command
+line values:
+
+set expression       | known as
+---------------------|--------------------------------------------
+[4,a,8,...]          | simple list
+range(0,20,3)        | python-like range (start, end, step)
+linspace(0,2,5)      | numpy-like linear range (start, stop, num)
+logspace(1,1000,5,10)| numpy-like log range (start, stop, num, base)
+
+The measurement instructor executes the given *cmd* on the cartesian
+product of all set expressions (see examples below).
 
 If you specify a name prefix for the output files on the command line, the
 standard output of your application executions will be saved appropriately.
@@ -26,12 +35,11 @@ standard output of your application executions will be saved appropriately.
 Probably you want to collect certain metrics of your application executions
 and evaluate them. You can use the `mcollector(1)` to achieve that efficiently.
 
-
 # SEE ALSO
 mcollector(1), byobu(1)
 
 # EXAMPLE
-minstructor -c "./binary -k0 foo -k1=range(3) -k2 [a,b]" will be expanded to
+minstructor -c "./binary -k0 foo -k1=range(3) -k2 [a,b]" will be interpreted as
 
 ```
   ./binary -k0 foo -k1=0 -k2 a
@@ -47,10 +55,6 @@ minstructor -c "./binary -k0 foo -k1=range(3) -k2 [a,b]" will be expanded to
 -c, \--cmd "*PATH/TO/BINARY* [*FLAG* [*VAL*|*RANGE*]]"
 :   *TODO: REMOVE -c FLAG* You can specify ranges on various ways, e.g.:
     **TODO: find out how to show quotations marks here**
-    [4,a,8,...]           simple lists
-    range(0,20,3)         python-like ranges (start,end,step)
-    linspace(0,2,5)       numpy-like linear ranges (start,stop,num)
-    logspace(1,1000,5,10) numpy-like log ranges (start,stop,num,base)
 
 ## Sub option
 
