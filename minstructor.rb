@@ -530,7 +530,8 @@ if __FILE__ == $0
 			else
 				t = Time.new(0)
 				t += estSec
-				puts "The jobs will approximately be submitted in #{t.strftime("%T")} (hh:mm:ss)"
+				puts "The jobs will approximately be submitted in " \
+				     "#{t.strftime("%T")} (hh:mm:ss)"
 			end
 		end
 		puts "Here is an random excerpt of your in total #{expandedCmds.length} generated commands:"
