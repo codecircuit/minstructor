@@ -191,7 +191,7 @@ def combinations(l)
 			if list[i].class == Array
 				list[i].each do |e|
 					copy = Array.new(list)
-					copy[i,1] = e
+					copy[i, 1] = e
 					res.push(copy)
 				end
 				return res
@@ -377,7 +377,7 @@ class OutputFileNameIterator
 		@prefix = String.new(opath)
 		if File.directory?(opath)
 			outDir = opath
-			@prefix = @prefix.chomp('/') + '/out_' 
+			@prefix = "#{@prefix.chomp('/')}/out_"
 			DEBUG("  - I got a output directory from the CLI")
 			DEBUG("    prefix = #{@prefix}")
 		else # else the user gave a prefix for the output files on the command line
@@ -451,7 +451,7 @@ def expandCmd(parsedCmds, outFileName_it, backend=:shell)
 	if backend == :slurm
 		DEBUG("  - you choose the slurm backend")
 		parsedCmds.map! do |cmd|
-			cmd = "sbatch " + "#{$options.backendArgs} " + '--wrap "' + cmd + '"'
+			cmd = "sbatch #{$options.backendArgs} " + '--wrap "' + cmd + '"'
 			cmd << " -o #{outFileName_it.next}" unless outFileName_it.empty?
 		end
 	end
