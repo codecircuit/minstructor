@@ -19,7 +19,7 @@ the execution of a program over multiple command line arguments. A *cmd* might
 contain expressions that will be parsed and interpreted as a set of command
 line values:
 
-set expression       | known as
+set expression       | also known as
 ---------------------|--------------------------------------------
 [4,a,8,...]          | simple list
 range(0,20,3)        | python-like range (start, end, step)
@@ -29,34 +29,39 @@ logspace(1,1000,5,10)| numpy-like log range (start, stop, num, base)
 The measurement instructor executes the given *cmd* on the cartesian
 product of all set expressions (see examples below).
 
-If you specify a name prefix for the output files on the command line, the
+If you specify a name *prefix* for the output files on the command line, the
 standard output of your application executions will be saved appropriately.
 
 Probably you want to collect certain metrics of your application executions
 and evaluate them. You can use the `mcollector(1)` to achieve that efficiently.
 
-# SEE ALSO
-mcollector(1), byobu(1)
 
 # EXAMPLE
-minstructor -c "./binary -k0 foo -k1=range(3) -k2 [a,b]" will be interpreted as
-
+$ minstructor "./binary -k0 foo -k1=range(3) -k2 [a,b]"
 ```
-  ./binary -k0 foo -k1=0 -k2 a
-  ./binary -k0 foo -k1=0 -k2 b
-  ./binary -k0 foo -k1=1 -k2 a
-  ./binary -k0 foo -k1=1 -k2 b
-  ./binary -k0 foo -k1=2 -k2 a
-  ./binary -k0 foo -k1=2 -k2 b
+./binary -k0 foo -k1=0 -k2 a
+./binary -k0 foo -k1=0 -k2 b
+./binary -k0 foo -k1=1 -k2 a
+./binary -k0 foo -k1=1 -k2 b
+./binary -k0 foo -k1=2 -k2 a
+./binary -k0 foo -k1=2 -k2 b
+```
+
+$ minstructor -a "-w host0,host1" -b slurm "./binary -k0 foo -k1 [a,1,c]"
+```
+sbatch --wrap "./binary -k0 foo -k1 a" -w host0,host1
+sbatch --wrap "./binary -k0 foo -k1 1" -w host0,host1
+sbatch --wrap "./binary -k0 foo -k1 c" -w host0,host1
+```
+
+$ minstructor -o /dir0/dir1/ "./binary -k0 foo -k1=linspace(0,1,3)"
+```
+./binary -k foo -k1=0   > /dir0/dir1/out_0.txt
+./binary -k foo -k1=0.5 > /dir0/dir1/out_1.txt
+./binary -k foo -k1=1.0 > /dir0/dir1/out_2.txt
 ```
 
 # OPTIONS
-
--c, \--cmd "*PATH/TO/BINARY* [*FLAG* [*VAL*|*RANGE*]]"
-:   *TODO: REMOVE -c FLAG* You can specify ranges on various ways, e.g.:
-    **TODO: find out how to show quotations marks here**
-
-## Sub option
 
 -n *repetitions*
 :   Number every unique command is repeated.  If you want to have multiple
@@ -74,8 +79,7 @@ minstructor -c "./binary -k0 foo -k1=range(3) -k2 [a,b]" will be interpreted as
     prefix, if *foo* is not the name of a directory.
 
 -f
-:   Do not prompt. Be careful with this flag, as this can result
-    in files being overwritten.
+:   Do not prompt.
 
 -b, \--backend [slurm|shell]
 :   DEFAULT=shell; Where to execute your binary. In case of the slurm backend,
@@ -99,6 +103,9 @@ minstructor -c "./binary -k0 foo -k1=range(3) -k2 [a,b]" will be interpreted as
 
 \--dry-run
 :   Do everything normal, but without executing any of the generated commands
+
+# SEE ALSO
+**mcollector**(1), **byobu**(1)
 
 # DEFAULTS
 todo
