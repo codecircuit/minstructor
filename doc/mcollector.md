@@ -10,7 +10,7 @@ mcollector - measurement collector
 
 # SYNOPSIS
 
-**mcollector** *file0* *file1* ...
+**mcollector** [**-k** *keyword*[,...]] [**-o** *csvfile*] [**-f**] *file0* *file1* ...
 
 # DESCRIPTION
 
@@ -36,42 +36,10 @@ the **minstructor**(1) to achieve that efficiently.
 ./binary -k0 foo -k1=2 -k2 b
 ```
 
-## II
-
-`$ minstructor -a "-w host0,host1" -b slurm "./binary -k0 foo -k1 [a,1,c]"`  
-
-```
-sbatch --wrap "./binary -k0 foo -k1 a" -w host0,host1
-sbatch --wrap "./binary -k0 foo -k1 1" -w host0,host1
-sbatch --wrap "./binary -k0 foo -k1 c" -w host0,host1
-```
-
-## III
-
-`$ minstructor -o /dir0/dir1/ "./binary -k0 foo -k1=linspace(0,1,3)"`
-
-```
-./binary -k foo -k1=0   > /dir0/dir1/out_0.txt
-./binary -k foo -k1=0.5 > /dir0/dir1/out_1.txt
-./binary -k foo -k1=1.0 > /dir0/dir1/out_2.txt
-```
-
-## IV
-
-$ ls
-```
-out_16.txt out_678.txt other.txt binary
-```
-$ minstructor -o . "./binary -key=range(2)"
-```
-  ./binary -key=0 > out_679.txt
-  ./binary -key=1 > out_678.txt
-```
-
 # OPTIONS
 
--k *keyword0*,*keyword1*,...
-:   Comma seperated list of keywords the mcollector should search for.
+-k *keyword0*,*keyword1*, ...
+:   Comma seperated list of *keywords* the mcollector should search for.
     This disables the automatic detection of keywords.
 
 -o, --output *csvfile*
