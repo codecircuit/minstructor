@@ -489,8 +489,8 @@ def executeCmds(cmds)
 
 	cmds.each do |cmd|
 		puts "Executing: '#{cmd}'" if $options.verbose
-		%x(sleep #{$SLURMDELAY}) if $options.backend == :slurm
-		%x(#{cmd}) unless $options.dry
+		`sleep #{$SLURMDELAY}` if $options.backend == :slurm
+		`#{cmd}` unless $options.dry
 		pbar.increment unless $options.verbose
 	end
 	puts "Nothing has been executed; this has been a dry run" if $options.dry
