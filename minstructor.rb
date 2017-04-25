@@ -43,7 +43,8 @@ class OptPrs
 			opts.separator ""
 			opts.separator "Options:"
 
-			opts.on("-n <repetitions>", "Number every unique command is repeated") do |rep|
+			opts.on("-n <repetitions>", "Number every unique command " \
+			                            "is repeated") do |rep|
 				options.rep = rep.to_i
 			end
 
@@ -53,7 +54,8 @@ class OptPrs
 				options.opath = p
 			end
 
-			opts.on("-f", "Do not prompt. Be careful with this flag!") do |noprompt|
+			opts.on("-f", "Do not prompt. Be careful with " \
+			              "this flag!") do |noprompt|
 				options.noprompt = noprompt
 			end
 
@@ -88,12 +90,14 @@ class OptPrs
 			end
 
 			# Boolean switch.
-			opts.on_tail("-d", "--[no-]debug", "Debug mode; includes verbosity") do |d|
+			opts.on_tail("-d", "--[no-]debug", "Debug mode; " \
+			                   "includes verbosity") do |d|
 				options.debug = d
 			end
 
 			# Boolean switch.
-			opts.on_tail("--dry-run", "Just print all commands which would be executed") do |dr|
+			opts.on_tail("--dry-run", "Just print all commands which would " \
+			             "be executed") do |dr|
 				options.dry = dr
 			end
 
@@ -534,7 +538,8 @@ if __FILE__ == $0
 				     "#{t.strftime("%T")} (hh:mm:ss)"
 			end
 		end
-		puts "Here is an random excerpt of your in total #{expandedCmds.length} generated commands:"
+		puts "Here is an random excerpt of your in total " \
+		     "#{expandedCmds.length} generated commands:"
 		expandedCmds.sample(linesShowMax).each { |cmd| puts cmd }
 	else
 		puts "The Measurement Instructor generated the following commands for you:"
