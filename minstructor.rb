@@ -262,7 +262,7 @@ end
 def expandRangeExpr(str)
 	str.gsub!(/\s/, '')
 	type = identifyRangeExpr(str)
-	if  type != :list and type != nil # :list is a self defined type (see above)
+	if  type != :list && type != nil # :list is a self defined type (see above)
 		values = eval(str)
 		return values.map { |el| el.to_s }
 	elsif type == :list
@@ -272,7 +272,6 @@ def expandRangeExpr(str)
 		return str
 	end
 end
-
 
 # The frontend takes the cmd input with range expressions
 # E.g. "./bin -key0 val -key1 range( 3) -key2 [a,b,33] foo"
@@ -520,7 +519,7 @@ if __FILE__ == $0
 	end
 
 	linesShowMax = 15
-	if expandedCmds.length > linesShowMax and not $options.verbose
+	if expandedCmds.length > linesShowMax && !$options.verbose
 		if $options.backend == :slurm
 			estSec = expandedCmds.length * $SLURMDELAY
 			if estSec / 3600.0 > 24.0
