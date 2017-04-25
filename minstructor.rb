@@ -44,7 +44,7 @@ class OptPrs
 			opts.separator "Options:"
 
 			opts.on("-n <repetitions>", "Number every unique command is repeated") do |rep|
-				options.rep = rep.to_i()
+				options.rep = rep.to_i
 			end
 
 			opts.on("-o", "--output-dir <pth/to/output>[/personal_prefix_]",
@@ -339,7 +339,7 @@ def frontend(userInput)
 			partitionAll.call(e, k)
 		}
 		DEBUG("MATCH TO EXPANSION #{k} => #{v}")
-		partitioned.replace(partitioned.flatten())
+		partitioned.replace(partitioned.flatten)
 	}
 
 	# Now we want to replace the collected expansions
@@ -392,7 +392,7 @@ class OutputFileNameIterator
 		DEBUG("  - Search for the first free output file index")
 		DEBUG("    to prevent a file overwrite...")
 		@prefix = File.expand_path(@prefix)
-		@prefix.freeze()
+		@prefix.freeze
 		outFileReg = /#{File.basename(@prefix)}(#{$integerRegex})\.txt/
 		usedIndices = [-1] # -1 results in default start index of 0
 		Dir.foreach(outDir) do |dirMem|
@@ -401,22 +401,22 @@ class OutputFileNameIterator
 				md = dirMem.match(outFileReg)
 				if md != nil
 				DEBUG("    - match data = #{md}")
-				usedIndices += [dirMem.match(outFileReg)[1].to_i()]
+				usedIndices += [dirMem.match(outFileReg)[1].to_i]
 				end
 			end
 		end
-		@id = usedIndices.max() + 1
+		@id = usedIndices.max + 1
 		DEBUG("  - uses start index = #{@id}")
 		DEBUG("[-] OutputFileNameIterator()")
 	end # end initialize
 
-	def empty?()
+	def empty?
 		return @prefix == nil
 	end
 
-	def next()
+	def next
 		return "" if @prefix == nil
-		currOutFilePath = @prefix + @id.to_s() + ".txt"
+		currOutFilePath = @prefix + @id.to_s + ".txt"
 		@id += 1
 		return currOutFilePath
 	end
@@ -435,7 +435,7 @@ def expandCmd(parsedCmds, outFileName_it, backend=:shell)
 	DEBUG("  - input = #{parsedCmds}")
 
 	parsedCmds = combinations(parsedCmds)
-	parsedCmds.map! { |cmd| cmd.join() }
+	parsedCmds.map! { |cmd| cmd.join }
 
 	DEBUG("  - cmds after combinations #{parsedCmds}")
 
@@ -450,14 +450,14 @@ def expandCmd(parsedCmds, outFileName_it, backend=:shell)
 		DEBUG("  - you choose the slurm backend")
 		parsedCmds.map! do |cmd|
 			cmd = "sbatch " + "#{$options.backendArgs} " + '--wrap "' + cmd + '"'
-			cmd << " -o #{outFileName_it.next()}" unless outFileName_it.empty?
+			cmd << " -o #{outFileName_it.next}" unless outFileName_it.empty?
 		end
 	end
 	if backend == :shell
 		DEBUG("  - you choose the shell backend")
 		if not outFileName_it.empty?
 			parsedCmds.map! do |cmd|
-				cmd += " > #{outFileName_it.next()}"
+				cmd += " > #{outFileName_it.next}"
 			end
 		end
 	end
@@ -480,7 +480,7 @@ end
 def executeCmds(cmds)
 	# If not verbose we want to have a progressbar
 	if not $options.verbose
-	pbar = ProgressBar.create()
+	pbar = ProgressBar.create
 	pbar.total = cmds.length
 	# pbar.title = <title> # to set the title of the progressbar
 	end
@@ -489,7 +489,7 @@ def executeCmds(cmds)
 		puts "Executing: '#{cmd}'" if $options.verbose
 		%x(sleep #{$SLURMDELAY}) if $options.backend == :slurm
 		%x(#{cmd}) unless $options.dry
-		pbar.increment() unless $options.verbose
+		pbar.increment unless $options.verbose
 	end
 	puts "Nothing has been executed; this has been a dry run" if $options.dry
 end
@@ -520,9 +520,9 @@ if __FILE__ == $0
 	end
 
 	linesShowMax = 15
-	if expandedCmds.length() > linesShowMax and not $options.verbose
+	if expandedCmds.length > linesShowMax and not $options.verbose
 		if $options.backend == :slurm
-			estSec = expandedCmds.length() * $SLURMDELAY
+			estSec = expandedCmds.length * $SLURMDELAY
 			if estSec / 3600.0 > 24.0
 				puts "Submitting the jobs will take more than 24h."
 			else
@@ -531,7 +531,7 @@ if __FILE__ == $0
 				puts "The jobs will approximately be submitted in #{t.strftime("%T")} (hh:mm:ss)"
 			end
 		end
-		puts "Here is an random excerpt of your in total #{expandedCmds.length()} generated commands:"
+		puts "Here is an random excerpt of your in total #{expandedCmds.length} generated commands:"
 		expandedCmds.sample(linesShowMax).each { |cmd| puts cmd }
 	else
 		puts "The Measurement Instructor generated the following commands for you:"
@@ -542,7 +542,7 @@ if __FILE__ == $0
 		print "Do you want to execute the generated commands? [y/N]: "
 		# We need to clear the ARGV array, because `gets` does not
 		# query for user input, if the array is still not empty
-		ARGV.clear()
+		ARGV.clear
 		answer = gets.chomp
 		if not %w[Yes Y y yes].any? {|key| answer == key}
 			puts "Going to exit"
