@@ -365,7 +365,9 @@ end
 
 # This class determines the correct output file naming
 # and represents an enumerator, which returns the current output
-# file name
+# file name. The output file names are enumerated consecutively,
+# but without overwriting any existing file. This the first
+# index is the first free index.
 class OutputFileNameIterator
 	def initialize(opath)
 		DEBUG("[+] OutputFileNameIterator(opath=#{opath})")
@@ -512,12 +514,7 @@ if __FILE__ == $0
 		parsed += [frontend(cmd)]
 	end
 
-	# OUTPUT FILE NAMING
-	# 1. if /output/path is a directory then name the output files
-	#    /output/path/out_0.txt, /output/path/out_1.txt,...
-	# 2. if output path = /foo/bar/myprefix and /foo/bar/myprefix does not
-	#    exist, but /foo/bar is a directory then name the output files
-	#    /foo/bar/myprefix_0.txt, /foo/bar/myprefix_1.txt,...
+	# Get output file naming
 	outFileName_it = OutputFileNameIterator.new($options.opath)
 
 	expandedCmds = []
