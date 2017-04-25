@@ -151,7 +151,7 @@ def linspace(s, e, num=50, precision=12)
 	res = [s]
 	step = (e - s) / (num - 1.0)
 	acc = s + step
-	for i in (0...num-1)
+	(0...num-1).each do
 		res.push(acc.round(precision))
 		acc += step
 	end
@@ -291,7 +291,7 @@ def frontend(userInput)
 	# them immediately, as we would change the underlaying container
 	# while iterating over it, which results in undefined behaviour.
 	matchToExpansion = {}
-	$regexOfRangeExpr.each_pair do |k,reg|
+	$regexOfRangeExpr.each_pair do |k, reg|
 		DEBUG("CHECKING THE KEY #{k} WITH REGEX #{reg}")
 		if k != :list # lists must be treated separately
 			strRanges = userInput.scan(reg)
@@ -333,7 +333,7 @@ def frontend(userInput)
 	# Input = ["./bin -key0 bla -key1 range(3 ) -key2 [a,b,33 ]"]
 	# Output = ["./bin -key0 bla -key1 ", "range(3 )", "-key2 ", "[a,b,33 ]"]
 	partitioned = [userInput]
-	matchToExpansion.each_pair { |k,v|
+	matchToExpansion.each_pair { |k, v|
 		partitioned.map!{ |e|
 			partitionAll.call(e, k)
 		}
