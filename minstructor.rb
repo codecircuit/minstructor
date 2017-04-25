@@ -135,7 +135,7 @@ def range(s, e=nil, i=1)
 	end
 
 	i = i.round
-	return (s...e).step(i).to_a
+	(s...e).step(i).to_a
 end
 
 # start, end, num values, floating point precision
@@ -156,14 +156,14 @@ def linspace(s, e, num=50, precision=12)
 		acc += step
 	end
 
-	return res
+	res
 end
 
 # start, end, number of values, base, floating point precision
 # numpy like logspace
 def logspace(s, e, num=50, base=10.0, precision=6)
 	exponents = linspace(s, e, num)
-	return exponents.map { |exp| (base**exp).round(precision) }
+	exponents.map { |exp| (base**exp).round(precision) }
 end
 
 ##############################
@@ -187,7 +187,7 @@ def combinations(l)
 	# [[a, c, e, [7, 8]], [a, d, e, [7,8]]]
 	expand = ->(list) {
 		res = []
-		list.each_index { |i| 
+		list.each_index do |i| 
 			if list[i].class == Array
 				list[i].each { |e|
 					copy = Array.new(list)
@@ -196,7 +196,7 @@ def combinations(l)
 				}
 				return res
 			end
-		}
+		end
 	}
 
 	# Helper function which returns true if there is
@@ -252,7 +252,8 @@ def identifyRangeExpr(str)
 	$regexOfRangeExpr.each do |key, regex|
 		return key if str.index(regex) != nil
 	end
-	return nil
+
+	nil
 end
 
 # Takes one string and returns a list of strings
@@ -350,7 +351,8 @@ def frontend(userInput)
 
 	DEBUG("  - Returns = #{expanded}")
 	DEBUG("[-] frontend()")
-	return expanded
+
+	expanded
 end
 
 ###########
@@ -410,14 +412,15 @@ class OutputFileNameIterator
 	end # end initialize
 
 	def empty?
-		return @prefix == nil
+		@prefix == nil
 	end
 
 	def next
 		return "" if @prefix == nil
 		currOutFilePath = @prefix + @id.to_s + ".txt"
 		@id += 1
-		return currOutFilePath
+
+		currOutFilePath
 	end
 end
 
@@ -470,7 +473,7 @@ def expandCmd(parsedCmds, outFileName_it, backend=:shell)
 	parsedCmds.map! { |cmd| cmd.squeeze(" ") }
 
 	DEBUG("[-] expandCmd()")
-	return parsedCmds
+	parsedCmds
 end
 
 ##################################
