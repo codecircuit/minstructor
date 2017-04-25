@@ -189,11 +189,11 @@ def combinations(l)
 		res = []
 		list.each_index do |i| 
 			if list[i].class == Array
-				list[i].each { |e|
+				list[i].each do |e|
 					copy = Array.new(list)
 					copy[i,1] = e
 					res.push(copy)
-				}
+				end
 				return res
 			end
 		end
@@ -334,13 +334,13 @@ def frontend(userInput)
 	# Input = ["./bin -key0 bla -key1 range(3 ) -key2 [a,b,33 ]"]
 	# Output = ["./bin -key0 bla -key1 ", "range(3 )", "-key2 ", "[a,b,33 ]"]
 	partitioned = [userInput]
-	matchToExpansion.each_pair { |k, v|
-		partitioned.map!{ |e|
+	matchToExpansion.each_pair do |k, v|
+		partitioned.map! do |e|
 			partitionAll.call(e, k)
-		}
+		end
 		DEBUG("MATCH TO EXPANSION #{k} => #{v}")
 		partitioned.replace(partitioned.flatten)
-	}
+	end
 
 	# Now we want to replace the collected expansions
 	expanded = partitioned
