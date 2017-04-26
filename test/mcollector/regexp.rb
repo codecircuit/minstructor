@@ -159,18 +159,26 @@ class TC_regexp < Test::Unit::TestCase
 			IMPORTANT but without link symbol
 			 SomeInt = 465768 
 			 TakeWithUnits = "9981MEGAUNIT"
+			   again but not recognized FooBar: "nope"
 		eos
 
 		check = ->(key, expectedValue) {
 			md = str.match(getKeyValueReg(key))
-			assert_equal(md.captures.select {|c| c != nil}[0], expectedValue)
+			assert_equal(md["value"], expectedValue)
 		}
 
-		check.call("Keyword0", "1654")
-		check.call("FooBar", '"bar baz"')
-		check.call("IMPORTANT", "+61.65e-77")
-		check.call("SomeInt", "465768")
-		check.call("TakeWithUnits", '"9981MEGAUNIT"')
+		key2val = {
+			"Keyword0" => "1654",
+			"FooBar" => '"bar baz"',
+			"IMPORTANT" => "+61.65e-77",
+			"SomeInt" => "465768",
+			"TakeWithUnits" => '"9981MEGAUNIT"'
+		}
+
+		key2val.each_pair do |key, val|
+			check.call(key, val)
+		end
+
 	end
 
 end
