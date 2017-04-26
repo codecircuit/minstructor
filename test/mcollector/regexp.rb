@@ -154,17 +154,18 @@ class TC_regexp < Test::Unit::TestCase
 		str = <<-eos
 			uditra en Keyword0 = 1654GB/s uditae
 			   \t uitae FooBar: "bar baz"
-			   - other IMPORTANT ----> +61.65e-77Units uditar
+			   - other IMPORTANT    ---->   +61.65e-77Units uditar
 			naed turl nedut rnle dtune dluvtr ned
 			IMPORTANT but without link symbol
 			 SomeInt = 465768 
 			 TakeWithUnits = "9981MEGAUNIT"
 			   again but not recognized FooBar: "nope"
+			   someK   ==>  00.1234
 		eos
 
 		check = ->(key, expectedValue) {
 			md = str.match(getKeyValueReg(key))
-			assert_equal(md["value"], expectedValue)
+			assert_equal(expectedValue, md["value"])
 		}
 
 		key2val = {
@@ -172,7 +173,8 @@ class TC_regexp < Test::Unit::TestCase
 			"FooBar" => '"bar baz"',
 			"IMPORTANT" => "+61.65e-77",
 			"SomeInt" => "465768",
-			"TakeWithUnits" => '"9981MEGAUNIT"'
+			"TakeWithUnits" => '"9981MEGAUNIT"',
+			"someK" => "00.1234",
 		}
 
 		key2val.each_pair do |key, val|

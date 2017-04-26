@@ -118,8 +118,8 @@ $numReg = /[-+]?[[:digit:]]+(?:\.[[:digit:]]+)?#{$expReg}?/
 $unitMaxSize        = 10 # maximum size of a unit, e.g. `Byte` has 4
 $unitReg          = /[^\s]{1,#{$unitMaxSize}}/
 
-# regex of assignment symbols
-$linkReg = /=|-+>|=+>|:/ # divided by logical OR
+# regex of assignment symbols; the order is crucial; do not change it
+$linkReg = /-+>|=+>|=|:/ # divided by logical OR
 
 # numerical value
 $quantityReg = /(?<value>#{$numReg})#{$unitReg}?/
