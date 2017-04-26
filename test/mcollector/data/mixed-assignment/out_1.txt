@@ -1,0 +1,8 @@
+## Some random output
+  - important-key7:1654
+    importantKey8:    	 -0.468e-100  seconds
+	 stringKey   =   bar  16674  whateverUnit
+ --- floatKey --> -060.684  the answer to everything is 42
+  smallkeyword  =+7.68416e+684465 woow that is a large number
+  uiter nuide nuidat enudle nudvrlne durlne uia
+more important stuff here

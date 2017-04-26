@@ -79,4 +79,24 @@ class TestCLI < Test::Unit::TestCase
 		assert(actualResult.include?("key0,key1"))
 		md = actualResult.match(expReg)
 	end
+
+	def test_mixedAssignment
+		dataDir = $dataDirPrefix + "mixed-assignment"
+		# The lines which must be in the correct output
+		lines = ["-86748,+0.6874e-08,foo,00.68748",
+		         "1654,-0.468e-100,bar,-060.684",
+		         "0165498,38.4e+1,BAAZ,+7.065",
+		         "-16846,1.468e7,foota,-1886.0648461"]
+		# the head of the CSV output
+		head = "important-key7,importantKey8,stringKey,floatKey"
+
+		# the mcollector should output the CSV table to stdout
+		# if we do not specify an output file
+		actualResult = %x(#{$mcollector} #{dataDir}/*.txt\
+		                  -k important-key7,importantKey8,stringKey,floatKey)
+		assert(actualResult.lines()[0].include?(head))
+		lines.each do |l|
+			assert(actualResult.include?(l))
+		end
+	end
 end
