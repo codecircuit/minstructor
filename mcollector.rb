@@ -1,24 +1,20 @@
 #!/usr/bin/ruby
 
-## Measurement Collector
-#
-# If you have several output files of a program run and you want
-# to collect the data of all files into one .csv file, this is
-# the appropriate program for you.
-
 require 'optparse'
 require 'ostruct'
 require 'csv'
 
 class OptPrs
 	def self.parse(args)
-		# The options specified on the command line will be collected in *options*.
+		# The options specified on the command
+		# line will be collected in *options*.
 		# We set default values here.
 		options = OpenStruct.new
 		options.verbose = false
 		options.dry = false
 		options.noprompt = false
 		options.keywords = []
+		options.nokeywords = []
 		options.opath = ""
 		options.debug = false
 		options.sort = false
@@ -41,19 +37,20 @@ class OptPrs
 			opts.banner = "Usage: mcollector.rb [OPTIONS] FILE0 FILE1 ..."
 
 			opts.separator ""
-			opts.separator "Mandatory:"
+			opts.separator "Optional:"
 
-			opts.on("-k", "--keywords <key0,key1,...>", Array) do |keywords|
+			opts.on("-k", "--keywords WORD0,WORD1,...", Array) do |keywords|
 				options.keywords = keywords
 			end
 
-			opts.separator ""
-			opts.separator "Optional:"
+			opts.on("-i KEY0,KEY1,...", "--no-keywords WORD0,WORD1,... ", Array) do |nokeywords|
+				options.nokeywords = nokeywords
+			end
 
-			opts.on("-o", "--output <pth/to/output/file.csv>",
-			        ".csv file to write the collected data",
-			        "If no file is specified the program will stream",
-			        "its output to stdout") do |p|
+			opts.on("-o", "--output CSVFILE",
+			        "CSV file to write the collected data",
+			        "If no file is specified the program will",
+			        "stream its output to stdout") do |p|
 				options.opath = p
 			end
 
@@ -88,7 +85,7 @@ class OptPrs
 
 		end
 		opt_parser.set_summary_indent("  ")
-		opt_parser.set_summary_width(30)
+		opt_parser.set_summary_width(34)
 		opt_parser.parse!(args)
 		options
 	end  # parse()
