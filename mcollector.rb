@@ -142,8 +142,8 @@ $valReg = /#{$quotationReg}|#{$quantityReg}|#{$wordReg}/
 def getKeyValueReg(keyword=nil)
 	if keyword != nil
 		/(?<keyword>#{keyword})\s*#{$linkReg}\s*#{$valReg}/
-	else
-		/(?<keyword>[_\-[:alnum:]]+)\s*#{$linkReg}\s*#{$valReg}/
+	else                       # '+?' = non greedy '+'
+		/(?<keyword>[_\-[:alnum:]]+?)\s*#{$linkReg}\s*#{$valReg}/
 	end
 end
 
@@ -252,6 +252,7 @@ def gather(df_it, options = {})
 				allkeywords.add(key)
 				c = md.post_match # remove match and part before match
 				row[key] = val
+				md = c.match(getKeyValueReg) # function call (see above)
 			end
 			# per default each row ends with the data file path
 			row["data-file-path"] = pth
