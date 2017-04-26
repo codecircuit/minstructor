@@ -345,12 +345,6 @@ if __FILE__ == $0
 		end
 	end
 
-	# CHECK IF KEYWORDS ARE GIVEN
-	if $options.keywords.empty?
-		STDERR.puts "ERROR: You did not give any keyword!"
-		exit 1
-	end
-
 	# CHECK IF DATA FILES ARE AVAILABLE
 	if $options.dfiles.empty?
 		STDERR.puts "ERROR: You did not give any data file!"
