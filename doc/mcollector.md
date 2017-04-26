@@ -10,7 +10,7 @@ mcollector - measurement collector
 
 # SYNOPSIS
 
-**mcollector** [**-k** *keyword*[,...]] [**-o** *csvfile*] [**-f**] *file0* *file1* ...
+**mcollector** [**-k** *keyword*[,...]] [**-i** *keyword*[,...]] [**-o** *csvfile*] [**-f**] *file0* *file1* ...
 
 # DESCRIPTION
 
