@@ -3,6 +3,7 @@
 require 'optparse'
 require 'ostruct'
 require 'csv'
+require 'set'
 
 class OptPrs
 	def self.parse(args)
@@ -199,6 +200,7 @@ end # DataFileIterator
 # every keyword. When actually writing the CSV file, the data format
 # is beneficial in the sense of memory access.
 def gather(df_it, options = {})
+	DEBUG("[+] gather()")
 
 	options = {
 		:keywords => [],
@@ -218,15 +220,19 @@ def gather(df_it, options = {})
 	}
 
 	res = []
-	allKeywords = Set.new(options[:keywords])
+	allkeywords = Set.new(options[:keywords])
+	allkeywords.add("data-file-path")
 	filesProcessed = 0
 
 	# User gave keywords on the command line
 	if !options[:keywords].empty?
+		DEBUG("  - User gave keywords = #{options[:keywords]}")
 		df_it.each_content_with_pth do |c, pth|
 			row = {}
 			options[:keywords].each do |key|
+				DEBUG("    - now searching for key: #{key}")
 				val = grepValue.call(key, c)
+				DEBUG("    - grepValue = #{val}")
 				row[key] = val unless val == nil
 			end
 			# per default each row ends with the data file path
@@ -243,7 +249,7 @@ def gather(df_it, options = {})
 			while md != nil
 				val = md["value"]
 				key = md["keyword"]
-				allKeywords.add(key)
+				allkeywords.add(key)
 				c = md.post_match # remove match and part before match
 				row[key] = val
 			end
@@ -255,21 +261,39 @@ def gather(df_it, options = {})
 	end
 
 	VERBOSE("  - I processed #{filesProcessed} data files")
-	return allKeywords, res
+	return allkeywords, res
+	DEBUG("[-] gather()")
 end
 
 # either output to stdout or write to file
-def outputCSV(opath, csvRows, keywords, options = {})
+#  - opath = path to CSV file
+#  - csvRowHashes = array of hashes containing the data of each row
+#  - allkeywords = set of all keywords in csvRowHashes
+def outputCSV(opath, csvRowHashes, allkeywords, options = {})
+	DEBUG("[+] outputCSV()")
+	DEBUG("  - csvRowHashes = #{csvRowHashes}")
 
 	options = {
 		:sort => false,
 	}.merge(options)
 
+	# first we convert to simple csvRows
+	csvRows = []
+	DEBUG("  - converting to simple arrays")
+	csvRowHashes.each do |rowHash|
+		rowHash.default = "N/A"
+		currRow = []
+		allkeywords.each do |key|
+			currRow.push(rowHash[key])
+		end
+		csvRows.push(currRow)
+	end
+
 	csvRows.sort! if options[:sort]
 
 	# add the header
-	csvStr = "#{keywords.join(',')},data-file-path\n"
-	# we take the index, to prevent the sublists from being expanded
+	csvStr = "#{allkeywords.to_a.join(',')}\n"
+
 	DEBUG("  - CSV ROWS = #{csvRows}")
 	csvRows.each_with_index do |row, i|
 		DEBUG("  - ROW = #{row}")
@@ -280,6 +304,7 @@ def outputCSV(opath, csvRows, keywords, options = {})
 	# WRITE TO STDOUT
 	if opath.empty?
 		puts csvStr
+		DEBUG("[-] outputCSV()")
 		return
 	end
 
@@ -287,6 +312,7 @@ def outputCSV(opath, csvRows, keywords, options = {})
 	f = File.open(opath, mode="w")
 	f.write(csvStr)
 	f.close
+	DEBUG("[-] outputCSV()")
 end
 
 
@@ -340,16 +366,16 @@ if __FILE__ == $0
 
 	# GREP ALL VALUES FROM FILE CONTENTS
 	timestamp = Time.now
-	csvRows = gather(df_it,
-	                 :keywords => $options.keywords,
-	                 :nokeywords => $options.nokeywords)
+	allkeywords, csvRowHashes = gather(df_it,
+	                              :keywords => $options.keywords,
+	                              :nokeywords => $options.nokeywords)
 	gatherT = Time.now - timestamp
 	VERBOSE("  - processing the files took #{gatherT} seconds")
 
 	# OUTPUT THE CSV DATA
 	VERBOSE("  - sorting flag = #{$options.sort}")
 	timestamp = Time.now
-	outputCSV($options.opath, csvRows, $options.keywords, :sort => $options.sort)
+	outputCSV($options.opath, csvRowHashes, allkeywords, :sort => $options.sort)
 	csvT = Time.now - timestamp
 	VERBOSE("  - outputting the csv data took #{csvT} seconds")
 end
