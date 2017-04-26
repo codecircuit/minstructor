@@ -121,24 +121,29 @@ $unitReg          = /[^\s]{1,#{$unitMaxSize}}/
 $linkReg = /=|-+>|=+>|:/ # divided by logical OR
 
 # numerical value
-$quantityReg = /(#{$numReg})#{$unitReg}?/
+$quantityReg = /(?<value>#{$numReg})#{$unitReg}?/
 
 # quoted value
-$quotationReg = /("[^"]+")/
+$quotationReg = /(?<value>"[^"]+")/
 
 # simple word value
-$wordReg = /([^\s]+)/
+$wordReg = /(?<value>[^\s]+)/
 
 # general value regex
 $valReg = /#{$quotationReg}|#{$quantityReg}|#{$wordReg}/
 
-# this function returns a regex which matches any
-# <keyword> <space> <link> <space> <value>
-# constellations. Moreover the <value> is captured,
-# thus can be obtained by taking the first non nil
-# capture object
-def getKeyValueReg(keyword)
-	/#{keyword}\s*#{$linkReg}\s*#{$valReg}/
+# This function returns a regex which matches any KEYWORD SPACE LINK
+# SPACE VALUE constellations. Moreover the VALUE and KEYWORD are
+# captured, and can be obtained by matchdata["value"], or matchdata["keyword"].
+# If the keyword is omitted, it is assumed that the keyword can consist of
+# [_-[:alnum:]], which are numbers, alphabetic characters, underscore and
+# minus.
+def getKeyValueReg(keyword=nil)
+	if keyword != nil
+		/(?<keyword>#{keyword})\s*#{$linkReg}\s*#{$valReg}/
+	else
+		/(?<keyword>[_\-[:alnum:]]+)\s*#{$linkReg}\s*#{$valReg}/
+	end
 end
 
 ##################
@@ -185,42 +190,72 @@ class DataFileIterator
 	end
 end # DataFileIterator
 
-# Takes a DataFileIterator iterates over the contents of the
+# Takes a DataFileIterator to iterate over the contents of the
 # files and searches for the values assigned to the keywords.
-# Returns: [[<csv first row>], [<csv second row>], ...]
-# which is basically the CSV data without the headline.
-def gather(df_it, keywords)
-	if keywords.empty?
-		STDERR.puts "I got no keywords to search for!"
-		exit 1
-	end
+# Options: - keywords = [WORD0, WORD1, ...] search for given keywords only
+#          - nokeywords = [WORD0, WORD1, ...] ignore these keywords
+# Returns: ALLKEYWORDS, [{ KEYWORD0 => A, KEYWORD1 => Z, ... }, ...]
+# I choose that result format, because not every file contains
+# every keyword. When actually writing the CSV file, the data format
+# is beneficial in the sense of memory access.
+def gather(df_it, options = {})
+
+	options = {
+		:keywords => [],
+		:nokeywords => [],
+	}.merge(options)
+
+	# nokeywords take precedence over keywords
+	options[:keywords] -= options[:nokeywords]
 
 	# take a keyword and a string and search for the first
 	# part, which matches the Regexp. From that match we
 	# want to have the first capture, which is not nil
 	grepValue = ->(key, str) {
 		md = str.match(getKeyValueReg(key))
-		return md.captures.select {|c| c != nil}[0] if md != nil
+		return md["value"] if md != nil
 		return nil
 	}
 
 	res = []
+	allKeywords = Set.new(options[:keywords])
 	filesProcessed = 0
 
-	df_it.each_content_with_pth do |c, pth|
-		row = [] 
-		keywords.each do |key|
-			val = grepValue.call(key, c)
-			row += ["N/A"] if val == nil
-			row += [val]   unless val == nil
+	# User gave keywords on the command line
+	if !options[:keywords].empty?
+		df_it.each_content_with_pth do |c, pth|
+			row = {}
+			options[:keywords].each do |key|
+				val = grepValue.call(key, c)
+				row[key] = val unless val == nil
+			end
+			# per default each row ends with the data file path
+			row["data-file-path"] = pth
+			res.push(row)
+			filesProcessed += 1
 		end
-		row += [pth] # per default each row ends with the data file path
-		res += [row] # row must be enclosed to preserve the sublist structure
-		filesProcessed += 1
+
+	# User gave no keywords on the command line
+	else
+		df_it.each_content_with_pth do |c, pth|
+			md = c.match(getKeyValueReg) # function call (see above)
+			row = {}
+			while md != nil
+				val = md["value"]
+				key = md["keyword"]
+				allKeywords.add(key)
+				c = md.post_match # remove match and part before match
+				row[key] = val
+			end
+			# per default each row ends with the data file path
+			row["data-file-path"] = pth
+			filesProcessed += 1
+			res.push(row)
+		end
 	end
 
 	VERBOSE("  - I processed #{filesProcessed} data files")
-	res
+	return allKeywords, res
 end
 
 # either output to stdout or write to file
@@ -305,7 +340,9 @@ if __FILE__ == $0
 
 	# GREP ALL VALUES FROM FILE CONTENTS
 	timestamp = Time.now
-	csvRows = gather(df_it, $options.keywords)
+	csvRows = gather(df_it,
+	                 :keywords => $options.keywords,
+	                 :nokeywords => $options.nokeywords)
 	gatherT = Time.now - timestamp
 	VERBOSE("  - processing the files took #{gatherT} seconds")
 
