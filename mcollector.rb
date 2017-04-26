@@ -15,7 +15,7 @@ class OptPrs
 		options.dry = false
 		options.noprompt = false
 		options.keywords = []
-		options.nokeywords = []
+		options.nokeywords = Set.new
 		options.opath = ""
 		options.debug = false
 		options.sort = false
@@ -44,8 +44,8 @@ class OptPrs
 				options.keywords = keywords
 			end
 
-			opts.on("-i KEY0,KEY1,...", "--no-keywords WORD0,WORD1,... ", Array) do |nokeywords|
-				options.nokeywords = nokeywords
+			opts.on("-i", "--ignore-keywords WORD0,WORD1,... ", Array) do |nokeywords|
+				options.nokeywords = Set.new(nokeywords)
 			end
 
 			opts.on("-o", "--output CSVFILE",
@@ -207,8 +207,11 @@ def gather(df_it, options = {})
 		:nokeywords => [],
 	}.merge(options)
 
+	DEBUG("  - keywords = #{options[:keywords]}")
+	DEBUG("  - nokeywords = #{options[:nokeywords].to_a}")
+
 	# nokeywords take precedence over keywords
-	options[:keywords] -= options[:nokeywords]
+	options[:keywords] -= options[:nokeywords].to_a
 
 	# take a keyword and a string and search for the first
 	# part, which matches the Regexp. From that match we
@@ -221,7 +224,6 @@ def gather(df_it, options = {})
 
 	res = []
 	allkeywords = Set.new(options[:keywords])
-	allkeywords.add("data-file-path")
 	filesProcessed = 0
 
 	# User gave keywords on the command line
@@ -246,12 +248,16 @@ def gather(df_it, options = {})
 		df_it.each_content_with_pth do |c, pth|
 			md = c.match(getKeyValueReg) # function call (see above)
 			row = {}
+			# Now we search iteratively for matching key value expressions.
+			# In each step we delete the string part with and before the match.
 			while md != nil
 				val = md["value"]
 				key = md["keyword"]
-				allkeywords.add(key)
+				if !options[:nokeywords].include?(key) # ignore some keys
+					allkeywords.add(key)
+					row[key] = val
+				end
 				c = md.post_match # remove match and part before match
-				row[key] = val
 				md = c.match(getKeyValueReg) # function call (see above)
 			end
 			# per default each row ends with the data file path
@@ -260,6 +266,8 @@ def gather(df_it, options = {})
 			res.push(row)
 		end
 	end
+
+	allkeywords.add("data-file-path")
 
 	VERBOSE("  - I processed #{filesProcessed} data files")
 	return allkeywords, res
@@ -360,6 +368,7 @@ if __FILE__ == $0
 	df_it = DataFileIterator.new(:dfiles => $options.dfiles)
 
 	# GREP ALL VALUES FROM FILE CONTENTS
+	DEBUG("  - nokeywords = #{$options.nokeywords}")
 	timestamp = Time.now
 	allkeywords, csvRowHashes = gather(df_it,
 	                              :keywords => $options.keywords,
