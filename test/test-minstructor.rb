@@ -5,5 +5,5 @@
 # front of the require statement
 
 require 'test/unit'
-require './minstructor/range-functions.rb'
-#require './minstructor/cli.rb'
+require_relative './minstructor/range-functions.rb'
+require_relative './minstructor/cli.rb'
