@@ -16,46 +16,20 @@ mcollector - measurement collector
 
 You give simple text *files* to the mcollector and he searches for
 typical assignment patterns within that *files* to generate a CSV table.
-This is reasonable if each files' content assigns each keyword at
+This is reasonable if the content of each file assigns each keyword at
 most once.
 
-Without the **-k** flag the measurement collector tries to search by itself
-for typical key value assignment patterns in the given files. With the
-use of ruby regular expressions the mcollector is able to understand
-key value assignments like:
-
-TODO: move to examples
-```
-...
-time =  16546ms  # time for calculation
-scheme-A --> fast_scheme
-throughput ===>   164.468e+77GB/s # I wish I had it
-otherKey: 16578 Steps
-...
-```
-
-In general a key value assignment expression contains of *KEY* *LINK* *VALUE*.
-The link symbol must exist and is not allowed to be a space character. Between
-the three expressions there can be a variable amount of tab and space
-characters. For the regular expressions themselves you should look into
-the source code.
+Without the **-k** flag the measurement collector tries to search by itself for
+typical key value assignment patterns in the given text files (see **EXAMPLE**
+below).  In general a key value assignment expression is composed of *KEY* *LINK*
+*VALUE*.  The link symbol (:,=>,->,=) must exist and is not allowed to be a space character.
+Between the three expressions there can be a variable amount of tab and space
+characters. If a file does not contain a keyword assignment, the value is substituted
+with "N/A". Look into the source code to see the regular expressions I used
+for parsing key value assignments.
 
 To get proper output *files* from your application you can use
 the **minstructor**(1) to achieve that efficiently.
-
-# EXAMPLE
-
-## I
-**TODO: prevent line break here**  
-`$ minstructor "./binary -k0 foo -k1=range(3) -k2 [a,b]"`
-```
-./binary -k0 foo -k1=0 -k2 a
-./binary -k0 foo -k1=0 -k2 b
-./binary -k0 foo -k1=1 -k2 a
-./binary -k0 foo -k1=1 -k2 b
-./binary -k0 foo -k1=2 -k2 a
-./binary -k0 foo -k1=2 -k2 b
-```
 
 # OPTIONS
 
@@ -81,18 +55,38 @@ the **minstructor**(1) to achieve that efficiently.
 :   Sort the CSV data.
 
 -h, \--help
-:   Show this help message
+:   Show this help message.
 
 -v, \--[no-]verbose
-:   Run verbosely
+:   Run verbosely.
 
 -d, \--[no-]debug
-:   Debug mode; includes verbosity
+:   Run in Debug mode (includes verbosity).
 
-# DEFAULTS
+# EXAMPLE
+Assume there are several output files in the current directory, which
+have similar content:
 
-Execute each unique command once with the shell backend
-and without producing any output files.
+```
+$ pwd
+  /data
+$ ls
+  out_0.txt out_1.txt ...
+$ cat out_0.txt
+  ...
+  time =  16546ms  # time for calculation
+  scheme-A --> fast_scheme
+  throughput ===>   164.468e+77GB/s # I wish I had it
+  key2: 16578 Steps
+  ...
+$ cat out_321.txt
+  ERROR: this run has not been successful
+$ mcollector -i ERROR ./out_*.txt
+  time,scheme-A,throughput,key2,data-file-path
+  16546,fast_scheme,164.468e+77,16578,/data/out_0.txt
+  16574,fast_scheme,16.48e+65,16873,/data/out_1.txt
+  ...
+```
 
 # SEE ALSO
-**mcollector**(1), **byobu**(1)
+**minstructor**(1), **byobu**(1)
