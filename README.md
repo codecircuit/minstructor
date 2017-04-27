@@ -59,7 +59,7 @@ You can collect your results, which are saved in output files, in a CSV table
 with:
 
 ```
-mcollector -k key0,key1,key2,footime,bar-val,no-key ./results/out_*
+mcollector ./results/out_*
 ``` 
 
 The `mcollector` is able to recognize certain assignment patterns, like they are
@@ -70,11 +70,14 @@ in several output files, an example CSV output of the `mcollector` could
 look like:
 
 ```
-keyword0,keyword1,keyword2,footime,bar-val,no-keyword,data-file-path
-foo,2,"long string a",0.4687,16547,N/A,/abs/path/results/out_0.txt
-foo,1,"long string b",0.4779,1756,N/A,/abs/path/results/out_1.txt
-foo,0,"long string c",0.4864,1654,N/A,/abs/path/results/out_2.txt
+key0,key1,key2,footime,bar-val,data-file-path
+foo,2,"long string a",0.4687,16547,/abs/path/results/out_0.txt
+foo,1,"long string b",N/A,1756,/abs/path/results/out_1.txt
+foo,0,"long string c",0.4864,1654,/abs/path/results/out_2.txt
 ```
+
+If a file does not contain a keyword assignment, which is found in
+other files, the value is substituted with N/A.
 
 ## minstructor VS google-benchmark-lib
 Why I prefer `minstructor` in comparison to the Google Benchmark library
