@@ -43,19 +43,18 @@ class OptPrs
 			opts.separator ""
 			opts.separator "Options:"
 
-			opts.on("-n <repetitions>", "Number every unique command " \
+			opts.on("-n NUM", "Number every unique command " \
 			                            "is repeated") do |rep|
 				options.rep = rep.to_i
 			end
 
-			opts.on("-o", "--output-dir <pth/to/output>[/personal_prefix_]",
+			opts.on("-o", "--output-dir DIR[/PREFIX]",
 			        "Directory where all output files, which contain",
 			        "the stdout of your binary, will be saved") do |p|
 				options.opath = p
 			end
 
-			opts.on("-f", "Do not prompt. Be careful with " \
-			              "this flag!") do |noprompt|
+			opts.on("-f", "Do not prompt") do |noprompt|
 				options.noprompt = noprompt
 			end
 
@@ -69,8 +68,8 @@ class OptPrs
 				options.backend = b
 			end
 
-			opts.on("-a", '--backend-args "<args>"',
-			        'E.g. -a "--exclusive -w <hostname>" for slurm') do |ba|
+			opts.on("-a", '--backend-args "ARGS"',
+			        'E.g. "--exclusive -w HOST" for slurm') do |ba|
 				options.backendArgs = ba
 			end
 
@@ -96,7 +95,7 @@ class OptPrs
 			end
 
 			# Boolean switch.
-			opts.on_tail("--dry-run", "Just print all commands which would " \
+			opts.on_tail("--dry-run", "Just print all commands, which would " \
 			             "be executed") do |dr|
 				options.dry = dr
 			end

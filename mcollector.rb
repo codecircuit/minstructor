@@ -38,7 +38,7 @@ class OptPrs
 			opts.banner = "Usage: mcollector.rb [OPTIONS] FILE0 FILE1 ..."
 
 			opts.separator ""
-			opts.separator "Optional:"
+			opts.separator "Options:"
 
 			opts.on("-k", "--keywords WORD0,WORD1,... ",
 			        "Keywords to search for;",
