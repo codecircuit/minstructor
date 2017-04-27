@@ -6,8 +6,9 @@ require 'test/unit'
 # Command Line Interface by simulating a user interaction
 # with the mcollector. In particular
 
-$mcollector = "../mcollector.rb"
-$dataDirPrefix = "./mcollector/data/"
+$thisDir = File.dirname(File.expand_path(__FILE__))
+$mcollector = "#{$thisDir}/../../mcollector.rb"
+$dataDirPrefix = "#{$thisDir}/data/"
 
 class TestCLIAutoKeywordDetection < Test::Unit::TestCase
 	def test_mixedAssignment

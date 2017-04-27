@@ -6,8 +6,9 @@ require 'test/unit'
 # Command Line Interface by simulating a user interaction
 # with the mcollector.
 
-$mcollector = "../mcollector.rb"
-$dataDirPrefix = "./mcollector/data/"
+$thisDir = File.dirname(File.expand_path(__FILE__))
+$mcollector = "#{$thisDir}/../../mcollector.rb"
+$dataDirPrefix = "#{$thisDir}/data/"
 
 class TestCLI < Test::Unit::TestCase
 

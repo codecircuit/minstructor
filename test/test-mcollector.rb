@@ -5,8 +5,8 @@
 # front of the require statement
 
 require 'test/unit'
-require './mcollector/regexp.rb'
-require './mcollector/data-file-it.rb'
-require './mcollector/csv-output.rb'
-require './mcollector/cli.rb'
-require './mcollector/cli-auto-keyword.rb'
+require_relative './mcollector/regexp.rb'
+require_relative './mcollector/data-file-it.rb'
+require_relative './mcollector/csv-output.rb'
+require_relative './mcollector/cli.rb'
+require_relative './mcollector/cli-auto-keyword.rb'

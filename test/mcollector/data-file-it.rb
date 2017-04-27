@@ -4,11 +4,11 @@ require 'test/unit'
 
 require_relative '../../mcollector.rb'
 
+$thisDir = File.dirname(File.expand_path(__FILE__))
+$dpath = "#{$thisDir}/data/data-file-iterator"
+
 class TestDataFileIterator < Test::Unit::TestCase
-
 	def test_pathIteration
-
-		dpath = "mcollector/data/data-file-iterator"
 
 		dataFileNames = [
 			"data0.txt",
@@ -17,7 +17,7 @@ class TestDataFileIterator < Test::Unit::TestCase
 			"file-b.txt"
 		]
 
-		it = DataFileIterator.new(:dfiles => dataFileNames.map { |fn| dpath + "/" + fn })
+		it = DataFileIterator.new(:dfiles => dataFileNames.map { |fn| $dpath + "/" + fn })
 
 		it.each_pth do |fpth|
 			fname = File.basename(fpth)
@@ -30,8 +30,6 @@ class TestDataFileIterator < Test::Unit::TestCase
 
 	def test_contentIteration
 
-		dpath = "mcollector/data/data-file-iterator"
-
 		dataFileNames = [
 			"data0.txt",
 			"data1.txt",
@@ -39,7 +37,7 @@ class TestDataFileIterator < Test::Unit::TestCase
 			"file-b.txt"
 		]
 
-		it = DataFileIterator.new(:dfiles => dataFileNames.map { |fn| dpath + "/" + fn })
+		it = DataFileIterator.new(:dfiles => dataFileNames.map { |fn| $dpath + "/" + fn })
 
 		it.each_content_with_pth do |c, fpth|
 			f = File.open(fpth)
@@ -49,5 +47,4 @@ class TestDataFileIterator < Test::Unit::TestCase
 			assert(content == c)
 		end
 	end
-
 end
