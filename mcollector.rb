@@ -78,12 +78,12 @@ class OptPrs
 			end
 
 			# Boolean switch
-			opts.on_tail("-v", "--[no-]verbose", "Run verbosely") do |v|
+			opts.on_tail("-v", "--verbose", "Run verbosely") do |v|
 				options.verbose = v
 			end
 
 			# Boolean switch
-			opts.on_tail("--[no-]debug", "Debug mode; includes verbosity") do |d|
+			opts.on_tail("--debug", "Debug mode; includes verbosity") do |d|
 				options.debug = d
 			end
 

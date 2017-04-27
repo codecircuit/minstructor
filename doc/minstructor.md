@@ -10,49 +10,79 @@ minstructor - measurement instructor
 
 # SYNOPSIS
 
-**minstructor** [**-o** *path*[*prefix*]] "*cmd0*" "*cmd1*" ...
+**minstructor** [**-n** *repititions*] [**-o** *path*[*prefix*]] [**-b** *backend*] [**-f**] [**-a** "*bargs*"] [**-v**] [**-h**] [**-d**] [**--dry-run**] "*cmd0*" "*cmd1*" ...
 
 # DESCRIPTION
 
-If you are tired of writing scripts manually, which instruct
-an application you want to benchmark, this program is what
-you are searching for. You gave lists of commmand line parameter
-values to the Measurement Instructor and he executes your
-application with every possible combination of the given parameters.
+You give command patterns *cmd* to the measurement instructor each describing
+the execution of a program over multiple command line arguments. A *cmd* might
+contain expressions that will be parsed and interpreted as a set of command
+line values:
 
-If you specify a name prefix for the output files on the command line, the
+set expression       | also known as
+---------------------|--------------------------------------------
+[4,a,8,...]          | simple list
+range(0,20,3)        | python-like range (start, end, step)
+linspace(0,2,5)      | numpy-like linear range (start, stop, num)
+logspace(1,1000,5,10)| numpy-like log range (start, stop, num, base)
+
+The measurement instructor executes the given *cmd* on the cartesian
+product of all set expressions (see **EXAMPLE** below).
+
+If you specify a name *prefix* for the output files on the command line, the
 standard output of your application executions will be saved appropriately.
 
 Probably you want to collect certain metrics of your application executions
-and evaluate them. You can use the `mcollector(1)` to achieve that efficiently.
+and evaluate them. You can use the **mcollector**(1) to achieve that efficiently.
 
-
-# SEE ALSO
-mcollector(1), byobu(1)
 
 # EXAMPLE
-minstructor -c "./binary -k0 foo -k1=range(3) -k2 [a,b]" will be expanded to
+
+## I
+**TODO: prevent line break here**  
+`$ minstructor "./binary -k0 foo -k1=range(3) -k2 [a,b]"`
+```
+./binary -k0 foo -k1=0 -k2 a
+./binary -k0 foo -k1=0 -k2 b
+./binary -k0 foo -k1=1 -k2 a
+./binary -k0 foo -k1=1 -k2 b
+./binary -k0 foo -k1=2 -k2 a
+./binary -k0 foo -k1=2 -k2 b
+```
+
+## II
+
+`$ minstructor -a "-w host0,host1" -b slurm "./binary -k0 foo -k1 [a,1,c]"`  
 
 ```
-  ./binary -k0 foo -k1=0 -k2 a
-  ./binary -k0 foo -k1=0 -k2 b
-  ./binary -k0 foo -k1=1 -k2 a
-  ./binary -k0 foo -k1=1 -k2 b
-  ./binary -k0 foo -k1=2 -k2 a
-  ./binary -k0 foo -k1=2 -k2 b
+sbatch --wrap "./binary -k0 foo -k1 a" -w host0,host1
+sbatch --wrap "./binary -k0 foo -k1 1" -w host0,host1
+sbatch --wrap "./binary -k0 foo -k1 c" -w host0,host1
+```
+
+## III
+
+`$ minstructor -o /dir0/dir1/ "./binary -k0 foo -k1=linspace(0,1,3)"`
+
+```
+./binary -k foo -k1=0   > /dir0/dir1/out_0.txt
+./binary -k foo -k1=0.5 > /dir0/dir1/out_1.txt
+./binary -k foo -k1=1.0 > /dir0/dir1/out_2.txt
+```
+
+## IV
+
+$ ls
+```
+out_16.txt out_678.txt other.txt binary
+```
+$ minstructor -o . "./binary -key=range(2)"
+```
+  ./binary -key=0 > out_679.txt
+  ./binary -key=1 > out_678.txt
 ```
 
 # OPTIONS
-
--c, \--cmd "*PATH/TO/BINARY* [*FLAG* [*VAL*|*RANGE*]]"
-:   *TODO: REMOVE -c FLAG* You can specify ranges on various ways, e.g.:
-    **TODO: find out how to show quotations marks here**
-    [4,a,8,...]           simple lists
-    range(0,20,3)         python-like ranges (start,end,step)
-    linspace(0,2,5)       numpy-like linear ranges (start,stop,num)
-    logspace(1,1000,5,10) numpy-like log ranges (start,stop,num,base)
-
-## Sub option
 
 -n *repetitions*
 :   Number every unique command is repeated.  If you want to have multiple
@@ -67,22 +97,24 @@ minstructor -c "./binary -k0 foo -k1=range(3) -k2 [a,b]" will be expanded to
     output file names are going to have that *prefix*. E.g.
     */var/data*, */var/data/*, */var/data/foo*,
     where the last example will generate output files with a *foo*
-    prefix, if *foo* is not the name of a directory.
+    prefix, if *foo* is not the name of a directory. *minstructor*
+    chooses the indices of output files consecutive without overwriting
+    any existing files (see **EXAMPLE**).
+
 
 -f
-:   Do not prompt. Be careful with this flag, as this can result
-    in files being overwritten.
+:   Do not prompt.
 
 -b, \--backend [slurm|shell]
-:   DEFAULT=shell; Where to execute your binary. In case of the slurm backend,
+:   Where to execute your binary (*DEFAULT*=shell). In case of the slurm backend,
     jobs will be sent via sbatch.  Hint: if you want to leave an ssh session
     after starting the *minstructor* , you can execute the script within a
     byobu(1) environment and take the `shell` backend.
 
--a, \--backend-args "ARGS"
-:   Specify specific additional backend arguments. This option depends on your
+-a, \--backend-args "*bargs*"
+:   Specify additional *backend arguments*. This option depends on your
     choosen backend. E.g. -a "--exclusive -w compute-node.cluster.com" will
-    instruct slurm to execute the submitted jobs on host compute-node.
+    instruct slurm to execute the submitted jobs on host compute-node.cluster.com.
 
 -h, \--help
 :   Show this help message
@@ -97,4 +129,9 @@ minstructor -c "./binary -k0 foo -k1=range(3) -k2 [a,b]" will be expanded to
 :   Do everything normal, but without executing any of the generated commands
 
 # DEFAULTS
-todo
+
+Execute each unique command once with the shell backend
+and without producing any output files.
+
+# SEE ALSO
+**mcollector**(1), **byobu**(1)
