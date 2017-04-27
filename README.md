@@ -1,8 +1,7 @@
 # Measurement Instructor
 
-**DISCLAIMER**: The software is currently in an alpha stage, thus not
-all mentioned features are available yet. The Beta-Release is planned
-for the end of April. For the current status take a look into the Wiki.
+**DISCLAIMER**: The software is currently in a beta stage and
+might contain bugs. Please contact me if you find some.
 
 If you are tired of writing scripts manually, which instruct
 an application you want to benchmark, this program is what
@@ -19,12 +18,12 @@ E.g. `minstructor -c "./binary -k0 foo -k1=range(3) -k2 [a,b]" -o ./results`
 will result in executing the following commands:
 
 ```shell
-  ./binary -k0 foo -k1=0 -k2 a > ./results/out_0.txt
-  ./binary -k0 foo -k1=0 -k2 b > ./results/out_1.txt
-  ./binary -k0 foo -k1=1 -k2 a > ./results/out_2.txt
-  ./binary -k0 foo -k1=1 -k2 b > ./results/out_3.txt
-  ./binary -k0 foo -k1=2 -k2 a > ./results/out_4.txt
-  ./binary -k0 foo -k1=2 -k2 b > ./results/out_5.txt
+./binary -k0 foo -k1=0 -k2 a > ./results/out_0.txt
+./binary -k0 foo -k1=0 -k2 b > ./results/out_1.txt
+./binary -k0 foo -k1=1 -k2 a > ./results/out_2.txt
+./binary -k0 foo -k1=1 -k2 b > ./results/out_3.txt
+./binary -k0 foo -k1=2 -k2 a > ./results/out_4.txt
+./binary -k0 foo -k1=2 -k2 b > ./results/out_5.txt
 ```
 
 You can specify ranges with various patterns:
@@ -37,11 +36,12 @@ You can specify ranges with various patterns:
 `logspace(1,1000,5,10)`   | python numpy-like log ranges
 
 ## Collect execution results
+
 Probably you want to collect certain metrics of your application executions
 and evaluate them. You can use the `mcollector` to achieve that efficiently.
 The `mcollector` expects multiple files each containing the `stdout` of one
 application run. Your application should output *every* relevant information.
-E.g. if you execute `./binary -k0 foo -k1=2 -k2 b`, a `stdout` processable 
+E.g. if you execute `./binary -k0 foo -k1=2 -k2 b`, a `stdout` processable
 by the `mcollector` could look like:
 
 ```shell
@@ -80,6 +80,7 @@ If a file does not contain a keyword assignment, which is found in
 other files, the value is substituted with N/A.
 
 ## minstructor VS google-benchmark-lib
+
 Why I prefer `minstructor` in comparison to the Google Benchmark library
 https://github.com/google/benchmark
 
