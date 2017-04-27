@@ -40,11 +40,14 @@ class OptPrs
 			opts.separator ""
 			opts.separator "Optional:"
 
-			opts.on("-k", "--keywords WORD0,WORD1,...", Array) do |keywords|
+			opts.on("-k", "--keywords WORD0,WORD1,... ",
+			        "Keywords to search for;",
+			        "Disables automatic keyword detection", Array) do |keywords|
 				options.keywords = keywords
 			end
 
-			opts.on("-i", "--ignore-keywords WORD0,WORD1,... ", Array) do |nokeywords|
+			opts.on("-i", "--ignore-keywords WORD0,WORD1,... ",
+			        "Ignore this keywords", Array) do |nokeywords|
 				options.nokeywords = Set.new(nokeywords)
 			end
 
@@ -86,7 +89,7 @@ class OptPrs
 
 		end
 		opt_parser.set_summary_indent("  ")
-		opt_parser.set_summary_width(34)
+		opt_parser.set_summary_width(25)
 		opt_parser.parse!(args)
 		options
 	end  # parse()
