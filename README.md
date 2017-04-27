@@ -1,7 +1,3 @@
-<!--
-  THIS FILE HAS BEEN GENERATED
-  SEE ./doc FOR THE ORIGINAL
--->
 Measurement Instructor
 ======================
 
@@ -11,7 +7,7 @@ If you are tired of writing scripts manually, which instruct an application you 
 
 If you specify a name prefix for the output files on the command line, the standard output of your application executions will be saved appropriately. Generally you want to save the output files in an *empty* directory, as there can be a lot of them.
 
-E.g. `minstructor -c "./binary -k0 foo -k1=range(3) -k2 [a,b]" -o ./results` will result in executing the following commands:
+E.g. `minstructor -o ./results "./binary -k0 foo -k1=range(3) -k2 [a,b]"` will result in executing the following commands:
 
 ``` shell
 ./binary -k0 foo -k1=0 -k2 a > ./results/out_0.txt
@@ -59,6 +55,19 @@ The `mcollector` is able to recognize certain assignment patterns, like they are
     foo,0,"long string c",0.4864,1654,/abs/path/results/out_2.txt
 
 If a file does not contain a keyword assignment, which is found in other files, the value is substituted with N/A.
+
+Requirements
+------------
+
+To build the manual pages you need to have `pandoc`, which can be installed with most system package manager programs. I wrote the scripts in Ruby, thus you need a Ruby implementation and the Ruby package manager `gem` to install the required RubyGems:
+
+``` shell
+gem install rake
+gem install progressbar
+gem install test-unit # to run the tests
+```
+
+If your shell does not find the RubyGems, it might be helpful to add `$(ruby -e 'print Gem.user_dir')/bin` to your `PATH` environment variable.
 
 minstructor VS google-benchmark-lib
 -----------------------------------
@@ -127,3 +136,5 @@ Why I prefer `minstructor` in comparison to the Google Benchmark library https:/
 </tr>
 </tbody>
 </table>
+
+
