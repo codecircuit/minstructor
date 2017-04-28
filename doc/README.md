@@ -101,6 +101,11 @@ Up to know the installation (`rake install`) will simply create two soft links
 under /usr/local/bin, which point to your cloned repository. The same
 will be done with the manual pages.
 
+## Documentation
+
+You will find more information on the manual pages, which can be build
+with `rake man`, or build and installed with `rake install`.
+
 ## minstructor VS google-benchmark-lib
 
 Why I prefer `minstructor` in comparison to the Google Benchmark library
