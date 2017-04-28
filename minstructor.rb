@@ -383,14 +383,12 @@ class OutputFileNameIterator
 			outDir = opath
 			@prefix = "#{@prefix.chomp('/')}/out_"
 			DEBUG("  - I got a output directory from the CLI")
-			DEBUG("    prefix = #{@prefix}")
 		else # else the user gave a prefix for the output files on the command line
 			outDir = File.dirname(opath)
 			if not File.directory?(outDir)
 				raise IOError, "Your output directory #{outDir} does not exists!"
 			end
 			DEBUG("  - I got a prefix for the output file naming on the CLI")
-			DEBUG("    prefix = #{@prefix}")
 		end
 
 		## SETTING THE OUTPUT FILE INDEX ##
@@ -398,11 +396,13 @@ class OutputFileNameIterator
 		DEBUG("    to prevent a file overwrite...")
 		@prefix = File.expand_path(@prefix)
 		@prefix.freeze
+		DEBUG("  - prefix = #{@prefix}")
 		outFileReg = /#{File.basename(@prefix)}(#{$integerRegex})\.txt/
 		usedIndices = [-1] # -1 results in default start index of 0
+		DEBUG("  - checking files in #{outDir}")
 		Dir.foreach(outDir) do |dirMem|
-			if File.file?(dirMem)
-				DEBUG("    - checking the file = #{dirMem}")
+			DEBUG("    - checking dir member = #{dirMem}")
+			if File.file?("#{outDir}/#{dirMem}")
 				md = dirMem.match(outFileReg)
 				if md != nil
 				DEBUG("    - match data = #{md}")
