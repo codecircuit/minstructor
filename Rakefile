@@ -3,8 +3,8 @@ task :readme => ["doc/README.md"] do
 end
 
 task :test do
-	`./test/test-minstructor.rb`
-	`./test/test-mcollector.rb`
+	puts `./test/test-minstructor.rb`
+	puts `./test/test-mcollector.rb`
 end
 
 directory "build"
