@@ -87,13 +87,19 @@ I wrote the scripts in Ruby, thus you need a Ruby implementation
 and the Ruby package manager `gem` to install the required RubyGems:
 
 ```shell
-gem install rake
-gem install progressbar
-gem install test-unit # to run the tests
+$ gem install progressbar
+$ gem install test-unit # to run the tests
+$ gem install rake # to run the tests and build the manual pages
 ```
 
 If your shell does not find the RubyGems, it might be helpful to add
 `$(ruby -e 'print Gem.user_dir')/bin` to your `PATH` environment variable.
+
+## Installation
+
+Up to know the installation (`rake install`) will simply create two soft links
+under /usr/local/bin, which point to your cloned repository. The same
+will be done with the manual pages.
 
 ## minstructor VS google-benchmark-lib
 
