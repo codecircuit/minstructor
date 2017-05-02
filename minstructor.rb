@@ -14,28 +14,11 @@ class OptPrs
 		options = OpenStruct.new
 		options.verbose = false
 		options.debug = false
-		options.cmd = ""
 		options.dry = false
 		options.opath = ""
 		options.backend = :shell
 		options.noprompt = false
 		options.rep = 1 # number of command repetitions
-
-		# Parse mandatory arguments, which are given
-		# without any flag
-		cmds = []
-		foundFlag = false
-		args.each do |arg|
-			if arg[0] == "-"
-				foundFlag = true
-			elsif not foundFlag
-				cmds += [arg]
-				foundFlag = false
-			else
-				foundFlag = false
-			end
-		end
-		options.cmds = cmds
 
 		opt_parser = OptionParser.new do |opts|
 			opts.banner = 'Usage: minstructor.rb [OPTIONS] "CMD0" "CMD1"'
@@ -110,6 +93,8 @@ class OptPrs
 end  # class OptPrs
 
 $options = OptPrs.parse(ARGV)
+$options.cmds = ARGV # parse mandatory args
+
 # if debug be also verbose
 $options.verbose = $options.verbose || $options.debug
 

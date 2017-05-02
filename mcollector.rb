@@ -20,20 +20,6 @@ class OptPrs
 		options.debug = false
 		options.sort = false
 
-		dfiles = []
-		foundFlag = false
-		args.each do |arg|
-			if arg[0] == "-"
-				foundFlag = true
-			elsif not foundFlag
-				dfiles += [arg]
-				foundFlag = false
-			else
-				foundFlag = false
-			end
-		end
-		options.dfiles = dfiles
-
 		opt_parser = OptionParser.new do |opts|
 			opts.banner = "Usage: mcollector.rb [OPTIONS] FILE0 FILE1 ..."
 
@@ -96,6 +82,8 @@ class OptPrs
 end  # class OptPrs
 
 $options = OptPrs.parse(ARGV)
+$options.dfiles = ARGV # get mandatory args
+
 # if debug be also verbose
 $options.verbose = $options.verbose || $options.debug
 

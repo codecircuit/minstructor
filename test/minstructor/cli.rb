@@ -50,21 +50,16 @@ class TestCLI < Test::Unit::TestCase
 	end
 
 	def test_twoListsWithSlurm
-		%x(#{$minstructor} -b slurm "#{@@dummyScriptFile} [foo,bar] -k [3,4]" -f)
-		f = File.open(@@dummyScriptLogFile, "r")
-		log = f.read()
-		f.close()
-		File.delete(@@dummyScriptLogFile)
+		stdout = %x(#{$minstructor} --dry-run -b slurm "#{@@dummyScriptFile} [foo,bar] -k [3,4]" -f)
 
 		# First we check if the script has been executed with the
 		# wanted parameters. The order in which the command line
 		# arguments are listed should be fixed by the user
-		lines = log.lines.map {|l| l.chomp} # remove \n
-		assert(lines.include?("foo -k 4"))
-		assert(lines.include?("foo -k 3"))
-		assert(lines.include?("bar -k 3"))
-		assert(lines.include?("bar -k 4"))
-		assert_equal(lines.length, 4)
+		lines = stdout.lines.map {|l| l.chomp} # remove \n
+		assert(lines.any?{ |l| l.include?("foo -k 4") } )
+		assert(lines.any?{ |l| l.include?("foo -k 3") } )
+		assert(lines.any?{ |l| l.include?("bar -k 4") } )
+		assert(lines.any?{ |l| l.include?("bar -k 3") } )
 	end
 
 	def test_multipleExecutions
