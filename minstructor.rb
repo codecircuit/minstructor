@@ -457,6 +457,7 @@ def expandCmd(parsedCmds, outFileName_it, backend=:shell)
 		parsedCmds.map! do |cmd|
 			cmd = "sbatch #{$options.backendArgs} " + '--wrap "' + cmd + '"'
 			cmd << " -o #{outFileName_it.next}" unless outFileName_it.empty?
+			cmd
 		end
 	end
 	if backend == :shell

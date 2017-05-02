@@ -49,6 +49,24 @@ class TestCLI < Test::Unit::TestCase
 		assert_equal(lines.length, 4)
 	end
 
+	def test_twoListsWithSlurm
+		%x(#{$minstructor} -b slurm "#{@@dummyScriptFile} [foo,bar] -k [3,4]" -f)
+		f = File.open(@@dummyScriptLogFile, "r")
+		log = f.read()
+		f.close()
+		File.delete(@@dummyScriptLogFile)
+
+		# First we check if the script has been executed with the
+		# wanted parameters. The order in which the command line
+		# arguments are listed should be fixed by the user
+		lines = log.lines.map {|l| l.chomp} # remove \n
+		assert(lines.include?("foo -k 4"))
+		assert(lines.include?("foo -k 3"))
+		assert(lines.include?("bar -k 3"))
+		assert(lines.include?("bar -k 4"))
+		assert_equal(lines.length, 4)
+	end
+
 	def test_multipleExecutions
 		cmd = "#{$minstructor} \"#{@@dummyScriptFile} -key0 a -imp=range(2) " \
 		      "-blao linspace(0.4, 12, 3)\" -f -n 3"
