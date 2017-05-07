@@ -501,12 +501,16 @@ if __FILE__ == $0
 	# Get output file naming
 	outFileName_it = OutputFileNameIterator.new($options.opath)
 
+	# expanded cmds is going to be a list of lists, each representing
+	# the expansion of one command expression.
 	expandedCmds = []
 	parsed.each do |parsedCmd|
 		expandedCmds += [expandCmd([parsedCmd], outFileName_it, $options.backend)]
 	end
 
 	linesShowMax = 15
+	# flatten: [[cmd,cmd,...],[cmd,cmd,...]] -> [cmd,cmd,cmd,cmd,...]
+	expandedCmds = expandedCmds.flatten
 	if expandedCmds.length > linesShowMax && !$options.verbose
 		if $options.backend == :slurm
 			estSec = expandedCmds.length * $SLURMDELAY
@@ -540,5 +544,5 @@ if __FILE__ == $0
 		puts "Continue..."
 	end
 
-	executeCmds(expandedCmds.flatten)
+	executeCmds(expandedCmds)
 end
