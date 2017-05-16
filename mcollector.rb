@@ -123,6 +123,7 @@ $wordReg = /(?<value>[^\s]+)/
 
 # general value regex
 $valReg = /#{$quotationReg}|#{$quantityReg}|#{$wordReg}/
+#$valReg = /#{$wordReg}/
 
 # This function returns a regex which matches any KEYWORD SPACE LINK
 # SPACE VALUE constellations. Moreover the VALUE and KEYWORD are
@@ -132,9 +133,9 @@ $valReg = /#{$quotationReg}|#{$quantityReg}|#{$wordReg}/
 # minus.
 def getKeyValueReg(keyword=nil)
 	if keyword != nil
-		/(?<keyword>#{keyword})\s*#{$linkReg}\s*#{$valReg}/
+		/(?<keyword>#{keyword})[[:blank:]]*#{$linkReg}[[:blank:]]*#{$valReg}/
 	else                       # '+?' = non greedy '+'
-		/(?<keyword>[_\-[:alnum:]]+?)\s*#{$linkReg}\s*#{$valReg}/
+		/(?<keyword>[_\-[:alnum:]]+?)[[:blank:]]*#{$linkReg}[[:blank:]]*#{$valReg}/
 	end
 end
 
