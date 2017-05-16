@@ -107,7 +107,7 @@ $numReg = /[-+]?[[:digit:]]+(?:\.[[:digit:]]+)?#{$expReg}?/
 # The unit regex should allow a lot of symbols, e.g. GB/s, foo^4
 # It matches everything except space.
 $unitMaxSize        = 10 # maximum size of a unit, e.g. `Byte` has 4
-$unitReg          = /[^\s]{1,#{$unitMaxSize}}/
+$unitReg          = /\S{1,#{$unitMaxSize}}/
 
 # regex of assignment symbols; the order is crucial; do not change it
 $linkReg = /-+>|=+>|=|:/ # divided by logical OR
@@ -119,7 +119,7 @@ $quantityReg = /(?<value>#{$numReg})#{$unitReg}?/
 $quotationReg = /(?<value>"[^"]+")/
 
 # simple word value
-$wordReg = /(?<value>[^\s]+)/
+$wordReg = /(?<value>\S+)/
 
 # general value regex
 $valReg = /#{$quotationReg}|#{$quantityReg}|#{$wordReg}/
@@ -133,6 +133,7 @@ $valReg = /#{$quotationReg}|#{$quantityReg}|#{$wordReg}/
 # minus.
 def getKeyValueReg(keyword=nil)
 	if keyword != nil
+		# We must us [[:blank:]] instead of \s, because \s includes \n!
 		/(?<keyword>#{keyword})[[:blank:]]*#{$linkReg}[[:blank:]]*#{$valReg}/
 	else                       # '+?' = non greedy '+'
 		/(?<keyword>[_\-[:alnum:]]+?)[[:blank:]]*#{$linkReg}[[:blank:]]*#{$valReg}/
