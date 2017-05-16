@@ -6,13 +6,13 @@ require 'test/unit'
 # Command Line Interface by simulating a user interaction
 # with the mcollector. In particular
 
-$thisDir = File.dirname(File.expand_path(__FILE__))
-$mcollector = "#{$thisDir}/../../mcollector.rb"
-$dataDirPrefix = "#{$thisDir}/data/"
+$this_dir = File.dirname(File.expand_path(__FILE__))
+$mcollector = "#{$this_dir}/../../mcollector.rb"
+$data_dir_pre = "#{$this_dir}/data/"
 
 class TestCLIAutoKeywordDetection < Test::Unit::TestCase
 	def test_mixedAssignment
-		dataDir = $dataDirPrefix + "mixed-assignment"
+		data_dir = $data_dir_pre + "mixed-assignment"
 		# The lines which must be in the correct output
 		lines = ["-86748,+0.6874e-08,foo,00.68748",
 		         "1654,-0.468e-100,bar,-060.684",
@@ -23,15 +23,15 @@ class TestCLIAutoKeywordDetection < Test::Unit::TestCase
 
 		# the mcollector should output the CSV table to stdout
 		# if we do not specify an output file
-		actualResult = %x(#{$mcollector} #{dataDir}/*.txt)
-		assert(actualResult.lines()[0].include?(head))
+		actual_result = %x(#{$mcollector} #{data_dir}/*.txt)
+		assert(actual_result.lines()[0].include?(head))
 		lines.each do |l|
-			assert(actualResult.include?(l))
+			assert(actual_result.include?(l))
 		end
 	end
 
 	def test_singleBlacklistKeyword
-		dataDir = $dataDirPrefix + "mixed-assignment"
+		data_dir = $data_dir_pre + "mixed-assignment"
 		# The lines which must be in the correct output
 		lines = ["-86748,foo,00.68748",
 		         "1654,bar,-060.684",
@@ -42,15 +42,15 @@ class TestCLIAutoKeywordDetection < Test::Unit::TestCase
 
 		# the mcollector should output the CSV table to stdout
 		# if we do not specify an output file
-		actualResult = %x(#{$mcollector} -i importantKey8 #{dataDir}/*.txt)
-		assert(actualResult.lines()[0].include?(head))
+		actual_result = %x(#{$mcollector} -i importantKey8 #{data_dir}/*.txt)
+		assert(actual_result.lines()[0].include?(head))
 		lines.each do |l|
-			assert(actualResult.include?(l))
+			assert(actual_result.include?(l))
 		end
 	end
 
 	def test_multipleBlacklistKeyword
-		dataDir = $dataDirPrefix + "mixed-assignment"
+		data_dir = $data_dir_pre + "mixed-assignment"
 		# The lines which must be in the correct output
 		lines = ["-86748,foo",
 		         "1654,bar",
@@ -61,10 +61,16 @@ class TestCLIAutoKeywordDetection < Test::Unit::TestCase
 
 		# the mcollector should output the CSV table to stdout
 		# if we do not specify an output file
-		actualResult = %x(#{$mcollector} -i importantKey8,floatKey #{dataDir}/*.txt)
-		assert(actualResult.lines()[0].include?(head))
+		actual_result = %x(#{$mcollector} -i importantKey8,floatKey #{data_dir}/*.txt)
+		assert(actual_result.lines()[0].include?(head))
 		lines.each do |l|
-			assert(actualResult.include?(l))
+			assert(actual_result.include?(l))
 		end
+	end
+	
+	def test_newlineIgnore
+		data_dir = $data_dir_pre + "newline-ignore"
+		actual_result = `#{$mcollector} #{data_dir}/*.txt`
+		assert(!actual_result.include?("Result"))
 	end
 end
