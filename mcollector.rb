@@ -82,7 +82,7 @@ class OptPrs
 end  # class OptPrs
 
 $options = OptPrs.parse(ARGV)
-$options.dfiles = ARGV # get mandatory args
+$options.dfiles = Array.new(ARGV) # get mandatory args
 
 # if debug be also verbose
 $options.verbose = $options.verbose || $options.debug
@@ -339,6 +339,11 @@ if __FILE__ == $0
 		if File.exists?(opath) && !$options.noprompt
 			STDERR.puts  "CAUTION: the file #{opath} does already exists."
 			STDERR.print "Do you want to replace it? [y/N]:"
+			# We must clear ARGV here, because if there are file paths
+			# in ARGV the content of the files seems to be read and
+			# subsequently processed by the `gets` function, which
+			# results in non-user answers to the question.
+			ARGV.clear
 			answer = gets.chomp
 			if not %w[Yes Y y yes].include?(answer)
 				puts "Going to exit..."
