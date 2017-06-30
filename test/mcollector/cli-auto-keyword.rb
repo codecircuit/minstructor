@@ -73,4 +73,13 @@ class TestCLIAutoKeywordDetection < Test::Unit::TestCase
 		actual_result = `#{$mcollector} #{data_dir}/*.txt`
 		assert(!actual_result.include?("Result"))
 	end
+
+	def test_doubleColonIgnore
+		data_dir = $data_dir_pre + "error"
+		actual_result = `#{$mcollector} #{data_dir}/*.txt`
+		assert(!actual_result.include?("what"))
+		assert(!actual_result.include?("donotlistme"))
+		assert(!actual_result.include?(":"))
+		assert(!actual_result.include?("Some"))
+	end
 end
