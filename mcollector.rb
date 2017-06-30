@@ -119,11 +119,13 @@ $quantityReg = /(?<value>#{$numReg})#{$unitReg}?/
 $quotationReg = /(?<value>"[^"]+")/
 
 # simple word value
-$wordReg = /(?<value>\S+)/
+# which must consists of word characters: [a-zA-Z0-9_]
+$wordReg = /(?<value>\w+)/
 
 # general value regex
+# the regular expressions here are processed from left to
+# right with decreasing priority.
 $valReg = /#{$quotationReg}|#{$quantityReg}|#{$wordReg}/
-#$valReg = /#{$wordReg}/
 
 # This function returns a regex which matches any KEYWORD SPACE LINK
 # SPACE VALUE constellations. Moreover the VALUE and KEYWORD are
