@@ -119,13 +119,23 @@ $quantityReg = /(?<value>#{$numReg})#{$unitReg}?/
 $quotationReg = /(?<value>"[^"]+")/
 
 # simple word value
-# which must consists of word characters: [a-zA-Z0-9_]
-$wordReg = /(?<value>\w+)/
+# which must consists of word characters: [a-zA-Z0-9_-]
+# the minus is contained, as we want to support detection of
+# words like `mp-data.ziti.uni-heidelberg.de`
+$wordReg = /(?<value>[\w-]+)/
+
+# date value
+# We need a date regex to add it before the quantity regex.
+# It is not possible to capture dates with the word regex, as
+# the word regex would also capture expressions like e.g.
+# `1654MB`, which should generally be captured by the quantity
+# regex to extract the number from the pattern.
+$dateReg = /(?<value>[0-9]{4}-[0-9]{2}-[0-9]{2})/
 
 # general value regex
 # the regular expressions here are processed from left to
 # right with decreasing priority.
-$valReg = /#{$quotationReg}|#{$quantityReg}|#{$wordReg}/
+$valReg = /#{$quotationReg}|#{$dateReg}|#{$quantityReg}|#{$wordReg}/
 
 # This function returns a regex which matches any KEYWORD SPACE LINK
 # SPACE VALUE constellations. Moreover the VALUE and KEYWORD are
