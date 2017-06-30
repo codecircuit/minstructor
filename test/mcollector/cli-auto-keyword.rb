@@ -82,4 +82,10 @@ class TestCLIAutoKeywordDetection < Test::Unit::TestCase
 		assert(!actual_result.include?(":"))
 		assert(!actual_result.include?("Some"))
 	end
+
+	def test_dateDetection
+		data_dir = $data_dir_pre + "date"
+		actual_result = `#{$mcollector} #{data_dir}/*.txt`
+		assert(actual_result.include?("2017-08-12"))
+	end
 end

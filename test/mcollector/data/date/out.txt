@@ -1,0 +1,9 @@
+## Some random output
+  - important-key7   = -86748
+    importantKey8-->  	 +0.6874e-08  seconds
+	 stringKey:   foo  16674  whateverUnit
+ --- floatKey 	 ==> 00.68748  the answer to everything is 42
+  smallkeyword  =    +7.68416e+684465 woow that is a large number
+ current-time = 2017-08-12
+  uiter nuide nuidat enudle nudvrlne durlne uia
+more important stuff here
