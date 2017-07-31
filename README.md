@@ -1,9 +1,7 @@
 Measurement Instructor
 ======================
 
-**DISCLAIMER**: The software is currently in a beta stage and might contain bugs. Please contact me if you find some.
-
-If you are tired of writing scripts manually, which instruct an application you want to benchmark, this program is what you are searching for. You give lists of commmand line parameter values to the Measurement Instructor and he executes your application with every possible combination of the given parameters.
+If you are tired of writing scripts manually, which instruct an application you want to benchmark, this program is what you are searching for. You give lists of command line parameter values to the Measurement Instructor and he executes your application with every possible combination of the given parameters.
 
 If you specify a name prefix for the output files on the command line, the standard output of your application executions will be saved appropriately. Generally you want to save the output files in an *empty* directory, as there can be a lot of them.
 

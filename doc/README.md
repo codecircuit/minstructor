@@ -1,11 +1,8 @@
 # Measurement Instructor
 
-**DISCLAIMER**: The software is currently in a beta stage and
-might contain bugs. Please contact me if you find some.
-
 If you are tired of writing scripts manually, which instruct
 an application you want to benchmark, this program is what
-you are searching for. You give lists of commmand line parameter
+you are searching for. You give lists of command line parameter
 values to the Measurement Instructor and he executes your
 application with every possible combination of the given parameters.
 
