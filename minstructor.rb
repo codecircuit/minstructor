@@ -390,10 +390,14 @@ class OutputFileNameIterator
 			if File.file?("#{outDir}/#{dirMem}")
 				md = dirMem.match(outFileReg)
 				if md != nil
-				DEBUG("    - match data = #{md}")
-				usedIndices += [dirMem.match(outFileReg)[1].to_i]
+					DEBUG("    - match data = #{md}")
+					usedIndices += [dirMem.match(outFileReg)[1].to_i]
 				end
 			end
+		end
+		if !`which scontrol`.empty?
+			DEBUG("  - checking scheduled slurm output files")
+			scontrol_out = `scontrol show job`
 		end
 		@id = usedIndices.max + 1
 		DEBUG("  - uses start index = #{@id}")
