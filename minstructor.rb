@@ -391,13 +391,23 @@ class OutputFileNameIterator
 				md = dirMem.match(outFileReg)
 				if md != nil
 					DEBUG("    - match data = #{md}")
-					usedIndices += [dirMem.match(outFileReg)[1].to_i]
+					usedIndices += [md[1].to_i]
 				end
 			end
 		end
-		if !`which scontrol`.empty?
+		if system("which scontrol > /dev/null 2>&1")
 			DEBUG("  - checking scheduled slurm output files")
-			scontrol_out = `scontrol show job`
+			scontrol_out = `scontrol show job -u $(whoami)`
+			reg = /(?<=StdErr=).*|(?<=StdOut=).*/
+			user_out_files = scontrol_out.scan(reg)
+			user_out_files.each do |f|
+				DEBUG("    - checking if #{f} in #{outDir}")
+				md = f.match(outFileReg)
+				if md != nil
+					DEBUG("      - #{f} increases the first index")
+					usedIndices += [md[1].to_i]
+				end
+			end
 		end
 		@id = usedIndices.max + 1
 		DEBUG("  - uses start index = #{@id}")
