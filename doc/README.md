@@ -95,13 +95,13 @@ If your shell does not find the RubyGems, it might be helpful to add
 ## Installation
 
 Up to know the installation (`rake install`) will simply create two soft links
-under /usr/local/bin, which point to your cloned repository. The same
+under `/usr/local/bin`, which point to your cloned repository. The same
 will be done with the manual pages.
 
 ## Documentation
 
-You will find more information on the manual pages, which can be build
-with `rake man`, or build and installed with `rake install`.
+You will find more information on the manual pages, which can be built
+with `rake man`, or built and installed with `rake install`.
 
 ## minstructor VS google-benchmark-lib
 
