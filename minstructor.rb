@@ -427,7 +427,9 @@ class OutputFileNameIterator
 
 	def next(additional_suffix = "")
 		return "" if @prefix == nil
-		curr_out_file_path = @prefix + @id.to_s + additional_suffix + ".txt"
+		dummy = ""
+		dummy = "_" unless additional_suffix == ""
+		curr_out_file_path = @prefix + @id.to_s + dummy + additional_suffix + ".txt"
 		@id += 1
 		curr_out_file_path
 	end
@@ -478,18 +480,30 @@ def expandCmd(parsedCmds, outFileName_it, backend=:shell)
 		parsedCmds.map! do |cmd|
 			cmd_str = "sbatch #{$options.backendArgs} " + '--wrap "' + cmd.join + '"'
 			job_name = cmd.values_at(*parameter_pos).join("_")
-			cmd_str << " -o #{outFileName_it.next}" unless outFileName_it.empty?
+			if $options.vfnames
+				cmd_str << " -o #{outFileName_it.next(job_name)}" unless outFileName_it.empty?
+			else
+				cmd_str << " -o #{outFileName_it.next}" unless outFileName_it.empty?
+			end
 			cmd_str << " -J '#{job_name}' "
 			cmd_str
 		end
 	end
 	if backend == :shell
-		parsedCmds.map! { |cmd| cmd.join }
 		DEBUG("  - you choose the shell backend")
 		if not outFileName_it.empty?
 			parsedCmds.map! do |cmd|
-				cmd += " > #{outFileName_it.next}"
+				if $options.vfnames
+					job_name = cmd.values_at(*parameter_pos).join("_")
+					cmd_str = cmd.join + " > #{outFileName_it.next(job_name)}"
+				else
+					cmd_str = cmd.join + " > #{outFileName_it.next}"
+					DEBUG("    - building up command: #{cmd_str}")
+				end
+				cmd_str
 			end
+		else 
+			parsedCmds.map! { |cmd| cmd.join }
 		end
 	end
 
@@ -498,6 +512,7 @@ def expandCmd(parsedCmds, outFileName_it, backend=:shell)
 		exit 1
 	end
 
+	DEBUG("  - parsed cmds befor sequeezing: #{parsedCmds}")
 	# REMOVE UNNECESSARY WHITESPACE
 	parsedCmds.map! { |cmd| cmd.squeeze(" ") }
 
