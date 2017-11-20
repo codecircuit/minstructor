@@ -88,4 +88,29 @@ class TestCLIAutoKeywordDetection < Test::Unit::TestCase
 		actual_result = `#{$mcollector} #{data_dir}/*.txt`
 		assert(actual_result.include?("2017-08-12"))
 	end
+
+	def test_whitespaceKeywords
+		data_dir = $data_dir_pre + "whitespace-keywords"
+		# The lines which must be in the correct output
+		lines = ['"sleep 1",0.1,2,3,4,1764,5,6,7',
+		         '"sleep 2",0.2,8,9,10,1800,11,12,13']
+		# the head of the CSV output
+		head = "Command being timed," +
+			"User time(seconds)," +
+			"Percent of CPU this job got," +
+			"Average unshared data size (kbytes)," +
+			"Average total size (kbytes)," +
+			"Maximum resident set size (kbytes)," +
+			"Major (requiring I/O) page faults," +
+			"Swaps," +
+			"File System inputs"
+
+		# the mcollector should output the CSV table to stdout
+		# if we do not specify an output file
+		actual_result = %x(#{$mcollector} -w  #{data_dir}/*.txt)
+		assert(actual_result.lines()[0].include?(head))
+		lines.each do |l|
+			assert(actual_result.include?(l))
+		end
+	end
 end

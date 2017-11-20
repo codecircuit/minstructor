@@ -1,0 +1,10 @@
+	Command being timed: "sleep 2"
+	User time (seconds): 0.20
+	Percent of CPU this job got: 8%
+	Average unshared data size (kbytes): 9
+	  Average total size (kbytes): 10
+	Maximum resident set size (kbytes): 1800
+	Major (requiring I/O) page faults: 11
+	Swaps: 12
+	File system inputs: 13
+

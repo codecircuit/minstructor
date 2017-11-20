@@ -158,7 +158,11 @@ def getKeyValueReg(keyword=nil)
 		# We must us [[:blank:]] instead of \s, because \s includes \n!
 		/(?<keyword>#{safe_keyword})[[:blank:]]*#{$linkReg}[[:blank:]]*#{$valReg}/
 	else                       # '+?' = non greedy '+'
-		/(?<keyword>[_\-[:alnum:]]+?)[[:blank:]]*#{$linkReg}[[:blank:]]*#{$valReg}/
+		if $options.wkeywords
+			/(?<keyword>[_ \-[:alnum:]]+?)[[:blank:]]*#{$linkReg}[[:blank:]]*#{$valReg}/
+		else
+			/(?<keyword>[_\-[:alnum:]]+?)[[:blank:]]*#{$linkReg}[[:blank:]]*#{$valReg}/
+		end
 	end
 end
 
