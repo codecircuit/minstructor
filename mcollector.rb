@@ -38,9 +38,9 @@ class OptPrs
 				options.nokeywords = Set.new(nokeywords)
 			end
 
-			opts.on("-w", "--whitespace-keywords",
+			opts.on("-w", "--weird-keywords",
 			        "Allow automatic detected keywords",
-			        "to contain whitespaces") do |wkeywords|
+					"to contain all characters but comma") do |wkeywords|
 				options.wkeywords = wkeywords
 			end
 

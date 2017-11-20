@@ -89,7 +89,7 @@ class TestCLIAutoKeywordDetection < Test::Unit::TestCase
 		assert(actual_result.include?("2017-08-12"))
 	end
 
-	def test_whitespaceKeywords
+	def test_weirdKeywords
 		data_dir = $data_dir_pre + "whitespace-keywords"
 		# The lines which must be in the correct output
 		lines = ['"sleep 1",0.10,2,3,4,1764,5,6,7',
