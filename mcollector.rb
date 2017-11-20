@@ -159,7 +159,7 @@ def getKeyValueReg(keyword=nil)
 		/(?<keyword>#{safe_keyword})[[:blank:]]*#{$linkReg}[[:blank:]]*#{$valReg}/
 	else
 		if $options.wkeywords           # '+?' = non greedy '+'
-			/(?<keyword>[_\(\) \-[:alnum:]]+?)[[:blank:]]*#{$linkReg}[[:blank:]]*#{$valReg}/
+			/(?<keyword>[^,]+?)[[:blank:]]*#{$linkReg}[[:blank:]]*#{$valReg}/
 		else                       # '+?' = non greedy '+'
 			/(?<keyword>[_\-[:alnum:]]+?)[[:blank:]]*#{$linkReg}[[:blank:]]*#{$valReg}/
 		end
