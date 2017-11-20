@@ -98,7 +98,8 @@ If your shell does not find the RubyGems, it might be helpful to add
 ## Installation
 
 Up to know the installation (`rake install`) will simply copy the scripts to 
-`/usr/local/bin`. The manual pages are installed to `$(man -w | cut -d: -f1)/man1`.
+`/usr/local/bin`. The manual pages are installed to `man1` folder in the
+last listed directory of `$ man -w`.
 
 ## Documentation
 
