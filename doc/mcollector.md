@@ -1,16 +1,19 @@
 ---
-title: mcollector(1) User Guide
+title: MCOLLECTOR(1)
 author: Christoph Klein
-date: 2017-04-16
+date: 2017-11-20
+header: User Guide
 ...
 
 # NAME
 
 mcollector - measurement collector
 
+
 # SYNOPSIS
 
 **mcollector** [**-k** *keyword*[,...]] [**-i** *keyword*[,...]] [**-o** *csvfile*] [**-f**] [**-s**|**--sort**] [**-h**|**--help**] [**-v**|**--verbose**] *file0* *file1* ...
+
 
 # DESCRIPTION
 
@@ -30,6 +33,7 @@ for parsing key value assignments.
 
 To get proper output *files* from your application you can use
 the **minstructor**(1) to achieve that efficiently.
+
 
 # OPTIONS
 
@@ -63,7 +67,9 @@ the **minstructor**(1) to achieve that efficiently.
 -d, \--[no-]debug
 :   Run in Debug mode (includes verbosity).
 
+
 # EXAMPLE
+
 Assume there are several output files in the current directory, which
 have similar content:
 
@@ -90,3 +96,5 @@ $ mcollector -i ERROR ./out_*.txt
 
 # SEE ALSO
 **minstructor**(1), **byobu**(1)
+
+https://github.com/codecircuit/minstructor
