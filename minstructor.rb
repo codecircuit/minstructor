@@ -347,7 +347,7 @@ def frontend(userInput)
 	DEBUG("[-] frontend()")
 
 	expanded
-end
+end # frontend
 
 ###########
 # BACKEND #
@@ -426,10 +426,14 @@ class OutputFileNameIterator
 	end
 
 	def next(additional_suffix = "")
+		#curr_out_file_path = ""
 		return "" if @prefix == nil
-		dummy = ""
-		dummy = "_" unless additional_suffix == ""
-		curr_out_file_path = @prefix + @id.to_s + dummy + additional_suffix + ".txt"
+		if additional_suffix == ""
+			curr_out_file_path = @prefix + @id.to_s + ".txt"
+		else
+			curr_out_file_path = @prefix + @id.to_s + "_" +
+				additional_suffix.strip().gsub(/\s/,"_") + ".txt"
+		end
 		@id += 1
 		curr_out_file_path
 	end
