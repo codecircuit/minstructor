@@ -427,6 +427,8 @@ class OutputFileNameIterator
 	end
 end # OutputFileNameIterator
 
+
+
 # Takes the parsed command line e.g.:
 #     ["./binary -k const -f ", [1,2,3], " foo bar"]
 # and creates all commands from that e.g.:
@@ -448,8 +450,16 @@ def expandCmd(parsedCmds, outFileName_it, backend=:shell)
 
 	DEBUG("  - input = #{parsedCmds}")
 
+	# Save the positions of the variable parameters in the parsed
+	# command: ["foo", [1, 2], "bar", ["a", "b"]]
+	# parameter_pos: [1, 3]
+	# Add the index to the array elements first
+	parameter_pos = parsedCmds[0].map.with_index { |v, i| [v, i] }
+	# filter for Array positions
+	DEBUG("  - parameter pos = #{parameter_pos}")
+	parameter_pos.select!{ |x| x[0].class == Array }.map! { |x| x[1] }
+
 	parsedCmds = combinations(parsedCmds)
-	parsedCmds.map! { |cmd| cmd.join }
 
 	DEBUG("  - cmds after combinations #{parsedCmds}")
 
@@ -463,12 +473,15 @@ def expandCmd(parsedCmds, outFileName_it, backend=:shell)
 	if backend == :slurm
 		DEBUG("  - you choose the slurm backend")
 		parsedCmds.map! do |cmd|
-			cmd = "sbatch #{$options.backendArgs} " + '--wrap "' + cmd + '"'
-			cmd << " -o #{outFileName_it.next}" unless outFileName_it.empty?
-			cmd
+			cmd_str = "sbatch #{$options.backendArgs} " + '--wrap "' + cmd.join + '"'
+			cmd_str << " -o #{outFileName_it.next}" unless outFileName_it.empty?
+			job_name = cmd.values_at(*parameter_pos).join("_")
+			cmd_str << " -J '#{job_name}' "
+			cmd_str
 		end
 	end
 	if backend == :shell
+		parsedCmds.map! { |cmd| cmd.join }
 		DEBUG("  - you choose the shell backend")
 		if not outFileName_it.empty?
 			parsedCmds.map! do |cmd|
