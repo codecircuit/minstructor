@@ -425,8 +425,17 @@ class OutputFileNameIterator
 
 		currOutFilePath
 	end
-end
+end # OutputFileNameIterator
 
+# Takes the parsed command line e.g.:
+#     ["./binary -k const -f ", [1,2,3], " foo bar"]
+# and creates all commands from that e.g.:
+#     ["./binary -k const -f 1 foo bar",
+#      "./binary -k const -f 2 foo bar",
+#      "./binary -k const -f 3 foo bar"]
+# and applies backend specific modifications to the
+# commands and repeats them if the user wants to execute
+# the same commands more than once.
 def expandCmd(parsedCmds, outFileName_it, backend=:shell)
 	DEBUG(" ")
 	DEBUG("[+] expandCmd()")
@@ -478,7 +487,7 @@ def expandCmd(parsedCmds, outFileName_it, backend=:shell)
 
 	DEBUG("[-] expandCmd()")
 	parsedCmds
-end
+end # expandCmd
 
 ##################################
 # EXECUTE THE GENERATED COMMANDS #
