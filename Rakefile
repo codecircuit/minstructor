@@ -1,5 +1,5 @@
 task :readme => ["doc/README.md"] do
-	`pandoc doc/README.md -t markdown_github -o README.md`
+	`pandoc doc/README.md -t gfm -o README.md`
 end
 
 task :test do
