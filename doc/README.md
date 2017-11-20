@@ -14,7 +14,7 @@ there can be a lot of them.
 E.g. `minstructor -o ./results "./binary -k0 foo -k1=range(3) -k2 [a,b]"`
 will result in executing the following commands:
 
-```shell
+```
 ./binary -k0 foo -k1=0 -k2 a > ./results/out_0.txt
 ./binary -k0 foo -k1=0 -k2 b > ./results/out_1.txt
 ./binary -k0 foo -k1=1 -k2 a > ./results/out_2.txt
@@ -41,7 +41,7 @@ application run. Your application should output *every* relevant information.
 E.g. if you execute `./binary -k0 foo -k1=2 -k2 b`, a `stdout` processable
 by the `mcollector` could look like:
 
-```shell
+```
 ...
   - scheme -> foo
   - bandwidth =   20 GB/s

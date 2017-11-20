@@ -14,14 +14,12 @@ directory, as there can be a lot of them.
 E.g. `minstructor -o ./results "./binary -k0 foo -k1=range(3) -k2
 [a,b]"` will result in executing the following commands:
 
-``` shell
-./binary -k0 foo -k1=0 -k2 a > ./results/out_0.txt
-./binary -k0 foo -k1=0 -k2 b > ./results/out_1.txt
-./binary -k0 foo -k1=1 -k2 a > ./results/out_2.txt
-./binary -k0 foo -k1=1 -k2 b > ./results/out_3.txt
-./binary -k0 foo -k1=2 -k2 a > ./results/out_4.txt
-./binary -k0 foo -k1=2 -k2 b > ./results/out_5.txt
-```
+    ./binary -k0 foo -k1=0 -k2 a > ./results/out_0.txt
+    ./binary -k0 foo -k1=0 -k2 b > ./results/out_1.txt
+    ./binary -k0 foo -k1=1 -k2 a > ./results/out_2.txt
+    ./binary -k0 foo -k1=1 -k2 b > ./results/out_3.txt
+    ./binary -k0 foo -k1=2 -k2 a > ./results/out_4.txt
+    ./binary -k0 foo -k1=2 -k2 b > ./results/out_5.txt
 
 You can specify ranges with various patterns:
 
@@ -42,19 +40,17 @@ output *every* relevant information. E.g. if you execute `./binary -k0
 foo -k1=2 -k2 b`, a `stdout` processable by the `mcollector` could look
 like:
 
-``` shell
-...
-  - scheme -> foo
-  - bandwidth =   20 GB/s
-    foo bar baz ... weather: "sunny and warm"
-    footime: 0.4687 s
-
-    Here you can also write about the bandwidth or scheme etc.
-    unless you don't assign it twice.
-
-  - random-seed --> 16547
-...
-```
+    ...
+      - scheme -> foo
+      - bandwidth =   20 GB/s
+        foo bar baz ... weather: "sunny and warm"
+        footime: 0.4687 s
+    
+        Here you can also write about the bandwidth or scheme etc.
+        unless you don't assign it twice.
+    
+      - random-seed --> 16547
+    ...
 
 You can collect your results, which are saved in output files, in a CSV
 table with:
