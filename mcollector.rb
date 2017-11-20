@@ -1,4 +1,4 @@
-#!/usr/bin/ruby
+#!/usr/bin/env ruby
 
 require 'optparse'
 require 'ostruct'
@@ -40,7 +40,7 @@ class OptPrs
 
 			opts.on("-w", "--weird-keywords",
 			        "Allow automatic detected keywords",
-					"to contain all characters but comma") do |wkeywords|
+					"to contain all characters except comma") do |wkeywords|
 				options.wkeywords = wkeywords
 			end
 
