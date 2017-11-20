@@ -11,16 +11,16 @@ standard output of your application executions will be saved appropriately.
 Generally you want to save the output files in an *empty* directory, as
 there can be a lot of them.
 
-E.g. `minstructor -o ./results "./binary -k0 foo -k1=range(3) -k2 [a,b]"`
+E.g. `minstructor -o ./results "./binary --scheme foo --seed=range(3) --param [a,b]"`
 will result in executing the following commands:
 
 ```
-./binary -k0 foo -k1=0 -k2 a > ./results/out_0.txt
-./binary -k0 foo -k1=0 -k2 b > ./results/out_1.txt
-./binary -k0 foo -k1=1 -k2 a > ./results/out_2.txt
-./binary -k0 foo -k1=1 -k2 b > ./results/out_3.txt
-./binary -k0 foo -k1=2 -k2 a > ./results/out_4.txt
-./binary -k0 foo -k1=2 -k2 b > ./results/out_5.txt
+./binary --scheme foo --seed=0 --param a > ./results/out_0.txt
+./binary --scheme foo --seed=0 --param b > ./results/out_1.txt
+./binary --scheme foo --seed=1 --param a > ./results/out_2.txt
+./binary --scheme foo --seed=1 --param b > ./results/out_3.txt
+./binary --scheme foo --seed=2 --param a > ./results/out_4.txt
+./binary --scheme foo --seed=2 --param b > ./results/out_5.txt
 ```
 
 You can specify ranges with various patterns:
@@ -28,9 +28,9 @@ You can specify ranges with various patterns:
 **Example**               | **Type**
 --------------------------|-------------------------
 `[4,a,8,...]`             | simple lists
-`range(0,20,3)`           | python-like ranges
-`linspace(0,2,5)`         | python numpy-like linear ranges
-`logspace(1,1000,5,10)`   | python numpy-like log ranges
+`range(0,20,3)`           | python-like ranges (start, end, step)
+`linspace(0,2,5)`         | python numpy-like linear ranges (start, stop, num)
+`logspace(3,12,10,2)`     | python numpy-like log ranges (start, stop, num, base)
 
 ## Collect execution results
 
@@ -38,7 +38,7 @@ Probably you want to collect certain metrics of your application executions
 and evaluate them. You can use the `mcollector` to achieve that efficiently.
 The `mcollector` expects multiple files each containing the `stdout` of one
 application run. Your application should output *every* relevant information.
-E.g. if you execute `./binary -k0 foo -k1=2 -k2 b`, a `stdout` processable
+E.g. if you execute `./binary --scheme foo --seed=16547`, a `stdout` processable
 by the `mcollector` could look like:
 
 ```
