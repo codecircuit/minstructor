@@ -92,18 +92,18 @@ class TestCLIAutoKeywordDetection < Test::Unit::TestCase
 	def test_whitespaceKeywords
 		data_dir = $data_dir_pre + "whitespace-keywords"
 		# The lines which must be in the correct output
-		lines = ['"sleep 1",0.1,2,3,4,1764,5,6,7',
-		         '"sleep 2",0.2,8,9,10,1800,11,12,13']
+		lines = ['"sleep 1",0.10,2,3,4,1764,5,6,7',
+		         '"sleep 2",0.20,8,9,10,1800,11,12,13']
 		# the head of the CSV output
 		head = "Command being timed," +
-			"User time(seconds)," +
+			"User time (seconds)," +
 			"Percent of CPU this job got," +
 			"Average unshared data size (kbytes)," +
 			"Average total size (kbytes)," +
 			"Maximum resident set size (kbytes)," +
 			"Major (requiring I/O) page faults," +
 			"Swaps," +
-			"File System inputs"
+			"File system inputs"
 
 		# the mcollector should output the CSV table to stdout
 		# if we do not specify an output file
