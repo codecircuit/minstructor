@@ -16,6 +16,7 @@ class OptPrs
 		options.debug = false
 		options.dry = false
 		options.opath = ""
+		options.vfnames = false
 		options.backend = :shell
 		options.noprompt = false
 		options.rep = 1 # number of command repetitions
@@ -35,6 +36,12 @@ class OptPrs
 			        "Directory where all output files, which contain",
 			        "the stdout of your binary, will be saved") do |p|
 				options.opath = p
+			end
+
+			opts.on("--verbose-fnames",
+			        "Add suffix with current command line parameters",
+			        "to output file names") do |vfnames|
+				options.vfnames = vfnames
 			end
 
 			opts.on("-f", "Do not prompt") do |noprompt|
