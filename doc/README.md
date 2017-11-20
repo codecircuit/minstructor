@@ -38,7 +38,7 @@ Probably you want to collect certain metrics of your application executions
 and evaluate them. You can use the `mcollector` to achieve that efficiently.
 The `mcollector` expects multiple files each containing the `stdout` of one
 application run. Your application should output *every* relevant information.
-E.g. if you execute `./binary -k0 foo -k1=2 -k2 b`, a `stdout` processable
+E.g. if you execute `./binary --scheme foo --seed 16547`, a `stdout` processable
 by the `mcollector` could look like:
 
 ```
