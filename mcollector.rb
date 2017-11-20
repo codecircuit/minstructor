@@ -16,6 +16,7 @@ class OptPrs
 		options.noprompt = false
 		options.keywords = []
 		options.nokeywords = Set.new
+		options.wkeywords = false
 		options.opath = ""
 		options.debug = false
 		options.sort = false
@@ -35,6 +36,12 @@ class OptPrs
 			opts.on("-i", "--ignore-keywords WORD0,WORD1,... ",
 			        "Ignore this keywords", Array) do |nokeywords|
 				options.nokeywords = Set.new(nokeywords)
+			end
+
+			opts.on("-w", "--whitespace-keywords",
+			        "Allow automatic detected keywords",
+			        "to contain whitespaces") do |wkeywords|
+				options.wkeywords = wkeywords
 			end
 
 			opts.on("-o", "--output CSVFILE",
