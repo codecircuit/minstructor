@@ -145,8 +145,11 @@ $valReg = /#{$quotationReg}|#{$dateReg}|#{$quantityReg}|#{$wordReg}/
 # minus.
 def getKeyValueReg(keyword=nil)
 	if keyword != nil
+		# If the keyword is given everything in the keyword should be matched
+		# literally, thus we escape every special regex character
+		safe_keyword = Regexp.quote(keyword)
 		# We must us [[:blank:]] instead of \s, because \s includes \n!
-		/(?<keyword>#{keyword})[[:blank:]]*#{$linkReg}[[:blank:]]*#{$valReg}/
+		/(?<keyword>#{safe_keyword})[[:blank:]]*#{$linkReg}[[:blank:]]*#{$valReg}/
 	else                       # '+?' = non greedy '+'
 		/(?<keyword>[_\-[:alnum:]]+?)[[:blank:]]*#{$linkReg}[[:blank:]]*#{$valReg}/
 	end
