@@ -157,10 +157,10 @@ def getKeyValueReg(keyword=nil)
 		safe_keyword = Regexp.quote(keyword)
 		# We must us [[:blank:]] instead of \s, because \s includes \n!
 		/(?<keyword>#{safe_keyword})[[:blank:]]*#{$linkReg}[[:blank:]]*#{$valReg}/
-	else                       # '+?' = non greedy '+'
-		if $options.wkeywords
-			/(?<keyword>[_ \-[:alnum:]]+?)[[:blank:]]*#{$linkReg}[[:blank:]]*#{$valReg}/
-		else
+	else
+		if $options.wkeywords           # '+?' = non greedy '+'
+			/(?<keyword>[_\(\) \-[:alnum:]]+?)[[:blank:]]*#{$linkReg}[[:blank:]]*#{$valReg}/
+		else                       # '+?' = non greedy '+'
 			/(?<keyword>[_\-[:alnum:]]+?)[[:blank:]]*#{$linkReg}[[:blank:]]*#{$valReg}/
 		end
 	end
@@ -319,8 +319,9 @@ def outputCSV(opath, csvRowHashes, allkeywords, options = {})
 
 	csvRows.sort! if options[:sort]
 
-	# add the header
-	csvStr = "#{allkeywords.to_a.join(',')}\n"
+	# add the header and ensure that the keywords have no
+	# preceeding and trailing whitespace characters
+	csvStr = "#{allkeywords.map { |k| k.strip }.to_a.join(',')}\n"
 
 	DEBUG("  - CSV ROWS = #{csvRows}")
 	csvRows.each_with_index do |row, i|
