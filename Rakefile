@@ -1,5 +1,5 @@
 task :readme => ["doc/README.md"] do
-	`pandoc doc/README.md -t markdown_github -o README.md`
+	`pandoc doc/README.md -t gfm -o README.md`
 end
 
 task :test do
@@ -42,12 +42,12 @@ task :install => [:default] do
 		# INSTALL MAN PAGES
 		manf = File.expand_path("build/#{t}.1.gz")
 		man1dir = "#{mandir}/man1/"
-		link = man1dir + File.basename(manf)
-		File.symlink(manf, link) if !File.exists?(link)
+		install_path = man1dir + File.basename(manf)
+		`cp -f #{manf} #{install_path}`
 
 		# INSTALL SCRIPTS
 		script = File.expand_path("#{t}.rb")
-		link = default_d + "/#{t}"
-		File.symlink(script, link) if !File.exists?(link)
+		install_path = default_d + "/#{t}"
+		`cp -f #{script} #{install_path}`
 	end
 end

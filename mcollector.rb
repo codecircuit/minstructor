@@ -1,4 +1,4 @@
-#!/usr/bin/ruby
+#!/usr/bin/env ruby
 
 require 'optparse'
 require 'ostruct'
@@ -16,6 +16,7 @@ class OptPrs
 		options.noprompt = false
 		options.keywords = []
 		options.nokeywords = Set.new
+		options.wkeywords = false
 		options.opath = ""
 		options.debug = false
 		options.sort = false
@@ -35,6 +36,12 @@ class OptPrs
 			opts.on("-i", "--ignore-keywords WORD0,WORD1,... ",
 			        "Ignore this keywords", Array) do |nokeywords|
 				options.nokeywords = Set.new(nokeywords)
+			end
+
+			opts.on("-w", "--weird-keywords",
+			        "Allow automatic detected keywords",
+					"to contain all characters except comma") do |wkeywords|
+				options.wkeywords = wkeywords
 			end
 
 			opts.on("-o", "--output CSVFILE",
@@ -145,10 +152,17 @@ $valReg = /#{$quotationReg}|#{$dateReg}|#{$quantityReg}|#{$wordReg}/
 # minus.
 def getKeyValueReg(keyword=nil)
 	if keyword != nil
+		# If the keyword is given everything in the keyword should be matched
+		# literally, thus we escape every special regex character
+		safe_keyword = Regexp.quote(keyword)
 		# We must us [[:blank:]] instead of \s, because \s includes \n!
-		/(?<keyword>#{keyword})[[:blank:]]*#{$linkReg}[[:blank:]]*#{$valReg}/
-	else                       # '+?' = non greedy '+'
-		/(?<keyword>[_\-[:alnum:]]+?)[[:blank:]]*#{$linkReg}[[:blank:]]*#{$valReg}/
+		/(?<keyword>#{safe_keyword})[[:blank:]]*#{$linkReg}[[:blank:]]*#{$valReg}/
+	else
+		if $options.wkeywords           # '+?' = non greedy '+'
+			/(?<keyword>[^,]+?)[[:blank:]]*#{$linkReg}[[:blank:]]*#{$valReg}/
+		else                       # '+?' = non greedy '+'
+			/(?<keyword>[_\-[:alnum:]]+?)[[:blank:]]*#{$linkReg}[[:blank:]]*#{$valReg}/
+		end
 	end
 end
 
@@ -305,8 +319,9 @@ def outputCSV(opath, csvRowHashes, allkeywords, options = {})
 
 	csvRows.sort! if options[:sort]
 
-	# add the header
-	csvStr = "#{allkeywords.to_a.join(',')}\n"
+	# add the header and ensure that the keywords have no
+	# preceeding and trailing whitespace characters
+	csvStr = "#{allkeywords.map { |k| k.strip }.to_a.join(',')}\n"
 
 	DEBUG("  - CSV ROWS = #{csvRows}")
 	csvRows.each_with_index do |row, i|

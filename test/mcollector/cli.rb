@@ -100,4 +100,20 @@ class TestCLI < Test::Unit::TestCase
 			assert(actualResult.include?(l))
 		end
 	end
+
+	def test_longKeysWithWhitespace
+		dataDir = $dataDirPrefix + "long-keys-with-whitespace"
+		# The lines which must be in the correct output
+		lines = ["baz,quux",
+		         "quuz,corge"]
+		# the head of the CSV output
+		head = "this is the long key,another key(with brackets)"
+
+		actualResult = %x(#{$mcollector} #{dataDir}/*.txt\
+		                  -k "this is the long key","another key(with brackets)")
+		assert(actualResult.lines()[0].include?(head))
+		lines.each do |l|
+			assert(actualResult.include?(l))
+		end
+	end
 end

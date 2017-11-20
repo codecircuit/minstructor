@@ -87,6 +87,27 @@ class TestCLI < Test::Unit::TestCase
 		end
 	end
 
+	def test_verboseOutputFileNaming
+		cmd = "#{$minstructor} \"#{@@dummyScriptFile} -key0 [ a,  3] " \
+		      "logspace(1,2,2)\" -f -n 2 --verbose-fname -o #{$thisDir}"
+		out = %x(#{cmd})
+		File.delete(@@dummyScriptLogFile)
+		out_file_names = [
+			"#{$thisDir}/#{@@defaultOutFilePrefix}0_a_10.0.txt",
+			"#{$thisDir}/#{@@defaultOutFilePrefix}1_a_100.0.txt",
+			"#{$thisDir}/#{@@defaultOutFilePrefix}2_3_10.0.txt",
+			"#{$thisDir}/#{@@defaultOutFilePrefix}3_3_100.0.txt",
+			"#{$thisDir}/#{@@defaultOutFilePrefix}4_a_10.0.txt",
+			"#{$thisDir}/#{@@defaultOutFilePrefix}5_a_100.0.txt",
+			"#{$thisDir}/#{@@defaultOutFilePrefix}6_3_10.0.txt",
+			"#{$thisDir}/#{@@defaultOutFilePrefix}7_3_100.0.txt"
+		]
+		for i in (0...8)
+			assert(File.exist? out_file_names[i])
+			File.delete(out_file_names[i])
+		end
+	end
+
 	def test_outputFilePrefix
 		cmd = "#{$minstructor} \"#{@@dummyScriptFile} -key0 " \
 		      "range(2)range(2)\" -f -n 3 -o #{$thisDir}/myoutputprefix"

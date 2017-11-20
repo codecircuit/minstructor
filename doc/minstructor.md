@@ -1,7 +1,8 @@
 ---
-title: minstructor(1) User Guide
+title: MINSTRUCTOR(1)
 author: Christoph Klein
-date: 2017-04-16
+date: 2017-11-20
+header: User Guide
 ...
 
 # NAME
@@ -24,7 +25,7 @@ set expression       | also known as
 [4,a,8,...]          | simple list
 range(0,20,3)        | python-like range (start, end, step)
 linspace(0,2,5)      | numpy-like linear range (start, stop, num)
-logspace(1,1000,5,10)| numpy-like log range (start, stop, num, base)
+logspace(2,11,10,2)  | numpy-like log range (start, stop, num, base)
 
 The measurement instructor executes the given *cmd* on the cartesian
 product of all set expressions (see **EXAMPLE** below).
@@ -36,52 +37,6 @@ Probably you want to collect certain metrics of your application executions
 and evaluate them. You can use the **mcollector**(1) to achieve that efficiently.
 
 
-# EXAMPLE
-
-## I
-**TODO: prevent line break here**  
-`$ minstructor "./binary -k0 foo -k1=range(3) -k2 [a,b]"`
-```
-./binary -k0 foo -k1=0 -k2 a
-./binary -k0 foo -k1=0 -k2 b
-./binary -k0 foo -k1=1 -k2 a
-./binary -k0 foo -k1=1 -k2 b
-./binary -k0 foo -k1=2 -k2 a
-./binary -k0 foo -k1=2 -k2 b
-```
-
-## II
-
-`$ minstructor -a "-w host0,host1" -b slurm "./binary -k0 foo -k1 [a,1,c]"`  
-
-```
-sbatch --wrap "./binary -k0 foo -k1 a" -w host0,host1
-sbatch --wrap "./binary -k0 foo -k1 1" -w host0,host1
-sbatch --wrap "./binary -k0 foo -k1 c" -w host0,host1
-```
-
-## III
-
-`$ minstructor -o /dir0/dir1/ "./binary -k0 foo -k1=linspace(0,1,3)"`
-
-```
-./binary -k foo -k1=0   > /dir0/dir1/out_0.txt
-./binary -k foo -k1=0.5 > /dir0/dir1/out_1.txt
-./binary -k foo -k1=1.0 > /dir0/dir1/out_2.txt
-```
-
-## IV
-
-$ ls
-```
-out_16.txt out_678.txt other.txt binary
-```
-$ minstructor -o . "./binary -key=range(2)"
-```
-  ./binary -key=0 > out_679.txt
-  ./binary -key=1 > out_678.txt
-```
-
 # OPTIONS
 
 -n *repetitions*
@@ -89,7 +44,7 @@ $ minstructor -o . "./binary -key=range(2)"
     measurement points for the same constellation of parameters, e.g. to
     calculate reasonable mean values, you can use this parameter (*DEFAULT*=1).
 
--o, --output-dir *path*[*prefix*]
+-o, \--output-dir *path*[*prefix*]
 :   Directory where all output files, which contain the stdout of
     your binary, will be saved.
     Generally you want to save the output files in an empty directory, as
@@ -101,6 +56,11 @@ $ minstructor -o . "./binary -key=range(2)"
     chooses the indices of output files consecutive without overwriting
     any existing files (see **EXAMPLE**).
 
+\--verbose-fnames
+:   Add the values of the current parameters to the output file name.
+    It is good practice not to use this flag, as decoding information
+    in file names is error-prone. You should better include all
+    necessary information in the stdout of your application.
 
 -f
 :   Do not prompt.
@@ -130,8 +90,58 @@ $ minstructor -o . "./binary -key=range(2)"
 
 # DEFAULTS
 
-Execute each unique command once with the shell backend
+Execute each unique command once with the shell back-end
 and without producing any output files.
+
+# EXAMPLE
+
+## I
+
+```
+$ minstructor "./binary -k0 foo -k1=range(3) -k2 [a,b]"
+
+./binary -k0 foo -k1=0 -k2 a
+./binary -k0 foo -k1=0 -k2 b
+./binary -k0 foo -k1=1 -k2 a
+./binary -k0 foo -k1=1 -k2 b
+./binary -k0 foo -k1=2 -k2 a
+./binary -k0 foo -k1=2 -k2 b
+```
+
+## II
+
+```
+$ minstructor -a "-w host0,host1" -b slurm "./binary -k0 foo -k1 [a,1,c]"
+
+sbatch --wrap "./binary -k0 foo -k1 a" -w host0,host1
+sbatch --wrap "./binary -k0 foo -k1 1" -w host0,host1
+sbatch --wrap "./binary -k0 foo -k1 c" -w host0,host1
+```
+
+## III
+
+```
+$ minstructor -o /dir0/dir1/ "./binary -k0 foo -k1=linspace(0,1,3)"
+
+./binary -k foo -k1=0   > /dir0/dir1/out_0.txt
+./binary -k foo -k1=0.5 > /dir0/dir1/out_1.txt
+./binary -k foo -k1=1.0 > /dir0/dir1/out_2.txt
+```
+
+## IV
+
+```
+$ ls
+
+out_16.txt out_678.txt other.txt binary
+
+$ minstructor --verbose-fname -o . "./binary -key=range(2)"
+
+  ./binary -key=0 > out_679_0.txt
+  ./binary -key=1 > out_678_1.txt
+```
 
 # SEE ALSO
 **mcollector**(1), **byobu**(1)
+
+https://github.com/codecircuit/minstructor

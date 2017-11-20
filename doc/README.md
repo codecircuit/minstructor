@@ -3,8 +3,8 @@
 If you are tired of writing scripts manually, which instruct
 an application you want to benchmark, this program is what
 you are searching for. You give lists of command line parameter
-values to the Measurement Instructor and he executes your
-application with every possible combination of the given parameters.
+values to the Measurement Instructor and it executes your
+application with every possible combination of the given parameter set.
 
 If you specify a name prefix for the output files on the command line, the
 standard output of your application executions will be saved appropriately.
@@ -14,7 +14,7 @@ there can be a lot of them.
 E.g. `minstructor -o ./results "./binary -k0 foo -k1=range(3) -k2 [a,b]"`
 will result in executing the following commands:
 
-```shell
+```
 ./binary -k0 foo -k1=0 -k2 a > ./results/out_0.txt
 ./binary -k0 foo -k1=0 -k2 b > ./results/out_1.txt
 ./binary -k0 foo -k1=1 -k2 a > ./results/out_2.txt
@@ -41,14 +41,17 @@ application run. Your application should output *every* relevant information.
 E.g. if you execute `./binary -k0 foo -k1=2 -k2 b`, a `stdout` processable
 by the `mcollector` could look like:
 
-```shell
+```
 ...
-  - key0 -> foo
-  - key1 =   2
-  other words key2: "long string a"
-footime: 0.4687 s
-     you can also mention key2 here
-  - bar-val --> 16547
+  - scheme -> foo
+  - bandwidth =   20 GB/s
+    foo bar baz ... weather: "sunny and warm"
+    footime: 0.4687 s
+
+    Here you can also write about the bandwidth or scheme etc.
+    unless you don't assign it twice.
+
+  - random-seed --> 16547
 ...
 ```
 
@@ -67,10 +70,10 @@ in several output files, an example CSV output of the `mcollector` could
 look like:
 
 ```
-key0,key1,key2,footime,bar-val,data-file-path
-foo,2,"long string a",0.4687,16547,/abs/path/results/out_0.txt
-foo,1,"long string b",N/A,1756,/abs/path/results/out_1.txt
-foo,0,"long string c",0.4864,1654,/abs/path/results/out_2.txt
+scheme,bandwidth,weather,footime,random-seed,data-file-path
+foo,20,"sunny and warm",0.4687,16547,/abs/path/results/out_0.txt
+foo,10,"rainy",N/A,1756,/abs/path/results/out_1.txt
+foo,0,"windy and rainy",0.4864,1654,/abs/path/results/out_2.txt
 ```
 
 If a file does not contain a keyword assignment, which is found in
@@ -94,14 +97,13 @@ If your shell does not find the RubyGems, it might be helpful to add
 
 ## Installation
 
-Up to know the installation (`rake install`) will simply create two soft links
-under /usr/local/bin, which point to your cloned repository. The same
-will be done with the manual pages.
+Up to know the installation (`rake install`) will simply copy the scripts to 
+`/usr/local/bin`. The manual pages are installed to `$(man -w | cut -d: -f1)/man1`.
 
 ## Documentation
 
-You will find more information on the manual pages, which can be build
-with `rake man`, or build and installed with `rake install`.
+You will find more information on the manual pages, which can be built
+with `rake man`, or built and installed with `rake install`.
 
 ## minstructor VS google-benchmark-lib
 
