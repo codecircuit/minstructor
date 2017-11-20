@@ -52,7 +52,7 @@ the **minstructor**(1) to achieve that efficiently.
     an effect for automatic keyword detection. Usually this is only useful if
     you have one keyword assignment per line.
 
--o, --output *csvfile*
+-o, \--output *csvfile*
 :   Path to output the CSV data. If not specified the mcollector will
     print the CSV data to stdout. This flag might result in asking
     for confirmation in case of overwriting a file.
