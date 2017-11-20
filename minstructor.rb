@@ -418,16 +418,13 @@ class OutputFileNameIterator
 		@prefix == nil
 	end
 
-	def next
+	def next(additional_suffix = "")
 		return "" if @prefix == nil
-		currOutFilePath = @prefix + @id.to_s + ".txt"
+		curr_out_file_path = @prefix + @id.to_s + additional_suffix + ".txt"
 		@id += 1
-
-		currOutFilePath
+		curr_out_file_path
 	end
 end # OutputFileNameIterator
-
-
 
 # Takes the parsed command line e.g.:
 #     ["./binary -k const -f ", [1,2,3], " foo bar"]
@@ -468,14 +465,13 @@ def expandCmd(parsedCmds, outFileName_it, backend=:shell)
 	parsedCmds = parsedCmds * $options.rep
 	DEBUG("  - cmds with repititions = #{parsedCmds}")
 
-
 	## ADJUST COMMANDS FOR BACKEND AND APPEND OUTFILES ##
 	if backend == :slurm
 		DEBUG("  - you choose the slurm backend")
 		parsedCmds.map! do |cmd|
 			cmd_str = "sbatch #{$options.backendArgs} " + '--wrap "' + cmd.join + '"'
-			cmd_str << " -o #{outFileName_it.next}" unless outFileName_it.empty?
 			job_name = cmd.values_at(*parameter_pos).join("_")
+			cmd_str << " -o #{outFileName_it.next}" unless outFileName_it.empty?
 			cmd_str << " -J '#{job_name}' "
 			cmd_str
 		end
