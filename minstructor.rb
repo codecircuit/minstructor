@@ -16,6 +16,7 @@ class OptPrs
 		options.debug = false
 		options.dry = false
 		options.opath = ""
+		options.vfnames = false
 		options.backend = :shell
 		options.noprompt = false
 		options.rep = 1 # number of command repetitions
@@ -35,6 +36,12 @@ class OptPrs
 			        "Directory where all output files, which contain",
 			        "the stdout of your binary, will be saved") do |p|
 				options.opath = p
+			end
+
+			opts.on("--verbose-fnames",
+			        "Add suffix with current command line parameters",
+			        "to output file names") do |vfnames|
+				options.vfnames = vfnames
 			end
 
 			opts.on("-f", "Do not prompt") do |noprompt|
@@ -340,7 +347,7 @@ def frontend(userInput)
 	DEBUG("[-] frontend()")
 
 	expanded
-end
+end # frontend
 
 ###########
 # BACKEND #
@@ -418,16 +425,19 @@ class OutputFileNameIterator
 		@prefix == nil
 	end
 
-	def next
+	def next(additional_suffix = "")
+		#curr_out_file_path = ""
 		return "" if @prefix == nil
-		currOutFilePath = @prefix + @id.to_s + ".txt"
+		if additional_suffix == ""
+			curr_out_file_path = @prefix + @id.to_s + ".txt"
+		else
+			curr_out_file_path = @prefix + @id.to_s + "_" +
+				additional_suffix.strip().gsub(/\s/,"_") + ".txt"
+		end
 		@id += 1
-
-		currOutFilePath
+		curr_out_file_path
 	end
 end # OutputFileNameIterator
-
-
 
 # Takes the parsed command line e.g.:
 #     ["./binary -k const -f ", [1,2,3], " foo bar"]
@@ -468,25 +478,36 @@ def expandCmd(parsedCmds, outFileName_it, backend=:shell)
 	parsedCmds = parsedCmds * $options.rep
 	DEBUG("  - cmds with repititions = #{parsedCmds}")
 
-
 	## ADJUST COMMANDS FOR BACKEND AND APPEND OUTFILES ##
 	if backend == :slurm
 		DEBUG("  - you choose the slurm backend")
 		parsedCmds.map! do |cmd|
 			cmd_str = "sbatch #{$options.backendArgs} " + '--wrap "' + cmd.join + '"'
-			cmd_str << " -o #{outFileName_it.next}" unless outFileName_it.empty?
 			job_name = cmd.values_at(*parameter_pos).join("_")
+			if $options.vfnames
+				cmd_str << " -o #{outFileName_it.next(job_name)}" unless outFileName_it.empty?
+			else
+				cmd_str << " -o #{outFileName_it.next}" unless outFileName_it.empty?
+			end
 			cmd_str << " -J '#{job_name}' "
 			cmd_str
 		end
 	end
 	if backend == :shell
-		parsedCmds.map! { |cmd| cmd.join }
 		DEBUG("  - you choose the shell backend")
 		if not outFileName_it.empty?
 			parsedCmds.map! do |cmd|
-				cmd += " > #{outFileName_it.next}"
+				if $options.vfnames
+					job_name = cmd.values_at(*parameter_pos).join("_")
+					cmd_str = cmd.join + " > #{outFileName_it.next(job_name)}"
+				else
+					cmd_str = cmd.join + " > #{outFileName_it.next}"
+					DEBUG("    - building up command: #{cmd_str}")
+				end
+				cmd_str
 			end
+		else 
+			parsedCmds.map! { |cmd| cmd.join }
 		end
 	end
 
@@ -495,6 +516,7 @@ def expandCmd(parsedCmds, outFileName_it, backend=:shell)
 		exit 1
 	end
 
+	DEBUG("  - parsed cmds befor sequeezing: #{parsedCmds}")
 	# REMOVE UNNECESSARY WHITESPACE
 	parsedCmds.map! { |cmd| cmd.squeeze(" ") }
 
