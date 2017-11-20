@@ -47,6 +47,11 @@ the **minstructor**(1) to achieve that efficiently.
     e.g. to omit text like 'ERROR: foo bar', which will be interpreted
     as an key value assignment.
 
+-w, \--weird-keywords
+:   Allow keywords to contain all characters except comma. This has only
+    an effect for automatic keyword detection. Usually this is only useful if
+    you have one keyword assignment per line.
+
 -o, --output *csvfile*
 :   Path to output the CSV data. If not specified the mcollector will
     print the CSV data to stdout. This flag might result in asking
