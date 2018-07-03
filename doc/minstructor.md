@@ -141,6 +141,16 @@ $ minstructor --verbose-fname -o . "./binary -key=range(2)"
   ./binary -key=1 > out_678_1.txt
 ```
 
+## V
+
+```
+$ minstructor --verbose-fname -o . 'VAR=[1,2,3]; ./binary -k $VAR -j $VAR'
+
+  ./binary -k 1 -j 1
+  ./binary -k 2 -j 2
+  ./binary -k 3 -j 3
+```
+
 # SEE ALSO
 **mcollector**(1), **byobu**(1)
 
