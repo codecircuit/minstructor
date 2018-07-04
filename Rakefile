@@ -1,3 +1,14 @@
+def which(cmd)
+	exts = ENV['PATHEXT'] ? ENV['PATHEXT'].split(';') : ['']
+	ENV['PATH'].split(File::PATH_SEPARATOR).each do |path|
+		exts.each { |ext|
+			exe = File.join(path, "#{cmd}#{ext}")
+			return exe if File.executable?(exe) && !File.directory?(exe)
+		}
+	end
+	return ""
+end
+
 task :readme => ["doc/README.md"] do
 	`pandoc doc/README.md -t gfm -o README.md`
 end
@@ -14,25 +25,18 @@ targets = ["minstructor", "mcollector"]
 
 targets.each do |t|
 	file "build/#{t}.1.gz" => ["build", "doc/#{t}.md"] do
-		`pandoc -t man -s doc/#{t}.md -o build/#{t}.1.gz`
+		if not File.executable?(which('pandoc'))
+			puts 'WARNING: `pandoc` is not installed; manual pages cannot be created.'
+			puts 'Ensure that `pandoc` is in your $PATH'
+		else
+			`pandoc -t man -s doc/#{t}.md -o build/#{t}.1.gz`
+		end
 	end
 end
 
 task :man => targets.map { |t| "build/#{t}.1.gz"} 
 
 task :default => [:man]
-
-
-def which(cmd)
-	exts = ENV['PATHEXT'] ? ENV['PATHEXT'].split(';') : ['']
-	ENV['PATH'].split(File::PATH_SEPARATOR).each do |path|
-		exts.each { |ext|
-			exe = File.join(path, "#{cmd}#{ext}")
-			return exe if File.executable?(exe) && !File.directory?(exe)
-		}
-	end
-	return ""
-end
 
 task :install => [:default] do
 
