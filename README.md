@@ -76,9 +76,10 @@ files, the value is substituted with N/A.
 ## Requirements
 
 To build the manual pages you need to have `pandoc`, which can be
-installed with most system package manager programs. I wrote the scripts
-in Ruby, thus you need a Ruby implementation and the Ruby package
-manager `gem` to install the required RubyGems:
+installed with most system package manager programs. `man` is required
+to install the manual pages. I wrote the scripts in Ruby, thus you need
+a Ruby implementation and the Ruby package manager `gem` to install the
+required RubyGems:
 
 ``` shell
 $ gem install progressbar
