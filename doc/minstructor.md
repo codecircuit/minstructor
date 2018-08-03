@@ -26,6 +26,7 @@ set expression       | also known as
 range(0,20,3)        | python-like range (start, end, step)
 linspace(0,2,5)      | numpy-like linear range (start, stop, num)
 logspace(2,11,10,2)  | numpy-like log range (start, stop, num, base)
+fromfile(./file.txt) | reads linewise from a file
 
 The measurement instructor executes the given *cmd* on the cartesian
 product of all set expressions (see **EXAMPLE** below).

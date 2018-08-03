@@ -150,4 +150,19 @@ class TestCLI < Test::Unit::TestCase
 			File.delete(outFileName)
 		end
 	end
+
+	def test_fromfile
+		cmd = "#{$minstructor} \"#{@@dummyScriptFile} -key0 a " \
+			"-blao fromfile(minstructor/data/fromfile0.txt)\" -f"
+		%x(#{cmd})
+
+		f = File.open(@@dummyScriptLogFile, "r")
+		log = f.read()
+		f.close()
+		File.delete(@@dummyScriptLogFile)
+		lines = log.lines.map {|l| l.chomp} # remove \n
+		assert(lines.include?("-key0 a -blao 1"))
+		assert(lines.include?("-key0 a -blao 2"))
+		assert(lines.include?("-key0 a -blao 3"))
+	end
 end

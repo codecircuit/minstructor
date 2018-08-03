@@ -160,6 +160,16 @@ def logspace(s, e, num=50, base=10.0, precision=6)
 	exponents.map { |exp| (base**exp).round(precision) }
 end
 
+def fromfile(filename)
+	res = []
+	File.open(filename) do |f|
+		f.each_line do |l|
+			res.push(l.chomp())
+		end
+	end
+	res
+end
+
 ##############################
 # COMMAND BUILDING FUNCTIONS #
 ##############################
@@ -224,6 +234,8 @@ end
 # You must remove white spaces before using this dictionary
 $floatingPointRegex = /[-+]?[[:digit:]]*\.?[[:digit:]]*/
 $integerRegex       = /[-+]?[[:digit:]]+/
+#$pathRegex          = /[^[:space]]+/
+$pathRegex          = /[^[:space:]\(\)]+/
 
 $regexOfRangeExpr = {
 # I want to group without capturing as the String.scan function
@@ -239,34 +251,8 @@ $regexOfRangeExpr = {
 	:logspace2 => /logspace\(\s*#{$floatingPointRegex}\s*,\s*#{$floatingPointRegex}\s*\)/,
 	:logspace3 => /logspace\(\s*#{$floatingPointRegex}\s*,\s*#{$floatingPointRegex}\s*,\s*#{$floatingPointRegex}\s*\)/,
 	:logspace4 => /logspace\(\s*#{$floatingPointRegex}\s*,\s*#{$floatingPointRegex}\s*,\s*#{$floatingPointRegex}\s*,\s*#{$floatingPointRegex}\s*\)/,
+	:fromfile => /fromfile\(\s*#{$pathRegex}\s*\)/,
 }
-
-def identifyRangeExpr(str)
-	str.gsub!(/\s/, '')
-	$regexOfRangeExpr.each do |key, regex|
-		return key if str.index(regex) != nil
-	end
-
-	nil
-end
-
-# Takes one string and returns a list of strings
-# if the input string has been a range expression.
-# E.g. "-key0"    -> "-key0"
-#      "range(3)" -> ["0", "1", "2"]
-def expandRangeExpr(str)
-	str.gsub!(/\s/, '')
-	type = identifyRangeExpr(str)
-	if  type != :list && type != nil # :list is a self defined type (see above)
-		values = eval(str)
-		return values.map { |el| el.to_s }
-	elsif type == :list
-		# add quotation marks around list elements
-		return eval(str.gsub!(/([^\[\],]+)/,'\'\1\''))
-	else
-		return str
-	end
-end
 
 # The frontend takes the cmd input with range expressions
 # E.g. "./bin -key0 val -key1 range( 3) -key2 [a,b,33] foo"
@@ -288,15 +274,7 @@ def frontend(userInput)
 	matchToExpansion = {}
 	$regexOfRangeExpr.each_pair do |k, reg|
 		DEBUG("CHECKING THE KEY #{k} WITH REGEX #{reg}")
-		if k != :list # lists must be treated separately
-			strRanges = userInput.scan(reg)
-			DEBUG("SCAN PATTERN RESULT #{strRanges}")
-			strRanges.each do |strRange|
-				DEBUG("TRY TO EVAL #{strRange}")
-				expRange = eval(strRange)
-				matchToExpansion[strRange] = expRange
-			end
-		else # if it is a list
+		if k == :list
 			strLists = userInput.scan(reg)
 			DEBUG("LISTS I FOUND = #{strLists}")
 			strLists.each do |strList|
@@ -305,6 +283,29 @@ def frontend(userInput)
 				# Add quotation marks around elements
 				l = eval(strList.gsub(/([^\[\],]+)/,'\'\1\''))
 				matchToExpansion[strList] = l
+			end
+		elsif k == :fromfile
+			# Here we also add quotation marks
+			strRanges = userInput.scan(reg)
+			DEBUG("SCAN PATTERN RESULT #{strRanges}")
+			strRanges.each do |strRange|
+				DEBUG("CURRENT REGEX = #{$regexOfRangeExpr[:fromfile]}")
+				DEBUG("strRange = #{strRange}")
+				r = /fromfile\(\s*(?<path>#{$pathRegex})\s*\)/
+				m = strRange.scan(r)
+				DEBUG("EVALUATING fromfile(#{m[0][0]})")
+				expRange = fromfile(m[0][0])
+				DEBUG("Adding #{expRange} FROMFILE")
+				matchToExpansion[strRange] = expRange
+			end
+		else # all other stuff
+			strRanges = userInput.scan(reg)
+			DEBUG("SCAN PATTERN RESULT #{strRanges}")
+			strRanges.each do |strRange|
+				DEBUG("TRY TO EVAL #{strRange}")
+				expRange = eval(strRange)
+				DEBUG("Adding #{expRange}")
+				matchToExpansion[strRange] = expRange
 			end
 		end
 	end

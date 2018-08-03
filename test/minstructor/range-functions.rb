@@ -1,6 +1,9 @@
 require 'test/unit'
 require_relative '../../minstructor.rb'
 
+$thisDir = File.dirname(File.expand_path(__FILE__))
+$dataDirPrefix = "#{$thisDir}/data/"
+
 class TestRangeFunctions < Test::Unit::TestCase
 
 	def test_range
@@ -29,4 +32,10 @@ class TestRangeFunctions < Test::Unit::TestCase
 		assert_raise(RangeError) {logspace(1,3,-1)}
 	end
 
+	def test_fromfile
+		out0 = fromfile("#{$dataDirPrefix}fromfile0.txt")
+		assert_equal(["1", "2", "3"], out0)
+		out1 = fromfile("#{$dataDirPrefix}fromfile1.txt")
+		assert_equal(["foo bar", "baz qux", "quux quuz"], out1)
+	end
 end
