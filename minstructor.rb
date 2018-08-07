@@ -483,7 +483,7 @@ def expandCmd(parsedCmds, outFileName_it, backend=:shell)
 	if backend == :slurm
 		DEBUG("  - you choose the slurm backend")
 		parsedCmds.map! do |cmd|
-			cmd_str = "sbatch #{$options.backendArgs} " + '--wrap "' + cmd.join + '"'
+			cmd_str = "sbatch #{$options.backendArgs} " + "--wrap '" + cmd.join + "'"
 			job_name = cmd.values_at(*parameter_pos).join("_")
 			if $options.vfnames
 				cmd_str << " -o #{outFileName_it.next(job_name)}" unless outFileName_it.empty?
