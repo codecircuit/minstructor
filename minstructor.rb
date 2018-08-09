@@ -555,7 +555,7 @@ def executeCmds(cmds)
 			curr_pending_jobs = `squeue -u $USER --noheader | wc -l`.to_i()
 			while curr_pending_jobs > $options.max_pending_jobs
 				`sleep 1`
-				curr_pending_jobs = `squeue -u $USER --noheader | wc -l`
+				curr_pending_jobs = `squeue -u $USER --noheader | wc -l`.to_i()
 			end
 		end
 		output = `#{cmd}` unless $options.dry
