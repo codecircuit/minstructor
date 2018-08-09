@@ -20,6 +20,9 @@ class OptPrs
 		options.backend = :shell
 		options.noprompt = false
 		options.rep = 1 # number of command repetitions
+		options.job_delay = 0.5 # seconds between two job submissions
+		options.max_pending_jobs = 100
+		options.disable_progress_bar = false
 
 		opt_parser = OptionParser.new do |opts|
 			opts.banner = 'Usage: minstructor.rb [OPTIONS] "CMD0" "CMD1"'
@@ -29,6 +32,11 @@ class OptPrs
 
 			opts.on("-n NUM", "Number every unique command " \
 			                            "is repeated") do |rep|
+				options.rep = rep.to_i
+			end
+
+			opts.on("-t SECONDS", "Seconds between two job submissions. " \
+			        "Has an effect if some scheduler is chosen as back end.") do |rep|
 				options.rep = rep.to_i
 			end
 
@@ -47,6 +55,14 @@ class OptPrs
 			opts.on("-f", "Do not prompt") do |noprompt|
 				options.noprompt = noprompt
 			end
+
+			opts.on("--no-progress-bar", "Hide the progress bar") do |disable_progress_bar|
+				# we must invert here, as the CLI parser interprets the `--no-...`
+				# pattern and sets the variable `disable_progress_bar` to false
+				# if `--no-progressbar` arises as CL flag
+				options.disable_progress_bar = (not disable_progress_bar)
+			end
+
 
 			opts.on("-b", "--backend [slurm|shell]",[:slurm, :shell],
 			        "DEFAULT=shell; Where to execute your binary. E.g.",
@@ -104,11 +120,6 @@ $options.cmds = ARGV # parse mandatory args
 
 # if debug be also verbose
 $options.verbose = $options.verbose || $options.debug
-
-# Between submitting jobs the script makes a break
-# of SLURMDELAY seconds. This prevents slurm from
-# rejecting jobs
-$SLURMDELAY = 0.5
 
 def DEBUG(msg)
 	puts "#{msg}" if $options.debug
@@ -530,17 +541,26 @@ end # expandCmd
 ##################################
 def executeCmds(cmds)
 	# If not verbose we want to have a progressbar
-	if not $options.verbose
-	pbar = ProgressBar.create
-	pbar.total = cmds.length
-	# pbar.title = <title> # to set the title of the progressbar
+	DEBUG("disable progress bar = #{$options.disable_progress_bar}")
+	if not $options.verbose and not $options.disable_progress_bar
+		pbar = ProgressBar.create
+		pbar.total = cmds.length
+		# pbar.title = <title> # to set the title of the progressbar
 	end
 
 	cmds.each do |cmd|
 		puts "Executing: '#{cmd}'" if $options.verbose
-		`sleep #{$SLURMDELAY}` if $options.backend == :slurm
-		`#{cmd}` unless $options.dry
-		pbar.increment unless $options.verbose
+		if $options.backend == :slurm
+			`sleep #{$options.job_delay}`
+			curr_pending_jobs = `squeue -u $USER --noheader | wc -l`.to_i()
+			while curr_pending_jobs > $options.max_pending_jobs
+				`sleep 1`
+				curr_pending_jobs = `squeue -u $USER --noheader | wc -l`
+			end
+		end
+		output = `#{cmd}` unless $options.dry
+		puts("\n\n" + output + "\n") if $options.backend == :shell and $options.opath == ""
+		pbar.increment if not $options.verbose and not $options.disable_progress_bar
 	end
 	puts "Nothing has been executed; this has been a dry run" if $options.dry
 end
@@ -572,7 +592,7 @@ if __FILE__ == $0
 	expandedCmds = expandedCmds.flatten
 	if expandedCmds.length > linesShowMax && !$options.verbose
 		if $options.backend == :slurm
-			estSec = expandedCmds.length * $SLURMDELAY
+			estSec = expandedCmds.length * $options.job_delay
 			if estSec / 3600.0 > 24.0
 				puts "Submitting the jobs will take more than 24h."
 			else

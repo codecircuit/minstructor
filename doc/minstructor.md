@@ -45,6 +45,10 @@ and evaluate them. You can use the **mcollector**(1) to achieve that efficiently
     measurement points for the same constellation of parameters, e.g. to
     calculate reasonable mean values, you can use this parameter (*DEFAULT*=1).
 
+-t *seconds*
+:   Seconds between two job submissions. This flag only has an effect if
+    a job scheduling system (e.g. Slurm) is chosen as back end.
+
 -o, \--output-dir *path*[*prefix*]
 :   Directory where all output files, which contain the stdout of
     your binary, will be saved.
@@ -66,11 +70,16 @@ and evaluate them. You can use the **mcollector**(1) to achieve that efficiently
 -f
 :   Do not prompt.
 
+\--no-progress-bar
+:   Hide the progress bar
+
 -b, \--backend [slurm|shell]
 :   Where to execute your binary (*DEFAULT*=shell). In case of the slurm backend,
-    jobs will be sent via sbatch.  Hint: if you want to leave an ssh session
-    after starting the *minstructor* , you can execute the script within a
-    byobu(1) environment and take the `shell` backend.
+    jobs will be sent via sbatch and the maximum pending job count is limited. Thus
+    `minstructor` will wait for the next job submission until you have less
+    pending jobs. Hint: if you want to leave an `ssh` session
+    after you started the *minstructor* , you can execute the script within a
+    **byobu(1)** environment.
 
 -a, \--backend-args "*bargs*"
 :   Specify additional *backend arguments*. This option depends on your
