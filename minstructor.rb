@@ -591,17 +591,6 @@ if __FILE__ == $0
 	# flatten: [[cmd,cmd,...],[cmd,cmd,...]] -> [cmd,cmd,cmd,cmd,...]
 	expandedCmds = expandedCmds.flatten
 	if expandedCmds.length > linesShowMax && !$options.verbose
-		if $options.backend == :slurm
-			estSec = expandedCmds.length * $options.job_delay
-			if estSec / 3600.0 > 24.0
-				puts "Submitting the jobs will take more than 24h."
-			else
-				t = Time.new(0)
-				t += estSec
-				puts "The jobs will approximately be submitted in " \
-				     "#{t.strftime("%T")} (hh:mm:ss)"
-			end
-		end
 		puts "Here is an random excerpt of your in total " \
 		     "#{expandedCmds.length} generated commands:"
 		expandedCmds.sample(linesShowMax).each { |cmd| puts cmd }
