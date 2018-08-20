@@ -6,30 +6,33 @@ searching for. You give lists of command line parameter values to the
 Measurement Instructor and it executes your application with every
 possible combination of the given parameter set.
 
-If you specify a name prefix for the output files on the command line,
+If you specify an output path for the output files on the command line,
 the standard output of your application executions will be saved
-appropriately. Generally you want to save the output files in an *empty*
-directory, as there can be a lot of them.
+appropriately. To enable multiple simultaneously **minstructor**
+executions, a new directory for the output files must be created, to
+avoid runtime hazards.
 
 E.g. `minstructor -o ./results "./binary --scheme foo --seed=range(3)
---param [a,b]"` will result in executing the following commands:
+--param [a,b]"` will result in executing the following
+    commands:
 
-    ./binary --scheme foo --seed=0 --param a > ./results/out_0.txt
-    ./binary --scheme foo --seed=0 --param b > ./results/out_1.txt
-    ./binary --scheme foo --seed=1 --param a > ./results/out_2.txt
-    ./binary --scheme foo --seed=1 --param b > ./results/out_3.txt
-    ./binary --scheme foo --seed=2 --param a > ./results/out_4.txt
-    ./binary --scheme foo --seed=2 --param b > ./results/out_5.txt
+    ./binary --scheme foo --seed=0 --param a > ./results/minstructor_0/out_0.txt
+    ./binary --scheme foo --seed=0 --param b > ./results/minstructor_0/out_1.txt
+    ./binary --scheme foo --seed=1 --param a > ./results/minstructor_0/out_2.txt
+    ./binary --scheme foo --seed=1 --param b > ./results/minstructor_0/out_3.txt
+    ./binary --scheme foo --seed=2 --param a > ./results/minstructor_0/out_4.txt
+    ./binary --scheme foo --seed=2 --param b > ./results/minstructor_0/out_5.txt
 
 You can specify ranges with various
 patterns:
 
-| **Example**           | **Type**                                              |
-| --------------------- | ----------------------------------------------------- |
-| `[4,a,8,...]`         | simple lists                                          |
-| `range(0,20,3)`       | python-like ranges (start, end, step)                 |
-| `linspace(0,2,5)`     | python numpy-like linear ranges (start, stop, num)    |
-| `logspace(3,12,10,2)` | python numpy-like log ranges (start, stop, num, base) |
+| **Example**            | **Type**                                              |
+| ---------------------- | ----------------------------------------------------- |
+| `[4,a,8,...]`          | simple lists                                          |
+| `range(0,20,3)`        | python-like ranges (start, end, step)                 |
+| `linspace(0,2,5)`      | python numpy-like linear ranges (start, stop, num)    |
+| `logspace(3,12,10,2)`  | python numpy-like log ranges (start, stop, num, base) |
+| `fromfile(./file.txt)` | reads linewise from a file                            |
 
 ## Collect execution results
 
@@ -56,7 +59,7 @@ could look like:
 You can collect your results, which are saved in output files, in a CSV
 table with:
 
-    mcollector ./results/out_*
+    mcollector ./results/mcollector_0/out_*
 
 The `mcollector` is able to recognize certain assignment patterns, like
 they are shown above, and will extract the words or numerical values
@@ -75,11 +78,11 @@ files, the value is substituted with N/A.
 
 ## Requirements
 
-To build the manual pages you need to have `pandoc`, which can be
-installed with most system package manager programs. `man` is required
-to install the manual pages. I wrote the scripts in Ruby, thus you need
-a Ruby implementation and the Ruby package manager `gem` to install the
-required RubyGems:
+Ruby version 2.5 or newer. To build the manual pages you need to have
+`pandoc`, which can be installed with most system package manager
+programs. `man` is required to install the manual pages. I wrote the
+scripts in Ruby, thus you need a Ruby implementation and the Ruby
+package manager `gem` to install the required RubyGems:
 
 ``` shell
 $ gem install progressbar

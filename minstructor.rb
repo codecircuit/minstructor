@@ -373,6 +373,8 @@ end # frontend
 class OutputFileNameIterator
 	def initialize(opath)
 		DEBUG("[+] OutputFileNameIterator(opath=#{opath})")
+		@created_dirs = []
+		@out_file_prefix = "out_"
 		if opath.empty?
 			@prefix = nil
 			@id = nil
@@ -381,19 +383,22 @@ class OutputFileNameIterator
 			return
 		end
 
-		## SETTING THE PREFIX ##
-		@prefix = String.new(opath)
-		if File.directory?(opath)
-			outDir = opath
-			@prefix = "#{@prefix.chomp('/')}/out_"
-			DEBUG("  - I got a output directory from the CLI")
-		else # else the user gave a prefix for the output files on the command line
-			outDir = File.dirname(opath)
-			if not File.directory?(outDir)
-				raise IOError, "Your output directory #{outDir} does not exists!"
-			end
-			DEBUG("  - I got a prefix for the output file naming on the CLI")
+		@out_dir_id = 0
+		@out_dir_prefix = "minstructor_"
+		if not Dir.exist?(opath.chomp('/'))
+			Dir.mkdir(opath.chomp('/'))
+			@created_dirs += [opath.chomp('/')]
 		end
+		@prefix = "#{opath.chomp('/')}/#{@out_dir_prefix}#{@out_dir_id}"
+		while Dir.exist?(@prefix) do
+			@out_dir_id += 1
+			@prefix = "#{opath.chomp('/')}/#{@out_dir_prefix}#{@out_dir_id}"
+		end
+		Dir.mkdir(@prefix)
+		@created_dirs += [@prefix]
+		@prefix = File.expand_path(@prefix)
+		@prefix += "/#{@out_file_prefix}"
+		@prefix.freeze()
 
 		## SETTING THE OUTPUT FILE INDEX ##
 		DEBUG("  - Search for the first free output file index")
@@ -401,40 +406,20 @@ class OutputFileNameIterator
 		@prefix = File.expand_path(@prefix)
 		@prefix.freeze
 		DEBUG("  - prefix = #{@prefix}")
-		outFileReg = /#{File.basename(@prefix)}(#{$integerRegex})\.txt/
-		usedIndices = [-1] # -1 results in default start index of 0
-		DEBUG("  - checking files in #{outDir}")
-		Dir.foreach(outDir) do |dirMem|
-			DEBUG("    - checking dir member = #{dirMem}")
-			if File.file?("#{outDir}/#{dirMem}")
-				md = dirMem.match(outFileReg)
-				if md != nil
-					DEBUG("    - match data = #{md}")
-					usedIndices += [md[1].to_i]
-				end
-			end
-		end
-		if system("which scontrol > /dev/null 2>&1")
-			DEBUG("  - checking scheduled slurm output files")
-			scontrol_out = `scontrol show job -u $(whoami)`
-			reg = /(?<=StdErr=).*|(?<=StdOut=).*/
-			user_out_files = scontrol_out.scan(reg)
-			user_out_files.each do |f|
-				DEBUG("    - checking if #{f} in #{outDir}")
-				md = f.match(outFileReg)
-				if md != nil
-					DEBUG("      - #{f} increases the first index")
-					usedIndices += [md[1].to_i]
-				end
-			end
-		end
-		@id = usedIndices.max + 1
+		@id = 0
 		DEBUG("  - uses start index = #{@id}")
 		DEBUG("[-] OutputFileNameIterator()")
 	end # end initialize
 
 	def empty?
 		@prefix == nil
+	end
+
+	# remove created directories
+	def rmdirs
+		@created_dirs.reverse_each do |d|
+			Dir.rmdir(d)
+		end
 	end
 
 	def next(additional_suffix = "")
@@ -607,6 +592,7 @@ if __FILE__ == $0
 		answer = gets.chomp
 		if not %w[Yes Y y yes].any? {|key| answer == key}
 			puts "Going to exit"
+			outFileName_it.rmdirs()
 			exit
 		end
 		puts "Continue..."

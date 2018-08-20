@@ -1,4 +1,4 @@
-#!/usr/bin/ruby
+#!/usr/bin/env ruby
 
 # this file makes it possible to disable
 # temporary tests by setting comments in
