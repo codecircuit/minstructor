@@ -112,7 +112,6 @@ class OptPrs
 		opt_parser.parse!(args)
 		options
 	end  # parse()
-
 end  # class OptPrs
 
 $options = OptPrs.parse(ARGV)
@@ -123,6 +122,12 @@ $options.verbose = $options.verbose || $options.debug
 
 def DEBUG(msg)
 	puts "#{msg}" if $options.debug
+end
+
+class Float
+	def try_int(epsilon = 0.0)
+		self == 0.0 ? 0 : ((to_i() - self) / self).abs <= epsilon ? to_i() : self
+	end
 end
 
 ###################
@@ -153,11 +158,13 @@ def linspace(s, e, num=50, precision=12)
 
 	return [s] * num if s == e
 
+	epsilon = 10**(-precision)
+
 	res = [s]
 	step = (e - s) / (num - 1.0)
 	acc = s + step
 	(0...num-1).each do
-		res.push(acc.round(precision))
+		res.push(acc.round(precision).to_f().try_int(epsilon))
 		acc += step
 	end
 
@@ -168,7 +175,8 @@ end
 # numpy like logspace
 def logspace(s, e, num=50, base=10.0, precision=6)
 	exponents = linspace(s, e, num)
-	exponents.map { |exp| (base**exp).round(precision) }
+	epsilon = 10**(-precision)
+	exponents.map { |exp| (base**exp).round(precision).to_f().try_int(epsilon) }
 end
 
 def fromfile(filename)

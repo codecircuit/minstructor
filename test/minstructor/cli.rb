@@ -94,14 +94,14 @@ class TestCLI < Test::Unit::TestCase
 		out = %x(#{cmd})
 		File.delete(@@dummyScriptLogFile)
 		out_file_names = [
-			"#{$thisDir}/minstructor_0/#{@@defaultOutFilePrefix}0_a_10.0.txt",
-			"#{$thisDir}/minstructor_0/#{@@defaultOutFilePrefix}1_a_100.0.txt",
-			"#{$thisDir}/minstructor_0/#{@@defaultOutFilePrefix}2_3_10.0.txt",
-			"#{$thisDir}/minstructor_0/#{@@defaultOutFilePrefix}3_3_100.0.txt",
-			"#{$thisDir}/minstructor_0/#{@@defaultOutFilePrefix}4_a_10.0.txt",
-			"#{$thisDir}/minstructor_0/#{@@defaultOutFilePrefix}5_a_100.0.txt",
-			"#{$thisDir}/minstructor_0/#{@@defaultOutFilePrefix}6_3_10.0.txt",
-			"#{$thisDir}/minstructor_0/#{@@defaultOutFilePrefix}7_3_100.0.txt"
+			"#{$thisDir}/minstructor_0/#{@@defaultOutFilePrefix}0_a_10.txt",
+			"#{$thisDir}/minstructor_0/#{@@defaultOutFilePrefix}1_a_100.txt",
+			"#{$thisDir}/minstructor_0/#{@@defaultOutFilePrefix}2_3_10.txt",
+			"#{$thisDir}/minstructor_0/#{@@defaultOutFilePrefix}3_3_100.txt",
+			"#{$thisDir}/minstructor_0/#{@@defaultOutFilePrefix}4_a_10.txt",
+			"#{$thisDir}/minstructor_0/#{@@defaultOutFilePrefix}5_a_100.txt",
+			"#{$thisDir}/minstructor_0/#{@@defaultOutFilePrefix}6_3_10.txt",
+			"#{$thisDir}/minstructor_0/#{@@defaultOutFilePrefix}7_3_100.txt"
 		]
 		for i in (0...8)
 			assert(File.exist? out_file_names[i])
