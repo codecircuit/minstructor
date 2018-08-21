@@ -1,7 +1,7 @@
 ---
 title: MCOLLECTOR(1)
 author: Christoph Klein
-date: 2017-11-20
+date: 2018-08-21
 header: User Guide
 ...
 
@@ -12,15 +12,16 @@ mcollector - measurement collector
 
 # SYNOPSIS
 
-**mcollector** [**-k** *keyword*[,...]] [**-i** *keyword*[,...]] [**-o** *csvfile*] [**-f**] [**-s**|**--sort**] [**-h**|**--help**] [**-v**|**--verbose**] *file0* *file1* ...
+**mcollector** [**-k** *keyword*[,...]] [**-i** *keyword*[,...]] [**-o** *csvfile*] [**-f**] [**-s**|**--sort**] [**-h**|**--help**] [**-v**|**--verbose**] *file0* *file1* ... *dir0* *dir1* ...
 
 
 # DESCRIPTION
 
-You give simple text *files* to the mcollector and he searches for
+You give simple text *files* to the `mcollector` and he searches for
 typical assignment patterns within that *files* to generate a CSV table.
 This is reasonable if the content of each file assigns each keyword at
-most once.
+most once. If a directory is given `mcollector` processes all files
+in that directory.
 
 Without the **-k** flag the measurement collector tries to search by itself for
 typical key value assignment patterns in the given text files (see **EXAMPLE**
@@ -56,6 +57,9 @@ the **minstructor**(1) to achieve that efficiently.
 :   Path to output the CSV data. If not specified the mcollector will
     print the CSV data to stdout. This flag might result in asking
     for confirmation in case of overwriting a file.
+
+-r, \--recursive
+:   Search recursively for data files in given directories.
 
 -f
 :   Do not prompt. This might result in overwriting files.

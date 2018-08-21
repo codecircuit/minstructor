@@ -113,4 +113,20 @@ class TestCLIAutoKeywordDetection < Test::Unit::TestCase
 			assert(actual_result.include?(l))
 		end
 	end
+
+	def test_recursive
+		dataDir = $data_dir_pre + "recursive"
+		# The lines which must be in the correct output
+		lines = ["baz,quux",
+		         "quuz,corge",
+		         "fred,plugh"]
+		# the head of the CSV output
+		head = "foo,bar"
+
+		actualResult = %x(#{$mcollector} -r #{dataDir})
+		assert(actualResult.lines()[0].include?(head))
+		lines.each do |l|
+			assert(actualResult.include?(l))
+		end
+	end
 end

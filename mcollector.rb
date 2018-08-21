@@ -20,6 +20,7 @@ class OptPrs
 		options.opath = ""
 		options.debug = false
 		options.sort = false
+		options.recursive = false
 
 		opt_parser = OptionParser.new do |opts|
 			opts.banner = "Usage: mcollector.rb [OPTIONS] FILE0 FILE1 ..."
@@ -49,6 +50,12 @@ class OptPrs
 			        "If no file is specified the program will",
 			        "stream its output to stdout") do |p|
 				options.opath = p
+			end
+
+			opts.on("-r", "--recursive",
+			        "If a directory is given as an input, search",
+			        "recursively in that directory for data files") do |r|
+				options.recursive = r
 			end
 
 			opts.on("-f", "Do not prompt. Be careful with this flag,",
@@ -169,14 +176,48 @@ end
 ##################
 # GATHER RESULTS #
 ##################
+
+def directoryEntries(dir, recursive = false)
+	DEBUG("[+] directoryEntries(#{dir}):")
+	result = []
+	next_dirs = []
+	Dir.entries(dir).each do |entry|
+		DEBUG("  - found entry #{entry}")
+		next if entry == ".." or entry == "."
+		pth = dir + '/' + entry
+		if File.file?(pth)
+			DEBUG("    - is a file")
+			result += [pth]
+		elsif Dir.exist?(pth)
+			next_dirs += [pth]
+		end
+	end
+	if recursive
+		next_dirs.each do |d|
+			result += directoryEntries(d, true)
+		end
+	end
+	DEBUG("[-] directoryEntries()")
+	return result
+end
+
 class DataFileIterator
-	# dfiles = array of data files,
-	# e.g. ["pth/to/file0.md", "pth/to/file1.txt"]
+	# dfiles = array of data files or directories,
+	# e.g. ["pth/to/file0.md", "pth/to/file1.txt", "pth/take_this_dir"]
+	# in case of a directory all the files within that directory are taken
 	def initialize(options = {})
 		options = {
 			:dfiles => [],
 		}.merge(options)
-		@dfiles = options[:dfiles]
+		@dfiles = []
+		options[:dfiles].each do |pth|
+			if Dir.exist?(pth)
+				DEBUG("  - Adding files of directory #{pth} = #{directoryEntries(pth, $options.recursive)}")
+				@dfiles += directoryEntries(pth, $options.recursive)
+			else
+				@dfiles += [pth]
+			end
+		end
 	end
 
 	# this function can be used to iterate with a block structure over all
