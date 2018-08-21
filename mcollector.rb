@@ -21,6 +21,7 @@ class OptPrs
 		options.debug = false
 		options.sort = false
 		options.recursive = false
+		options.separator = ','
 
 		opt_parser = OptionParser.new do |opts|
 			opts.banner = "Usage: mcollector.rb [OPTIONS] FILE0 FILE1 ..."
@@ -50,6 +51,12 @@ class OptPrs
 			        "If no file is specified the program will",
 			        "stream its output to stdout") do |p|
 				options.opath = p
+			end
+
+			opts.on("--separator CHARACTER",
+			        "If another separator than ',' is desired",
+			        "for the tabular output") do |s|
+				options.separator = s
 			end
 
 			opts.on("-r", "--recursive",
@@ -206,11 +213,13 @@ class DataFileIterator
 	# e.g. ["pth/to/file0.md", "pth/to/file1.txt", "pth/take_this_dir"]
 	# in case of a directory all the files within that directory are taken
 	def initialize(options = {})
+		DEBUG("[+] DataFileIterator():")
 		options = {
 			:dfiles => [],
 		}.merge(options)
 		@dfiles = []
 		options[:dfiles].each do |pth|
+			DEBUG("  - checking pth #{pth}")
 			if Dir.exist?(pth)
 				DEBUG("  - Adding files of directory #{pth} = #{directoryEntries(pth, $options.recursive)}")
 				@dfiles += directoryEntries(pth, $options.recursive)
@@ -218,6 +227,7 @@ class DataFileIterator
 				@dfiles += [pth]
 			end
 		end
+		DEBUG("[-] DataFileIterator()")
 	end
 
 	# this function can be used to iterate with a block structure over all
@@ -334,6 +344,10 @@ def gather(df_it, options = {})
 	DEBUG("[-] gather()")
 end
 
+def expandSeparator(s)
+	s.gsub('\t', "\t")
+end
+
 # either output to stdout or write to file
 #  - opath = path to CSV file
 #  - csvRowHashes = array of hashes containing the data of each row
@@ -360,15 +374,18 @@ def outputCSV(opath, csvRowHashes, allkeywords, options = {})
 
 	csvRows.sort! if options[:sort]
 
+	curr_separator = expandSeparator($options.separator)
+	DEBUG("  - curr separator = #{curr_separator}")
+
 	# add the header and ensure that the keywords have no
 	# preceeding and trailing whitespace characters
-	csvStr = "#{allkeywords.map { |k| k.strip }.to_a.join(',')}\n"
+	csvStr = "#{allkeywords.map { |k| k.strip }.to_a.join(curr_separator)}\n"
 
 	DEBUG("  - CSV ROWS = #{csvRows}")
 	csvRows.each_with_index do |row, i|
 		DEBUG("  - ROW = #{row}")
-		DEBUG("  - [*row].join(',') = #{[*row].join(',')}")
-		csvStr << [*row].join(',') << "\n"
+		DEBUG("  - [*row].join(#{curr_separator}) = #{[*row].join(curr_separator)}")
+		csvStr << [*row].join(curr_separator) << "\n"
 	end
 
 	# WRITE TO STDOUT

@@ -129,4 +129,19 @@ class TestCLIAutoKeywordDetection < Test::Unit::TestCase
 			assert(actualResult.include?(l))
 		end
 	end
+
+	def test_separator
+		dataDir = $data_dir_pre + "recursive"
+		# The lines which must be in the correct output
+		lines = ["baz\tquux",
+		         "quuz\tcorge"]
+		# the head of the CSV output
+		head = "foo\tbar"
+
+		actualResult = %x(#{$mcollector} --separator '\\t' #{dataDir})
+		assert(actualResult.lines()[0].include?(head))
+		lines.each do |l|
+			assert(actualResult.include?(l))
+		end
+	end
 end

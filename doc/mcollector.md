@@ -58,6 +58,9 @@ the **minstructor**(1) to achieve that efficiently.
     print the CSV data to stdout. This flag might result in asking
     for confirmation in case of overwriting a file.
 
+--separator *string*
+:   If a different separator than ',' is desired it can be chosen here.
+
 -r, \--recursive
 :   Search recursively for data files in given directories.
 
@@ -100,6 +103,7 @@ $ mcollector -i ERROR ./out_*.txt
   time,scheme-A,throughput,key2,data-file-path
   16546,fast_scheme,164.468e+77,16578,/data/out_0.txt
   16574,fast_scheme,16.48e+65,16873,/data/out_1.txt
+$ mcollector --separator '\t,\t' ./out_*.txt
   ...
 ```
 
