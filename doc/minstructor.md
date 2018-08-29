@@ -72,9 +72,7 @@ and evaluate them. You can use the **mcollector**(1) to achieve that efficiently
 
 -b, \--backend [slurm|shell]
 :   Where to execute your binary (*DEFAULT*=shell). In case of the slurm backend,
-    jobs will be sent via sbatch and the maximum pending job count is limited. Thus
-    `minstructor` will wait for the next job submission until you have less
-    pending jobs. Hint: if you want to leave an `ssh` session
+    jobs will be sent via sbatch. Hint: if you want to leave an `ssh` session
     after you started the *minstructor* , you can execute the script within a
     **byobu(1)** environment.
 

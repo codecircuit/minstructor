@@ -21,7 +21,6 @@ class OptPrs
 		options.noprompt = false
 		options.rep = 1 # number of command repetitions
 		options.job_delay = 0.5 # seconds between two job submissions
-		options.max_pending_jobs = 100
 		options.disable_progress_bar = false
 
 		opt_parser = OptionParser.new do |opts|
