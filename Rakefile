@@ -32,8 +32,12 @@ task :install, [:default_d,:man_d] => [:default] do |task,args|
     default_d = args.default_d
     mandir = args.man_d
 
-    puts "#{args.man_d}"
-    puts "#{mandir}"
+    puts "Installing ruby scripts to #{default_d}"
+    puts "Installing man files to #{mandir}"
+
+    # Ensure the required folders are available
+    FileUtils.mkdir_p default_d
+    FileUtils.mkdir_p mandir
 
 	[default_d, mandir].each do |d|
 		if !File.directory?(d)
