@@ -97,16 +97,16 @@ variable.
 
 ## Installation
 
-The default installation (`rake install`) will simply copy the
-scripts to `/usr/local/bin`. The manual pages are installed to `man1`
-folder in the last listed directory of `$ man -w`.
+The default installation (`rake install`) will simply copy the scripts
+to `/usr/local/bin`. The manual pages are installed to `man1` folder in
+the last listed directory of `$ man -w`.
 
-```bash
+``` bash
 rake "install[$(pwd)/rubyscripts,$(pwd)/mandir]"
 #installs scripts to $(pwd)/rubyscripts folder
 #installs man pages to $(pwd)/mandir folder
 
-rake "install"[,$(pwd)/mandir]"
+rake "install[,$(pwd)/mandir]"
 #installs ruby scripts to /usr/local/bin
 #installs man pages to $(pwd)/mandir folder
 
