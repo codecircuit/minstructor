@@ -36,7 +36,7 @@ class OptPrs
 
 			opts.on("-t SECONDS", "Seconds between two job submissions. " \
 			        "Has an effect if some scheduler is chosen as back end.") do |rep|
-				options.rep = rep.to_i
+				options.job_delay = rep.to_f
 			end
 
 			opts.on("-o", "--output-dir DIR[/PREFIX]",
@@ -543,7 +543,7 @@ def executeCmds(cmds)
 	cmds.each do |cmd|
 		puts "Executing: '#{cmd}'" if $options.verbose
 		if $options.backend == :slurm
-			`sleep #{$options.job_delay}`
+			sleep($options.job_delay)
 		end
 		output = `#{cmd}` unless $options.dry
 		puts("\n\n" + output + "\n") if $options.backend == :shell and $options.opath == ""
