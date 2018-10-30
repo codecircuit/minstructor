@@ -24,18 +24,22 @@ task :man => targets.map { |t| "build/#{t}.1.gz"}
 
 task :default => [:man]
 
-task :install, [:default_d,:man_d] => [:default] do |task,args|
-    args.with_defaults(:default_d => "/usr/local/bin",
+task :install, [:install_d,:man_d] => [:default] do |task,args|
+    args.with_defaults(:install_d => "/usr/local/bin",
                        :man_d => `man -w`.chomp.split(':')[-1]
                       )
 
-    default_d = args.default_d
+    install_d = args.install_d
     mandir = args.man_d
 
-    puts "#{args.man_d}"
-    puts "#{mandir}"
+    puts "Installing ruby scripts to #{install_d}"
+    puts "Installing man files to #{mandir}"
 
-	[default_d, mandir].each do |d|
+    # Ensure the required folders are available
+    FileUtils.mkdir_p install_d
+    FileUtils.mkdir_p mandir
+
+	[install_d, mandir].each do |d|
 		if !File.directory?(d)
 			puts "ERROR: directory #{d} does not exist"
 			exit 1
@@ -56,7 +60,7 @@ task :install, [:default_d,:man_d] => [:default] do |task,args|
 
 		# INSTALL SCRIPTS
 		script = File.expand_path("#{t}.rb")
-		install_path = default_d + "/#{t}"
+		install_path = install_d + "/#{t}"
 		`cp -f #{script} #{install_path}`
 	end
 end
