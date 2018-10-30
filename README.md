@@ -88,6 +88,7 @@ package manager `gem` to install the required RubyGems:
 $ gem install progressbar
 $ gem install test-unit # to run the tests
 $ gem install rake # to run the tests and build the manual pages
+$ gem install fileutils # in order to handle mkdir_p
 ```
 
 If your shell does not find the RubyGems, it might be helpful to add
@@ -96,9 +97,21 @@ variable.
 
 ## Installation
 
-Up to know the installation (`rake install`) will simply copy the
-scripts to `/usr/local/bin`. The manual pages are installed to `man1`
-folder in the last listed directory of `$ man -w`.
+The default installation (`rake install`) will simply copy the scripts
+to `/usr/local/bin`. The manual pages are installed to `man1` folder in
+the last listed directory of `$ man -w`.
+
+``` bash
+rake "install[$(pwd)/rubyscripts,$(pwd)/mandir]"
+#installs scripts to $(pwd)/rubyscripts folder
+#installs man pages to $(pwd)/mandir folder
+
+rake "install[,$(pwd)/mandir]"
+#installs ruby scripts to /usr/local/bin
+#installs man pages to $(pwd)/mandir folder
+
+rake -AT #lists all tasks and their arguments
+```
 
 ## Documentation
 
