@@ -143,6 +143,18 @@ $ minstructor -o . 'VAR=[1,2,3]; ./binary -k $VAR -j $VAR'
   ./binary -k 3 -j 3 > ~/minstructor_0/out_2.txt
 ```
 
+## V
+
+```
+$ # backend argument expansion is also possible
+$ minstructor -b slurm -a "-w node[0,1]" "./binary -k [1,2]"
+
+  sbatch -w node0 --wrap './binary -k 1'
+  sbatch -w node0 --wrap './binary -k 2'
+  sbatch -w node1 --wrap './binary -k 1'
+  sbatch -w node1 --wrap './binary -k 2'
+```
+
 # SEE ALSO
 **mcollector**(1), **byobu**(1)
 

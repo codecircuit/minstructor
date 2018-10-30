@@ -22,6 +22,7 @@ class OptPrs
 		options.rep = 1 # number of command repetitions
 		options.job_delay = 0.5 # seconds between two job submissions
 		options.disable_progress_bar = false
+		options.backendArgs = ""
 
 		opt_parser = OptionParser.new do |opts|
 			opts.banner = 'Usage: minstructor.rb [OPTIONS] "CMD0" "CMD1"'
@@ -225,7 +226,7 @@ def combinations(l)
 	# still sth to expand
 	# [bin, c, b, 3] -> false
 	# [bin, [a,c], b, 3] -> true
-	containsArray = ->(list) { list.any? { |el| el.class == Array } }
+	containsArray = ->(list) { list.class == Array ? list.any? { |el| el.class == Array } : false }
 
 	# Check first if there is work left
 	if l.any? { |list| containsArray.call(list) }
@@ -465,14 +466,16 @@ def expandCmd(parsedCmds, outFileName_it, backend=:shell)
 	DEBUG("  - input = #{parsedCmds}")
 
 	# Save the positions of the variable parameters in the parsed
-	# command: ["foo", [1, 2], "bar", ["a", "b"]]
-	# parameter_pos: [1, 3]
+	#     command: ["foo", [1, 2], "bar", ["a", "b"]]
+	#     parameter_pos: [1, 3]
+	# This is used to create meaningful job and/or file names.
 	# Add the index to the array elements first
 	parameter_pos = parsedCmds[0].map.with_index { |v, i| [v, i] }
 	# filter for Array positions
 	DEBUG("  - parameter pos = #{parameter_pos}")
 	parameter_pos.select!{ |x| x[0].class == Array }.map! { |x| x[1] }
 
+	DEBUG("  - parsed Cmds before combinations = #{parsedCmds}")
 	parsedCmds = combinations(parsedCmds)
 
 	DEBUG("  - cmds after combinations #{parsedCmds}")
@@ -486,16 +489,26 @@ def expandCmd(parsedCmds, outFileName_it, backend=:shell)
 	if backend == :slurm
 		DEBUG("  - you choose the slurm backend")
 		parsedCmds.map! do |cmd|
-			cmd_str = "sbatch #{$options.backendArgs} " + "--wrap '" + cmd.join + "'"
-			job_name = cmd.values_at(*parameter_pos).join("_")
-			if $options.vfnames
-				cmd_str << " -o #{outFileName_it.next(job_name)}" unless outFileName_it.empty?
-			else
-				cmd_str << " -o #{outFileName_it.next}" unless outFileName_it.empty?
+			cmd_strs = []
+			DEBUG("  - backendArgs = #{$options.backendArgs}")
+			DEBUG("  - frontend(backendArgs) = #{frontend($options.backendArgs)}")
+			DEBUG("  - combinations(frontend(backendArgs)) = #{combinations(frontend($options.backendArgs))}")
+			combinations([frontend($options.backendArgs)]).each do |curr_backend_arg_list|
+				curr_backend_args = curr_backend_arg_list.join()
+				cmd_str = "sbatch #{curr_backend_args} " + "--wrap '" + cmd.join + "'"
+				job_name = cmd.values_at(*parameter_pos).join("_")
+				if $options.vfnames
+					cmd_str << " -o #{outFileName_it.next(job_name)}" unless outFileName_it.empty?
+				else
+					cmd_str << " -o #{outFileName_it.next}" unless outFileName_it.empty?
+				end
+				cmd_str << " -J '#{job_name}' "
+				cmd_strs += [cmd_str]
 			end
-			cmd_str << " -J '#{job_name}' "
-			cmd_str
+			cmd_strs
 		end
+		DEBUG("  - parsedCmds before flatten = #{parsedCmds}")
+		parsedCmds.flatten! #if $options.backendArgs != ""
 	end
 	if backend == :shell
 		DEBUG("  - you choose the shell backend")

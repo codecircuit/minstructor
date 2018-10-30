@@ -62,6 +62,17 @@ class TestCLI < Test::Unit::TestCase
 		assert(lines.any?{ |l| l.include?("bar -k 3") } )
 	end
 
+	def test_backendArgsExpansion
+		stdout = %x(#{$minstructor} -a "-w mp-capture0[1,2]" --dry-run -b slurm "#{@@dummyScriptFile} [foo,bar]" -f)
+
+		# First we check if the script has been executed with the
+		# wanted parameters. The order in which the command line
+		# arguments are listed should be fixed by the user
+		lines = stdout.lines.map {|l| l.chomp} # remove \n
+		assert(lines.any?{ |l| l.include?("-w mp-capture01") } )
+		assert(lines.any?{ |l| l.include?("-w mp-capture02") } )
+	end
+
 	def test_multipleExecutions
 		cmd = "#{$minstructor} \"#{@@dummyScriptFile} -key0 a -imp=range(2) " \
 		      "-blao linspace(0.4, 12, 3)\" -f -n 3"
