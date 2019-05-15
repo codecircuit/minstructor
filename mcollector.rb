@@ -9,7 +9,14 @@ require_relative './mcollector-modules/available-modules.rb'
 require_relative './math.rb'
 require_relative './version.rb'
 
+$lost_file = ""
+
 def parse_hash(str)
+	if File.exist?(str)
+		# we accidentally got a file here
+		$lost_file = str
+		return {}
+	end
 	begin
 		h = eval(str)
 	rescue
@@ -139,8 +146,17 @@ class OptPrs
 	end  # parse()
 end  # class OptPrs
 
+def append_if_not_empty(arr, val)
+	if val.empty?
+		return arr
+	else
+		return arr.append(val)
+	end
+end
+
 $options = OptPrs.parse(ARGV)
-$options.dfiles = Array.new(ARGV) # get mandatory args
+# get mandatory args
+$options.dfiles = append_if_not_empty(Array.new(ARGV), $lost_file)
 
 # if debug be also verbose
 $options.verbose = $options.verbose || $options.debug
