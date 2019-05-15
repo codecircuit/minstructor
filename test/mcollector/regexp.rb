@@ -183,4 +183,33 @@ class TC_regexp < Test::Unit::TestCase
 
 	end
 
+	def test_csvReg
+
+	csvstr = <<-eos
+	iaueuiae
+	u
+	iae
+	uieuiaeuieeiuaei
+
+foo,bar,baz,"long name"
+1,2,3,"foo bar"
+4,5,6,"bar bazu"
+
+uia
+eiuaeuia
+e
+
+	eos
+
+	csvpart = <<-eos
+foo,bar,baz,"long name"
+1,2,3,"foo bar"
+4,5,6,"bar bazu"
+eos
+
+	md = $csvReg.match(csvstr)
+	assert_equal(csvpart, md[0])
+
+	end
+
 end
