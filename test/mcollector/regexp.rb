@@ -164,7 +164,7 @@ class TC_regexp < Test::Unit::TestCase
 		eos
 
 		check = ->(key, expectedValue) {
-			md = str.match(getKeyValueReg(key))
+			md = str.match(getKeyValueReg(:keyword => key))
 			assert_equal(expectedValue, md["value"])
 		}
 

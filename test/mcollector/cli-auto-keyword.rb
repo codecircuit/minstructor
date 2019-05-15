@@ -42,7 +42,7 @@ class TestCLIAutoKeywordDetection < Test::Unit::TestCase
 
 		# the mcollector should output the CSV table to stdout
 		# if we do not specify an output file
-		actual_result = %x(#{$mcollector} -i importantKey8 #{data_dir}/*.txt)
+		actual_result = %x(#{$mcollector} --module-enable-akav '{ :nokeywords => ["importantKey8"] }' #{data_dir}/*.txt)
 		assert(actual_result.lines()[0].include?(head))
 		lines.each do |l|
 			assert(actual_result.include?(l))
@@ -61,7 +61,7 @@ class TestCLIAutoKeywordDetection < Test::Unit::TestCase
 
 		# the mcollector should output the CSV table to stdout
 		# if we do not specify an output file
-		actual_result = %x(#{$mcollector} -i importantKey8,floatKey #{data_dir}/*.txt)
+		actual_result = %x(#{$mcollector} --module-enable-akav '{ :nokeywords => ["floatKey", "importantKey8"] }'  #{data_dir}/*.txt)
 		assert(actual_result.lines()[0].include?(head))
 		lines.each do |l|
 			assert(actual_result.include?(l))
@@ -107,7 +107,7 @@ class TestCLIAutoKeywordDetection < Test::Unit::TestCase
 
 		# the mcollector should output the CSV table to stdout
 		# if we do not specify an output file
-		actual_result = %x(#{$mcollector} -w  #{data_dir}/*.txt)
+		actual_result = %x(#{$mcollector} --module-enable-akav '{ :allow_weird_keywords => true }'  #{data_dir}/*.txt)
 		assert(actual_result.lines()[0].include?(head))
 		lines.each do |l|
 			assert(actual_result.include?(l))

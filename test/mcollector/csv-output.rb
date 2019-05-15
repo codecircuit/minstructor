@@ -14,7 +14,6 @@ class TestCSVOutput < Test::Unit::TestCase
 			{ "key0" =>"dumm", "key1" => "baz", "key2" => "132", "data-file-path" => "/pth/2.txt" },
 			{ "key0" => "hip", "key1" => "hop", "key2" => "165", "data-file-path" => "/pth/3.txt" },
 		]
-		keywords = Set.new(["key0", "key1", "key2", "data-file-path"])
 
 		expectedResult = <<-eos
 key0,key1,key2,data-file-path
@@ -28,7 +27,7 @@ hip,hop,165,/pth/3.txt
 		tmpfile.close
 		tmpfile.unlink
 
-		outputCSV(tmppth, csvRows, keywords)
+		outputCSV(tmppth, csvRows)
 
 		f = File.open(tmppth)
 		content = f.read()

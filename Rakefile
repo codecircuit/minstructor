@@ -28,9 +28,8 @@ task :install, [:install_d,:man_d] => [:default] do |task,args|
     args.with_defaults(:install_d => "/usr/local/bin",
                        :man_d => `man -w`.chomp.split(':')[-1]
                       )
-
-    install_d = args.install_d
-    mandir = args.man_d
+	install_d = File.expand_path(args.install_d)
+	mandir = File.expand_path(args.man_d)
 
     puts "Installing ruby scripts to #{install_d}"
     puts "Installing man files to #{mandir}"
@@ -50,17 +49,38 @@ task :install, [:install_d,:man_d] => [:default] do |task,args|
 		end
 	end
 
+	# INSTALL MAN PAGES
 	targets.map do |t|
-		# INSTALL MAN PAGES
 		manf = File.expand_path("build/#{t}.1.gz")
 		man1dir = "#{mandir}/man1/"
         FileUtils.mkdir_p man1dir
 		install_path = man1dir + File.basename(manf)
 		`cp -f #{manf} #{install_path}`
+	end
 
-		# INSTALL SCRIPTS
-		script = File.expand_path("#{t}.rb")
-		install_path = install_d + "/#{t}"
-		`cp -f #{script} #{install_path}`
+	# INSTALL SCRIPTS
+	install_files = [
+		"math.rb",
+		"regular-expressions.rb",
+		"minstructor.rb",
+		"mcollector.rb",
+		"mcollector-modules/akav.rb",
+		"mcollector-modules/kav.rb",
+		"mcollector-modules/base.rb",
+		"mcollector-modules/available-modules.rb",
+	]
+	libpath = install_d + "/minstructor-lib/"
+	install_files.each do |f|
+		install_path = libpath + f
+		puts "install _path = #{install_path}"
+		if !File.directory?(File.dirname(install_path))
+			FileUtils.mkdir_p(File.dirname(install_path))
+		end
+		FileUtils.copy(f, install_path)
+	end
+
+	# INSTALL SOFTLINKS FOR EXECUTION
+	targets.each do |t|
+		FileUtils.ln_s(libpath + t + ".rb", install_d + "/#{t}", force: true)
 	end
 end
