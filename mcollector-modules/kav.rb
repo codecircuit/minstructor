@@ -16,7 +16,7 @@ def getKeyValueReg(args = {})
 	if args[:keyword] != nil
 		# If the keyword is given everything in the keyword should be matched
 		# literally, thus we escape every special regex character
-		safe_keyword = Regexp.quote(keyword)
+		safe_keyword = Regexp.quote(args[:keyword])
 		# We must us [[:blank:]] instead of \s, because \s includes \n!
 		/(?<keyword>#{safe_keyword})[[:blank:]]*#{$linkReg}[[:blank:]]*#{$valReg}/
 	else
@@ -70,6 +70,8 @@ module MCollectorModule
 					val = md["value"]
 					pruned_str = md.pre_match + md.post_match # remove match from str
 					row[key] = val
+				else
+					row[key] = "N/A"
 				end
 			end
 			return [[row], args[:prune] ? pruned_str : input_str]
