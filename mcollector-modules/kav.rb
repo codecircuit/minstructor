@@ -45,12 +45,20 @@ module MCollectorModule
 	# the KEYs must be given as optional args
 
 	class KAV < Base
+
+		def default_args
+			return DefaultArgs.new({
+				:keywords => [[], "Search for these keywords (mandatory)"],
+				:prune => [true, "Remove extracted information for next module"],
+			})
+		end
+
 		def apply(input_str, args)
 
-			args = {
-				:keywords => [],
-				:prune => true,
-			}.merge(args)
+			args = default_args.merge(args)
+			if args[:keywords].empty?
+				raise ArgumentError, "Module KAV needs keywords to process!"
+			end
 
 			row = {}
 
@@ -64,16 +72,22 @@ module MCollectorModule
 					row[key] = val
 				end
 			end
-			return [[row], opt_args[:prune] ? pruned_str : input_str]
+			return [[row], args[:prune] ? pruned_str : input_str]
 		end
 
 		def name()
 			return "kav"
 		end
 
+		def hname()
+			return "KAV (key assignment value)"
+		end
+
 		def help()
-			return ' :keywords => ["takeme", "grepmyval"], 
-			         :prune => true # remove matches from string for next module'
+			intro_msg = "Search for the given keywords. Thus they must be given
+on the command line."
+			example_msg = '{ :keywords => ["takeme", "grepmyval"] }'
+			return HelpMessage.new(default_args, intro_msg , example_msg, "")
 		end
 	end
 

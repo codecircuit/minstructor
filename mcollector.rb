@@ -8,6 +8,20 @@ require 'set'
 require_relative './mcollector-modules/available-modules.rb'
 require_relative './math.rb'
 
+def parse_hash(str)
+	begin
+		h = eval(str)
+	rescue
+		raise ArgumentError, "Cannot evaluate additional module arguments.
+		                      Please give valid Ruby syntax!"
+	end
+	if h.class != Hash
+		raise ArgumentError, "Cannot evaluate additional module arguments.
+		                      Please give a Ruby Hash object!"
+	end
+	return h
+end
+
 class OptPrs
 	def self.parse(args)
 		# The options specified on the command
@@ -17,9 +31,6 @@ class OptPrs
 		options.verbose = false
 		options.dry = false
 		options.noprompt = false
-		options.keywords = []
-		options.nokeywords = Set.new
-		options.wkeywords = false
 		options.opath = ""
 		options.debug = false
 		options.sort = false
@@ -32,24 +43,39 @@ class OptPrs
 			opts.banner = "Usage: mcollector.rb [OPTIONS] FILE0 FILE1 ..."
 
 			opts.separator ""
+			opts.separator "Modules:"
+
+			# Use this flag to overwrite defaults of `active_module_names`
+			module_flag_found = false
+			$available_modules.each do |m|
+				opts.on("--module-enable-" + m.name() + " [ARGS_AS_RUBYHASH]",
+						"Enable module " + m.name()) do |mf|
+					mf = mf || "{}"
+					mf = parse_hash(mf)
+					options.active_modules_optargs[m.name()] = mf
+					if mf
+						if !module_flag_found
+							options.active_module_names = [m.name()]
+							module_flag_found = true
+						else
+							options.active_module_names.append(m.name())
+						end
+					end
+				end
+			end
+
+			$available_modules.each do |m|
+				opts.on("--module-help-" + m.name(),
+						"Show help message of module " + m.hname()) do |mf|
+					puts ""
+					puts "# Module: " + m.hname()
+					puts m.help()
+					exit
+				end
+			end
+
+			opts.separator ""
 			opts.separator "Options:"
-
-			opts.on("-k", "--keywords WORD0,WORD1,... ",
-			        "Keywords to search for;",
-			        "Disables automatic keyword detection", Array) do |keywords|
-				options.keywords = keywords
-			end
-
-			opts.on("-i", "--ignore-keywords WORD0,WORD1,... ",
-			        "Ignore this keywords", Array) do |nokeywords|
-				options.nokeywords = Set.new(nokeywords)
-			end
-
-			opts.on("-w", "--weird-keywords",
-			        "Allow automatic detected keywords",
-					"to contain all characters except comma") do |wkeywords|
-				options.wkeywords = wkeywords
-			end
 
 			opts.on("-o", "--output CSVFILE",
 			        "CSV file to write the collected data",

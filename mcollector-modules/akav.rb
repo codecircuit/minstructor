@@ -9,6 +9,15 @@ module MCollectorModule
 	# Searches automatically for KEY ASSIGNMENTSYMBOL VALUE patterns
 
 	class AKAV < Base
+
+		def default_args
+			return DefaultArgs.new({
+				:nokeywords => [[], "Ignore these keywords"],
+				:allow_weird_keywords => [false, "Allow keywords to contain all characters"],
+				:prune => [true, "Remove extracted information for next module"],
+			})
+		end
+
 		def apply(input_str, opt_args)
 
 			# TODO: currently we also remove the keys
@@ -16,11 +25,7 @@ module MCollectorModule
 			# reasonable to keep the ignored keywords, to be able
 			# to process them in a subsequent module.
 
-			opt_args = {
-				:nokeywords => [],
-				:allow_weird_keywords => false,
-				:prune => true,
-			}.merge(opt_args)
+			opt_args = default_args.merge(opt_args)
 
 			get_md = ->(str) {
 				return str.match(getKeyValueReg(:allow_weird_keywords => opt_args[:allow_weird_keywords]))
@@ -49,10 +54,21 @@ module MCollectorModule
 			return "akav"
 		end
 
+		def hname()
+			return "AKAV (automated key assignment value)"
+		end
+
 		def help()
-			return ' :nokeywords => ["ignorethis", "alsoignorethis"],
-			:prune => true # prune the string for the next module, 
-			:allow_weird_keywords => false # allow the keywords to contain all characters'
+			intro_msg = "Search for `KEY ASSIGNMENT_SYMBOL VALUE [UNIT]` patterns.
+This is very useful if your output looks like e.g.:
+
+    ...
+    - bandwidth = 158.68 GB/s
+    - time = 0.4654 s
+    ...
+"
+			example_msg = '{ :nokeywords => ["bandwidth2", "donotcollectme"] }'
+			return HelpMessage.new(default_args, intro_msg , example_msg, "")
 		end
 	end
 
