@@ -76,6 +76,22 @@ the `mcollector` could look like:
 If a file does not contain a keyword assignment, which is found in other
 files, the value is substituted with N/A.
 
+This is only the default behaviour of `mcollector`. In fact `mcollector`
+is a powerful modularized information aggregator. E.g. you can enable
+different modules and chain them on the output
+files:
+
+``` 
+    mcollector --module-enable-foo --module-enable-bar '{ :optarg_for_module_bar => "baz" }' ...
+```
+
+Which would execute module `foo` first and module `bar` with additional
+module arguments given as Ruby `Hash` object second. Due to this modular
+architecture you can easily extend `mcollector` by yourself. So if
+`mcollector` is not able to process your special kind of output format,
+you can simply write a module for that. To get more information on that
+please read `./mcollector-modules/how-to-module.md`.
+
 ## Requirements
 
 Ruby version 2.5 or newer. To build the manual pages you need to have
