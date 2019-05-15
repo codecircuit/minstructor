@@ -9,11 +9,6 @@ end
 
 module MCollectorModule
 
-	##
-	# Automated Key Assignment Value Module
-	#
-	# Searches automatically for KEY ASSIGNMENTSYMBOL VALUE patterns
-
 	class CSV < Base
 
 		def default_args
