@@ -1,7 +1,7 @@
 ---
 title: MINSTRUCTOR(1)
 author: Christoph Klein
-date: 2017-11-20
+date: 2018-08-20
 header: User Guide
 ...
 
@@ -11,7 +11,7 @@ minstructor - measurement instructor
 
 # SYNOPSIS
 
-**minstructor** [**-n** *repititions*] [**-o** *path*[*prefix*]] [**-b** *backend*] [**-f**] [**-a** "*bargs*"] [**-v**] [**-h**] [**-d**] [**--dry-run**] "*cmd0*" "*cmd1*" ...
+**minstructor** [**-n** *repititions*] [**-o** *path*] [**-b** *backend*] [**-f**] [**-a** "*bargs*"] [**-v**] [**-h**] [**-d**] [**--dry-run**] "*cmd0*" "*cmd1*" ...
 
 # DESCRIPTION
 
@@ -26,12 +26,15 @@ set expression       | also known as
 range(0,20,3)        | python-like range (start, end, step)
 linspace(0,2,5)      | numpy-like linear range (start, stop, num)
 logspace(2,11,10,2)  | numpy-like log range (start, stop, num, base)
+fromfile(./file.txt) | reads linewise from a file
 
 The measurement instructor executes the given *cmd* on the cartesian
 product of all set expressions (see **EXAMPLE** below).
 
-If you specify a name *prefix* for the output files on the command line, the
+If you specify an output *path* for the output files on the command line, the
 standard output of your application executions will be saved appropriately.
+To enable multiple simultaneously **minstructor** executions, a new directory for the
+output files must be created, to avoid runtime hazards.
 
 Probably you want to collect certain metrics of your application executions
 and evaluate them. You can use the **mcollector**(1) to achieve that efficiently.
@@ -44,17 +47,16 @@ and evaluate them. You can use the **mcollector**(1) to achieve that efficiently
     measurement points for the same constellation of parameters, e.g. to
     calculate reasonable mean values, you can use this parameter (*DEFAULT*=1).
 
--o, \--output-dir *path*[*prefix*]
+-t *seconds*
+:   Seconds between two job submissions. This flag only has an effect if
+    a job scheduling system (e.g. Slurm) is chosen as back end.
+
+-o, \--output-dir *path*
 :   Directory where all output files, which contain the stdout of
-    your binary, will be saved.
-    Generally you want to save the output files in an empty directory, as
-    there can be a lot of them.  If you also give a *prefix* the
-    output file names are going to have that *prefix*. E.g.
-    */var/data*, */var/data/*, */var/data/foo*,
-    where the last example will generate output files with a *foo*
-    prefix, if *foo* is not the name of a directory. *minstructor*
-    chooses the indices of output files consecutive without overwriting
-    any existing files (see **EXAMPLE**).
+    your binary, will be saved. If the trailing directory does not
+    exist, it will be created. Within the given directory
+    `minstructor` will create one directory for each execution of
+    `minstructor` (see **EXAMPLE**).
 
 \--verbose-fnames
 :   Add the values of the current parameters to the output file name.
@@ -65,11 +67,14 @@ and evaluate them. You can use the **mcollector**(1) to achieve that efficiently
 -f
 :   Do not prompt.
 
+\--no-progress-bar
+:   Hide the progress bar
+
 -b, \--backend [slurm|shell]
 :   Where to execute your binary (*DEFAULT*=shell). In case of the slurm backend,
-    jobs will be sent via sbatch.  Hint: if you want to leave an ssh session
-    after starting the *minstructor* , you can execute the script within a
-    byobu(1) environment and take the `shell` backend.
+    jobs will be sent via sbatch. Hint: if you want to leave an `ssh` session
+    after you started the *minstructor* , you can execute the script within a
+    **byobu(1)** environment.
 
 -a, \--backend-args "*bargs*"
 :   Specify additional *backend arguments*. This option depends on your
@@ -121,24 +126,33 @@ sbatch --wrap "./binary -k0 foo -k1 c" -w host0,host1
 ## III
 
 ```
-$ minstructor -o /dir0/dir1/ "./binary -k0 foo -k1=linspace(0,1,3)"
+$ minstructor --verbose-fname -o /dir0/dir1/ "./binary -k0 foo -k1=linspace(0,1,3)"
 
-./binary -k foo -k1=0   > /dir0/dir1/out_0.txt
-./binary -k foo -k1=0.5 > /dir0/dir1/out_1.txt
-./binary -k foo -k1=1.0 > /dir0/dir1/out_2.txt
+./binary -k foo -k1=0   > /dir0/dir1/minstructor_0/out_0_0.txt
+./binary -k foo -k1=0.5 > /dir0/dir1/minstructor_0/out_1_0.5.txt
+./binary -k foo -k1=1.0 > /dir0/dir1/minstructor_0/out_2_1.0.txt
 ```
 
 ## IV
 
 ```
-$ ls
+$ minstructor -o . 'VAR=[1,2,3]; ./binary -k $VAR -j $VAR'
 
-out_16.txt out_678.txt other.txt binary
+  ./binary -k 1 -j 1 > ~/minstructor_0/out_0.txt
+  ./binary -k 2 -j 2 > ~/minstructor_0/out_1.txt
+  ./binary -k 3 -j 3 > ~/minstructor_0/out_2.txt
+```
 
-$ minstructor --verbose-fname -o . "./binary -key=range(2)"
+## V
 
-  ./binary -key=0 > out_679_0.txt
-  ./binary -key=1 > out_678_1.txt
+```
+$ # backend argument expansion is also possible
+$ minstructor -b slurm -a "-w node[0,1]" "./binary -k [1,2]"
+
+  sbatch -w node0 --wrap './binary -k 1'
+  sbatch -w node0 --wrap './binary -k 2'
+  sbatch -w node1 --wrap './binary -k 1'
+  sbatch -w node1 --wrap './binary -k 2'
 ```
 
 # SEE ALSO

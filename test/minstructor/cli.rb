@@ -62,6 +62,17 @@ class TestCLI < Test::Unit::TestCase
 		assert(lines.any?{ |l| l.include?("bar -k 3") } )
 	end
 
+	def test_backendArgsExpansion
+		stdout = %x(#{$minstructor} -a "-w mp-capture0[1,2]" --dry-run -b slurm "#{@@dummyScriptFile} [foo,bar]" -f)
+
+		# First we check if the script has been executed with the
+		# wanted parameters. The order in which the command line
+		# arguments are listed should be fixed by the user
+		lines = stdout.lines.map {|l| l.chomp} # remove \n
+		assert(lines.any?{ |l| l.include?("-w mp-capture01") } )
+		assert(lines.any?{ |l| l.include?("-w mp-capture02") } )
+	end
+
 	def test_multipleExecutions
 		cmd = "#{$minstructor} \"#{@@dummyScriptFile} -key0 a -imp=range(2) " \
 		      "-blao linspace(0.4, 12, 3)\" -f -n 3"
@@ -81,10 +92,11 @@ class TestCLI < Test::Unit::TestCase
 		out = %x(#{cmd})
 		File.delete(@@dummyScriptLogFile)
 		for i in (0...18)
-			outFileName = "#{$thisDir}/#{@@defaultOutFilePrefix}#{i}.txt"
+			outFileName = "#{$thisDir}/minstructor_0/#{@@defaultOutFilePrefix}#{i}.txt"
 			assert(File.exist? outFileName)
 			File.delete(outFileName)
 		end
+		Dir.rmdir("#{$thisDir}/minstructor_0")
 	end
 
 	def test_verboseOutputFileNaming
@@ -93,61 +105,34 @@ class TestCLI < Test::Unit::TestCase
 		out = %x(#{cmd})
 		File.delete(@@dummyScriptLogFile)
 		out_file_names = [
-			"#{$thisDir}/#{@@defaultOutFilePrefix}0_a_10.0.txt",
-			"#{$thisDir}/#{@@defaultOutFilePrefix}1_a_100.0.txt",
-			"#{$thisDir}/#{@@defaultOutFilePrefix}2_3_10.0.txt",
-			"#{$thisDir}/#{@@defaultOutFilePrefix}3_3_100.0.txt",
-			"#{$thisDir}/#{@@defaultOutFilePrefix}4_a_10.0.txt",
-			"#{$thisDir}/#{@@defaultOutFilePrefix}5_a_100.0.txt",
-			"#{$thisDir}/#{@@defaultOutFilePrefix}6_3_10.0.txt",
-			"#{$thisDir}/#{@@defaultOutFilePrefix}7_3_100.0.txt"
+			"#{$thisDir}/minstructor_0/#{@@defaultOutFilePrefix}0_a_10.txt",
+			"#{$thisDir}/minstructor_0/#{@@defaultOutFilePrefix}1_a_100.txt",
+			"#{$thisDir}/minstructor_0/#{@@defaultOutFilePrefix}2_3_10.txt",
+			"#{$thisDir}/minstructor_0/#{@@defaultOutFilePrefix}3_3_100.txt",
+			"#{$thisDir}/minstructor_0/#{@@defaultOutFilePrefix}4_a_10.txt",
+			"#{$thisDir}/minstructor_0/#{@@defaultOutFilePrefix}5_a_100.txt",
+			"#{$thisDir}/minstructor_0/#{@@defaultOutFilePrefix}6_3_10.txt",
+			"#{$thisDir}/minstructor_0/#{@@defaultOutFilePrefix}7_3_100.txt"
 		]
 		for i in (0...8)
 			assert(File.exist? out_file_names[i])
 			File.delete(out_file_names[i])
 		end
+		Dir.rmdir("#{$thisDir}/minstructor_0")
 	end
 
-	def test_outputFilePrefix
-		cmd = "#{$minstructor} \"#{@@dummyScriptFile} -key0 " \
-		      "range(2)range(2)\" -f -n 3 -o #{$thisDir}/myoutputprefix"
+	def test_fromfile
+		cmd = "#{$minstructor} \"#{@@dummyScriptFile} -key0 a " \
+			"-blao fromfile(minstructor/data/fromfile0.txt)\" -f"
 		%x(#{cmd})
 
+		f = File.open(@@dummyScriptLogFile, "r")
+		log = f.read()
+		f.close()
 		File.delete(@@dummyScriptLogFile)
-		for i in (0...12)
-			outFileName = "#{$thisDir}/myoutputprefix#{i}.txt"
-			assert(File.exist? outFileName)
-			File.delete(outFileName)
-		end
-	end
-
-	def test_outputFileNumeration
-		cmd = "#{$minstructor} \"#{@@dummyScriptFile} -key0 " \
-		      "range(2)range(2)\" -f -n 3 -o #{$thisDir}"
-
-		(0...2).each { %x(#{cmd}) }
-
-		File.delete(@@dummyScriptLogFile)
-		(0...24).each do |i|
-			outFileName = "#{$thisDir}/#{@@defaultOutFilePrefix}#{i}.txt"
-			assert(File.exist? outFileName)
-			File.delete(outFileName)
-		end
-	end
-
-	def test_outputFileNotOverwrite
-		# Create a dummy file
-		tmpFile = "#{$thisDir}/#{@@defaultOutFilePrefix}4687.txt"
-		`touch #{tmpFile}`
-
-		# the output file name must start with 4688
-		%x(#{$minstructor} "#{@@dummyScriptFile} -key0 range(2)range(2)" -f -n 3 -o #{$thisDir})
-
-		File.delete(@@dummyScriptLogFile)
-		(4687..4687 + 2 * 2 * 3).each do |i|
-			outFileName = "#{$thisDir}/#{@@defaultOutFilePrefix}#{i}.txt"
-			assert(File.exist? outFileName)
-			File.delete(outFileName)
-		end
+		lines = log.lines.map {|l| l.chomp} # remove \n
+		assert(lines.include?("-key0 a -blao 1"))
+		assert(lines.include?("-key0 a -blao 2"))
+		assert(lines.include?("-key0 a -blao 3"))
 	end
 end

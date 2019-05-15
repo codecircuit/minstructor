@@ -1,4 +1,4 @@
-#!/usr/bin/ruby
+#!/usr/bin/env ruby
 
 require 'test/unit'
 
@@ -42,7 +42,7 @@ class TestCLIAutoKeywordDetection < Test::Unit::TestCase
 
 		# the mcollector should output the CSV table to stdout
 		# if we do not specify an output file
-		actual_result = %x(#{$mcollector} -i importantKey8 #{data_dir}/*.txt)
+		actual_result = %x(#{$mcollector} --module-enable-akav '{ :nokeywords => ["importantKey8"] }' #{data_dir}/*.txt)
 		assert(actual_result.lines()[0].include?(head))
 		lines.each do |l|
 			assert(actual_result.include?(l))
@@ -61,7 +61,7 @@ class TestCLIAutoKeywordDetection < Test::Unit::TestCase
 
 		# the mcollector should output the CSV table to stdout
 		# if we do not specify an output file
-		actual_result = %x(#{$mcollector} -i importantKey8,floatKey #{data_dir}/*.txt)
+		actual_result = %x(#{$mcollector} --module-enable-akav '{ :nokeywords => ["floatKey", "importantKey8"] }'  #{data_dir}/*.txt)
 		assert(actual_result.lines()[0].include?(head))
 		lines.each do |l|
 			assert(actual_result.include?(l))
@@ -107,10 +107,41 @@ class TestCLIAutoKeywordDetection < Test::Unit::TestCase
 
 		# the mcollector should output the CSV table to stdout
 		# if we do not specify an output file
-		actual_result = %x(#{$mcollector} -w  #{data_dir}/*.txt)
+		actual_result = %x(#{$mcollector} --module-enable-akav '{ :allow_weird_keywords => true }'  #{data_dir}/*.txt)
 		assert(actual_result.lines()[0].include?(head))
 		lines.each do |l|
 			assert(actual_result.include?(l))
+		end
+	end
+
+	def test_recursive
+		dataDir = $data_dir_pre + "recursive"
+		# The lines which must be in the correct output
+		lines = ["baz,quux",
+		         "quuz,corge",
+		         "fred,plugh"]
+		# the head of the CSV output
+		head = "foo,bar"
+
+		actualResult = %x(#{$mcollector} -r #{dataDir})
+		assert(actualResult.lines()[0].include?(head))
+		lines.each do |l|
+			assert(actualResult.include?(l))
+		end
+	end
+
+	def test_separator
+		dataDir = $data_dir_pre + "recursive"
+		# The lines which must be in the correct output
+		lines = ["baz\tquux",
+		         "quuz\tcorge"]
+		# the head of the CSV output
+		head = "foo\tbar"
+
+		actualResult = %x(#{$mcollector} --separator '\\t' #{dataDir})
+		assert(actualResult.lines()[0].include?(head))
+		lines.each do |l|
+			assert(actualResult.include?(l))
 		end
 	end
 end

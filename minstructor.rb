@@ -6,6 +6,9 @@ require 'ostruct'
 # Install it via ruby gems
 require 'progressbar'
 
+require_relative './math.rb'
+require_relative './version.rb'
+
 class OptPrs
 
 	def self.parse(args)
@@ -20,6 +23,9 @@ class OptPrs
 		options.backend = :shell
 		options.noprompt = false
 		options.rep = 1 # number of command repetitions
+		options.job_delay = 0.5 # seconds between two job submissions
+		options.disable_progress_bar = false
+		options.backendArgs = ""
 
 		opt_parser = OptionParser.new do |opts|
 			opts.banner = 'Usage: minstructor.rb [OPTIONS] "CMD0" "CMD1"'
@@ -30,6 +36,11 @@ class OptPrs
 			opts.on("-n NUM", "Number every unique command " \
 			                            "is repeated") do |rep|
 				options.rep = rep.to_i
+			end
+
+			opts.on("-t SECONDS", "Seconds between two job submissions. " \
+			        "Has an effect if some scheduler is chosen as back end.") do |rep|
+				options.job_delay = rep.to_f
 			end
 
 			opts.on("-o", "--output-dir DIR[/PREFIX]",
@@ -47,6 +58,14 @@ class OptPrs
 			opts.on("-f", "Do not prompt") do |noprompt|
 				options.noprompt = noprompt
 			end
+
+			opts.on("--no-progress-bar", "Hide the progress bar") do |disable_progress_bar|
+				# we must invert here, as the CLI parser interprets the `--no-...`
+				# pattern and sets the variable `disable_progress_bar` to false
+				# if `--no-progressbar` arises as CL flag
+				options.disable_progress_bar = (not disable_progress_bar)
+			end
+
 
 			opts.on("-b", "--backend [slurm|shell]",[:slurm, :shell],
 			        "DEFAULT=shell; Where to execute your binary. E.g.",
@@ -89,6 +108,11 @@ class OptPrs
 				options.dry = dr
 			end
 
+			opts.on_tail("--version", "show version") do |v|
+				puts $VERSION
+				exit
+			end
+
 		end
 
 		opt_parser.set_summary_indent("  ")
@@ -96,7 +120,6 @@ class OptPrs
 		opt_parser.parse!(args)
 		options
 	end  # parse()
-
 end  # class OptPrs
 
 $options = OptPrs.parse(ARGV)
@@ -105,13 +128,14 @@ $options.cmds = ARGV # parse mandatory args
 # if debug be also verbose
 $options.verbose = $options.verbose || $options.debug
 
-# Between submitting jobs the script makes a break
-# of SLURMDELAY seconds. This prevents slurm from
-# rejecting jobs
-$SLURMDELAY = 0.5
-
 def DEBUG(msg)
 	puts "#{msg}" if $options.debug
+end
+
+class Float
+	def try_int(epsilon = 0.0)
+		self == 0.0 ? 0 : ((to_i() - self) / self).abs <= epsilon ? to_i() : self
+	end
 end
 
 ###################
@@ -142,11 +166,13 @@ def linspace(s, e, num=50, precision=12)
 
 	return [s] * num if s == e
 
+	epsilon = 10**(-precision)
+
 	res = [s]
 	step = (e - s) / (num - 1.0)
 	acc = s + step
 	(0...num-1).each do
-		res.push(acc.round(precision))
+		res.push(acc.round(precision).to_f().try_int(epsilon))
 		acc += step
 	end
 
@@ -157,62 +183,18 @@ end
 # numpy like logspace
 def logspace(s, e, num=50, base=10.0, precision=6)
 	exponents = linspace(s, e, num)
-	exponents.map { |exp| (base**exp).round(precision) }
+	epsilon = 10**(-precision)
+	exponents.map { |exp| (base**exp).round(precision).to_f().try_int(epsilon) }
 end
 
-##############################
-# COMMAND BUILDING FUNCTIONS #
-##############################
-# these functions build all
-# wanted combinations given
-# by the command line args.
-
-# takes a list [a, [b, c], 0, [3, 4], d]
-# and returns all possible combinations
-#   - [a, b, 0, 3, d]
-#   - [a, b, 0, 4, d]
-#   - [a, c, 0, 3, d]
-#   - [a, c, 0, 4, d]
-def combinations(l)
-
-	# This helper function takes a list
-	# [a, [c, d], e, [7, 8]] and expands
-	# the first bracket within the list to
-	# [[a, c, e, [7, 8]], [a, d, e, [7,8]]]
-	expand = ->(list) {
-		res = []
-		list.each_index do |i| 
-			if list[i].class == Array
-				list[i].each do |e|
-					copy = Array.new(list)
-					copy[i, 1] = e
-					res.push(copy)
-				end
-				return res
-			end
+def fromfile(filename)
+	res = []
+	File.open(filename) do |f|
+		f.each_line do |l|
+			res.push(l.chomp())
 		end
-	}
-
-	# Helper function which returns true if there is
-	# still sth to expand
-	# [bin, c, b, 3] -> false
-	# [bin, [a,c], b, 3] -> true
-	containsArray = ->(list) { list.any? { |el| el.class == Array } }
-
-	# Check first if there is work left
-	if l.any? { |list| containsArray.call(list) }
-		# If Yes: expand something
-		l.map! { |list| expand.call(list) }
-		# Is there still something to expand?
-		# then call recursively
-		if l.any? { |list| containsArray.call(list) }
-			return combinations(l.flatten(1)) 
-		else
-			return l.flatten(1)
-		end
-	else
-		return l
 	end
+	res
 end
 
 ############
@@ -224,6 +206,8 @@ end
 # You must remove white spaces before using this dictionary
 $floatingPointRegex = /[-+]?[[:digit:]]*\.?[[:digit:]]*/
 $integerRegex       = /[-+]?[[:digit:]]+/
+#$pathRegex          = /[^[:space]]+/
+$pathRegex          = /[^[:space:]\(\)]+/
 
 $regexOfRangeExpr = {
 # I want to group without capturing as the String.scan function
@@ -239,34 +223,8 @@ $regexOfRangeExpr = {
 	:logspace2 => /logspace\(\s*#{$floatingPointRegex}\s*,\s*#{$floatingPointRegex}\s*\)/,
 	:logspace3 => /logspace\(\s*#{$floatingPointRegex}\s*,\s*#{$floatingPointRegex}\s*,\s*#{$floatingPointRegex}\s*\)/,
 	:logspace4 => /logspace\(\s*#{$floatingPointRegex}\s*,\s*#{$floatingPointRegex}\s*,\s*#{$floatingPointRegex}\s*,\s*#{$floatingPointRegex}\s*\)/,
+	:fromfile => /fromfile\(\s*#{$pathRegex}\s*\)/,
 }
-
-def identifyRangeExpr(str)
-	str.gsub!(/\s/, '')
-	$regexOfRangeExpr.each do |key, regex|
-		return key if str.index(regex) != nil
-	end
-
-	nil
-end
-
-# Takes one string and returns a list of strings
-# if the input string has been a range expression.
-# E.g. "-key0"    -> "-key0"
-#      "range(3)" -> ["0", "1", "2"]
-def expandRangeExpr(str)
-	str.gsub!(/\s/, '')
-	type = identifyRangeExpr(str)
-	if  type != :list && type != nil # :list is a self defined type (see above)
-		values = eval(str)
-		return values.map { |el| el.to_s }
-	elsif type == :list
-		# add quotation marks around list elements
-		return eval(str.gsub!(/([^\[\],]+)/,'\'\1\''))
-	else
-		return str
-	end
-end
 
 # The frontend takes the cmd input with range expressions
 # E.g. "./bin -key0 val -key1 range( 3) -key2 [a,b,33] foo"
@@ -288,15 +246,7 @@ def frontend(userInput)
 	matchToExpansion = {}
 	$regexOfRangeExpr.each_pair do |k, reg|
 		DEBUG("CHECKING THE KEY #{k} WITH REGEX #{reg}")
-		if k != :list # lists must be treated separately
-			strRanges = userInput.scan(reg)
-			DEBUG("SCAN PATTERN RESULT #{strRanges}")
-			strRanges.each do |strRange|
-				DEBUG("TRY TO EVAL #{strRange}")
-				expRange = eval(strRange)
-				matchToExpansion[strRange] = expRange
-			end
-		else # if it is a list
+		if k == :list
 			strLists = userInput.scan(reg)
 			DEBUG("LISTS I FOUND = #{strLists}")
 			strLists.each do |strList|
@@ -305,6 +255,29 @@ def frontend(userInput)
 				# Add quotation marks around elements
 				l = eval(strList.gsub(/([^\[\],]+)/,'\'\1\''))
 				matchToExpansion[strList] = l
+			end
+		elsif k == :fromfile
+			# Here we also add quotation marks
+			strRanges = userInput.scan(reg)
+			DEBUG("SCAN PATTERN RESULT #{strRanges}")
+			strRanges.each do |strRange|
+				DEBUG("CURRENT REGEX = #{$regexOfRangeExpr[:fromfile]}")
+				DEBUG("strRange = #{strRange}")
+				r = /fromfile\(\s*(?<path>#{$pathRegex})\s*\)/
+				m = strRange.scan(r)
+				DEBUG("EVALUATING fromfile(#{m[0][0]})")
+				expRange = fromfile(m[0][0])
+				DEBUG("Adding #{expRange} FROMFILE")
+				matchToExpansion[strRange] = expRange
+			end
+		else # all other stuff
+			strRanges = userInput.scan(reg)
+			DEBUG("SCAN PATTERN RESULT #{strRanges}")
+			strRanges.each do |strRange|
+				DEBUG("TRY TO EVAL #{strRange}")
+				expRange = eval(strRange)
+				DEBUG("Adding #{expRange}")
+				matchToExpansion[strRange] = expRange
 			end
 		end
 	end
@@ -361,6 +334,8 @@ end # frontend
 class OutputFileNameIterator
 	def initialize(opath)
 		DEBUG("[+] OutputFileNameIterator(opath=#{opath})")
+		@created_dirs = []
+		@out_file_prefix = "out_"
 		if opath.empty?
 			@prefix = nil
 			@id = nil
@@ -369,19 +344,22 @@ class OutputFileNameIterator
 			return
 		end
 
-		## SETTING THE PREFIX ##
-		@prefix = String.new(opath)
-		if File.directory?(opath)
-			outDir = opath
-			@prefix = "#{@prefix.chomp('/')}/out_"
-			DEBUG("  - I got a output directory from the CLI")
-		else # else the user gave a prefix for the output files on the command line
-			outDir = File.dirname(opath)
-			if not File.directory?(outDir)
-				raise IOError, "Your output directory #{outDir} does not exists!"
-			end
-			DEBUG("  - I got a prefix for the output file naming on the CLI")
+		@out_dir_id = 0
+		@out_dir_prefix = "minstructor_"
+		if not Dir.exist?(opath.chomp('/'))
+			Dir.mkdir(opath.chomp('/'))
+			@created_dirs += [opath.chomp('/')]
 		end
+		@prefix = "#{opath.chomp('/')}/#{@out_dir_prefix}#{@out_dir_id}"
+		while Dir.exist?(@prefix) do
+			@out_dir_id += 1
+			@prefix = "#{opath.chomp('/')}/#{@out_dir_prefix}#{@out_dir_id}"
+		end
+		Dir.mkdir(@prefix)
+		@created_dirs += [@prefix]
+		@prefix = File.expand_path(@prefix)
+		@prefix += "/#{@out_file_prefix}"
+		@prefix.freeze()
 
 		## SETTING THE OUTPUT FILE INDEX ##
 		DEBUG("  - Search for the first free output file index")
@@ -389,40 +367,20 @@ class OutputFileNameIterator
 		@prefix = File.expand_path(@prefix)
 		@prefix.freeze
 		DEBUG("  - prefix = #{@prefix}")
-		outFileReg = /#{File.basename(@prefix)}(#{$integerRegex})\.txt/
-		usedIndices = [-1] # -1 results in default start index of 0
-		DEBUG("  - checking files in #{outDir}")
-		Dir.foreach(outDir) do |dirMem|
-			DEBUG("    - checking dir member = #{dirMem}")
-			if File.file?("#{outDir}/#{dirMem}")
-				md = dirMem.match(outFileReg)
-				if md != nil
-					DEBUG("    - match data = #{md}")
-					usedIndices += [md[1].to_i]
-				end
-			end
-		end
-		if system("which scontrol > /dev/null 2>&1")
-			DEBUG("  - checking scheduled slurm output files")
-			scontrol_out = `scontrol show job -u $(whoami)`
-			reg = /(?<=StdErr=).*|(?<=StdOut=).*/
-			user_out_files = scontrol_out.scan(reg)
-			user_out_files.each do |f|
-				DEBUG("    - checking if #{f} in #{outDir}")
-				md = f.match(outFileReg)
-				if md != nil
-					DEBUG("      - #{f} increases the first index")
-					usedIndices += [md[1].to_i]
-				end
-			end
-		end
-		@id = usedIndices.max + 1
+		@id = 0
 		DEBUG("  - uses start index = #{@id}")
 		DEBUG("[-] OutputFileNameIterator()")
 	end # end initialize
 
 	def empty?
 		@prefix == nil
+	end
+
+	# remove created directories
+	def rmdirs
+		@created_dirs.reverse_each do |d|
+			Dir.rmdir(d)
+		end
 	end
 
 	def next(additional_suffix = "")
@@ -461,14 +419,16 @@ def expandCmd(parsedCmds, outFileName_it, backend=:shell)
 	DEBUG("  - input = #{parsedCmds}")
 
 	# Save the positions of the variable parameters in the parsed
-	# command: ["foo", [1, 2], "bar", ["a", "b"]]
-	# parameter_pos: [1, 3]
+	#     command: ["foo", [1, 2], "bar", ["a", "b"]]
+	#     parameter_pos: [1, 3]
+	# This is used to create meaningful job and/or file names.
 	# Add the index to the array elements first
 	parameter_pos = parsedCmds[0].map.with_index { |v, i| [v, i] }
 	# filter for Array positions
 	DEBUG("  - parameter pos = #{parameter_pos}")
 	parameter_pos.select!{ |x| x[0].class == Array }.map! { |x| x[1] }
 
+	DEBUG("  - parsed Cmds before combinations = #{parsedCmds}")
 	parsedCmds = combinations(parsedCmds)
 
 	DEBUG("  - cmds after combinations #{parsedCmds}")
@@ -482,16 +442,26 @@ def expandCmd(parsedCmds, outFileName_it, backend=:shell)
 	if backend == :slurm
 		DEBUG("  - you choose the slurm backend")
 		parsedCmds.map! do |cmd|
-			cmd_str = "sbatch #{$options.backendArgs} " + '--wrap "' + cmd.join + '"'
-			job_name = cmd.values_at(*parameter_pos).join("_")
-			if $options.vfnames
-				cmd_str << " -o #{outFileName_it.next(job_name)}" unless outFileName_it.empty?
-			else
-				cmd_str << " -o #{outFileName_it.next}" unless outFileName_it.empty?
+			cmd_strs = []
+			DEBUG("  - backendArgs = #{$options.backendArgs}")
+			DEBUG("  - frontend(backendArgs) = #{frontend($options.backendArgs)}")
+			DEBUG("  - combinations(frontend(backendArgs)) = #{combinations(frontend($options.backendArgs))}")
+			combinations([frontend($options.backendArgs)]).each do |curr_backend_arg_list|
+				curr_backend_args = curr_backend_arg_list.join()
+				cmd_str = "sbatch #{curr_backend_args} " + "--wrap '" + cmd.join + "'"
+				job_name = cmd.values_at(*parameter_pos).join("_")
+				if $options.vfnames
+					cmd_str << " -o #{outFileName_it.next(job_name)}" unless outFileName_it.empty?
+				else
+					cmd_str << " -o #{outFileName_it.next}" unless outFileName_it.empty?
+				end
+				cmd_str << " -J '#{job_name}' "
+				cmd_strs += [cmd_str]
 			end
-			cmd_str << " -J '#{job_name}' "
-			cmd_str
+			cmd_strs
 		end
+		DEBUG("  - parsedCmds before flatten = #{parsedCmds}")
+		parsedCmds.flatten! #if $options.backendArgs != ""
 	end
 	if backend == :shell
 		DEBUG("  - you choose the shell backend")
@@ -529,17 +499,21 @@ end # expandCmd
 ##################################
 def executeCmds(cmds)
 	# If not verbose we want to have a progressbar
-	if not $options.verbose
-	pbar = ProgressBar.create
-	pbar.total = cmds.length
-	# pbar.title = <title> # to set the title of the progressbar
+	DEBUG("disable progress bar = #{$options.disable_progress_bar}")
+	if not $options.verbose and not $options.disable_progress_bar
+		pbar = ProgressBar.create
+		pbar.total = cmds.length
+		# pbar.title = <title> # to set the title of the progressbar
 	end
 
 	cmds.each do |cmd|
 		puts "Executing: '#{cmd}'" if $options.verbose
-		`sleep #{$SLURMDELAY}` if $options.backend == :slurm
-		`#{cmd}` unless $options.dry
-		pbar.increment unless $options.verbose
+		if $options.backend == :slurm
+			sleep($options.job_delay)
+		end
+		output = `#{cmd}` unless $options.dry
+		puts("\n\n" + output + "\n") if $options.backend == :shell and $options.opath == ""
+		pbar.increment if not $options.verbose and not $options.disable_progress_bar
 	end
 	puts "Nothing has been executed; this has been a dry run" if $options.dry
 end
@@ -570,17 +544,6 @@ if __FILE__ == $0
 	# flatten: [[cmd,cmd,...],[cmd,cmd,...]] -> [cmd,cmd,cmd,cmd,...]
 	expandedCmds = expandedCmds.flatten
 	if expandedCmds.length > linesShowMax && !$options.verbose
-		if $options.backend == :slurm
-			estSec = expandedCmds.length * $SLURMDELAY
-			if estSec / 3600.0 > 24.0
-				puts "Submitting the jobs will take more than 24h."
-			else
-				t = Time.new(0)
-				t += estSec
-				puts "The jobs will approximately be submitted in " \
-				     "#{t.strftime("%T")} (hh:mm:ss)"
-			end
-		end
 		puts "Here is an random excerpt of your in total " \
 		     "#{expandedCmds.length} generated commands:"
 		expandedCmds.sample(linesShowMax).each { |cmd| puts cmd }
@@ -597,6 +560,7 @@ if __FILE__ == $0
 		answer = gets.chomp
 		if not %w[Yes Y y yes].any? {|key| answer == key}
 			puts "Going to exit"
+			outFileName_it.rmdirs()
 			exit
 		end
 		puts "Continue..."

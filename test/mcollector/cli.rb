@@ -1,4 +1,4 @@
-#!/usr/bin/ruby
+#!/usr/bin/env ruby
 
 require 'test/unit'
 
@@ -25,7 +25,7 @@ class TestCLI < Test::Unit::TestCase
 		# the mcollector should output the CSV table to stdout
 		# if we do not specify an output file
 		actualResult = %x(#{$mcollector} #{dataDir}/*.txt\
-		                  -k important-key7,importantKey8,stringKey,floatKey)
+		                  --module-enable-kav '{ :keywords =>  ["important-key7","importantKey8","stringKey","floatKey"] }' )
 		assert(actualResult.lines()[0].include?(head))
 		lines.each do |l|
 			assert(actualResult.include?(l))
@@ -45,7 +45,7 @@ class TestCLI < Test::Unit::TestCase
 		# the mcollector should output the CSV table to stdout
 		# if we do not specify an output file
 		actualResult = %x(#{$mcollector} #{dataDir}/*.txt\
-		                  -k important-key7,importantKey8,stringKey,floatKey)
+		                  --module-enable-kav '{ :keywords =>  ["important-key7","importantKey8","stringKey","floatKey"] }')
 		assert(actualResult.lines()[0].include?(head))
 		lines.each do |l|
 			assert(actualResult.include?(l))
@@ -65,7 +65,7 @@ class TestCLI < Test::Unit::TestCase
 		# the mcollector should output the CSV table to stdout
 		# if we do not specify an output file
 		actualResult = %x(#{$mcollector} #{dataDir}/*.txt\
-		                  -k important-key7,importantKey8,stringKey,floatKey)
+		                  --module-enable-kav '{ :keywords =>  ["important-key7","importantKey8","stringKey","floatKey"] }')
 		assert(actualResult.lines()[0].include?(head))
 		lines.each do |l|
 			assert(actualResult.include?(l))
@@ -75,9 +75,10 @@ class TestCLI < Test::Unit::TestCase
 	def test_nokeywords
 		dataDir = $dataDirPrefix + "no-keywords"
 		actualResult = %x(#{$mcollector} #{dataDir}/*.txt\
-		                  -k key0,key1)
+		                  --module-enable-kav '{ :keywords =>  ["key0", "key1"] }')
 		expReg = /(?:N\/A){2},.*\/file[01]\.txt/
-		assert(actualResult.include?("key0,key1"))
+		assert(actualResult.include?("key0"))
+		assert(actualResult.include?("key1"))
 		md = actualResult.match(expReg)
 	end
 
@@ -94,7 +95,7 @@ class TestCLI < Test::Unit::TestCase
 		# the mcollector should output the CSV table to stdout
 		# if we do not specify an output file
 		actualResult = %x(#{$mcollector} #{dataDir}/*.txt\
-		                  -k important-key7,importantKey8,stringKey,floatKey)
+		                  --module-enable-kav '{ :keywords =>  ["important-key7","importantKey8","stringKey","floatKey"] }')
 		assert(actualResult.lines()[0].include?(head))
 		lines.each do |l|
 			assert(actualResult.include?(l))
@@ -110,7 +111,7 @@ class TestCLI < Test::Unit::TestCase
 		head = "this is the long key,another key(with brackets)"
 
 		actualResult = %x(#{$mcollector} #{dataDir}/*.txt\
-		                  -k "this is the long key","another key(with brackets)")
+		                  --module-enable-kav '{ :keywords =>  ["this is the long key","another key(with brackets)"] }')
 		assert(actualResult.lines()[0].include?(head))
 		lines.each do |l|
 			assert(actualResult.include?(l))
