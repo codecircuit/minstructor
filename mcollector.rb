@@ -5,6 +5,9 @@ require 'ostruct'
 require 'csv'
 require 'set'
 
+require_relative './mcollector-modules/available-modules.rb'
+require_relative './math.rb'
+
 class OptPrs
 	def self.parse(args)
 		# The options specified on the command
@@ -22,6 +25,8 @@ class OptPrs
 		options.sort = false
 		options.recursive = false
 		options.separator = ','
+		options.active_module_names = ["akav"]
+		options.active_modules_optargs = {}
 
 		opt_parser = OptionParser.new do |opts|
 			opts.banner = "Usage: mcollector.rb [OPTIONS] FILE0 FILE1 ..."
@@ -116,70 +121,6 @@ def VERBOSE(msg)
 	puts msg if $options.verbose
 end
 
-#########
-# REGEX #
-#########
-# the following variables should be global to test them when
-# including this file from another ruby script
-
-$expReg = /[eE][-+]?[[:digit:]]+/ # e.g. e+64 or E-0674
-$numReg = /[-+]?[[:digit:]]+(?:\.[[:digit:]]+)?#{$expReg}?/
-
-# The unit regex should allow a lot of symbols, e.g. GB/s, foo^4
-# It matches everything except space.
-$unitMaxSize        = 10 # maximum size of a unit, e.g. `Byte` has 4
-$unitReg          = /\S{1,#{$unitMaxSize}}/
-
-# regex of assignment symbols; the order is crucial; do not change it
-$linkReg = /-+>|=+>|=|:/ # divided by logical OR
-
-# numerical value
-$quantityReg = /(?<value>#{$numReg})#{$unitReg}?/
-
-# quoted value
-$quotationReg = /(?<value>"[^"]+")/
-
-# simple word value
-# which must consists of word characters: [a-zA-Z0-9_-]
-# the minus is contained, as we want to support detection of
-# words like `mp-data.ziti.uni-heidelberg.de`
-$wordReg = /(?<value>[\w-]+)/
-
-# date value
-# We need a date regex to add it before the quantity regex.
-# It is not possible to capture dates with the word regex, as
-# the word regex would also capture expressions like e.g.
-# `1654MB`, which should generally be captured by the quantity
-# regex to extract the number from the pattern.
-$dateReg = /(?<value>[0-9]{4}-[0-9]{2}-[0-9]{2})/
-
-# general value regex
-# the regular expressions here are processed from left to
-# right with decreasing priority.
-$valReg = /#{$quotationReg}|#{$dateReg}|#{$quantityReg}|#{$wordReg}/
-
-# This function returns a regex which matches any KEYWORD SPACE LINK
-# SPACE VALUE constellations. Moreover the VALUE and KEYWORD are
-# captured, and can be obtained by matchdata["value"], or matchdata["keyword"].
-# If the keyword is omitted, it is assumed that the keyword can consist of
-# [_-[:alnum:]], which are numbers, alphabetic characters, underscore and
-# minus.
-def getKeyValueReg(keyword=nil)
-	if keyword != nil
-		# If the keyword is given everything in the keyword should be matched
-		# literally, thus we escape every special regex character
-		safe_keyword = Regexp.quote(keyword)
-		# We must us [[:blank:]] instead of \s, because \s includes \n!
-		/(?<keyword>#{safe_keyword})[[:blank:]]*#{$linkReg}[[:blank:]]*#{$valReg}/
-	else
-		if $options.wkeywords           # '+?' = non greedy '+'
-			/(?<keyword>[^,]+?)[[:blank:]]*#{$linkReg}[[:blank:]]*#{$valReg}/
-		else                       # '+?' = non greedy '+'
-			/(?<keyword>[_\-[:alnum:]]+?)[[:blank:]]*#{$linkReg}[[:blank:]]*#{$valReg}/
-		end
-	end
-end
-
 ##################
 # GATHER RESULTS #
 ##################
@@ -218,6 +159,7 @@ class DataFileIterator
 			:dfiles => [],
 		}.merge(options)
 		@dfiles = []
+		@num_files_processed = 0
 		options[:dfiles].each do |pth|
 			DEBUG("  - checking pth #{pth}")
 			if Dir.exist?(pth)
@@ -242,6 +184,7 @@ class DataFileIterator
 		@dfiles.each do |fpth|
 			pth = File.expand_path(fpth)
 			if File.readable?(pth) && File.file?(pth)
+				@num_files_processed += 1
 				yield pth
 			else
 				STDERR.puts "WARNING: given file #{pth} is not readable" \
@@ -256,10 +199,126 @@ class DataFileIterator
 			f = File.open(fpth)
 			content = f.read
 			f.close
+			@num_files_processed += 1
 			yield content, fpth
 		end
 	end
+
+	def num_files_processed
+		return @num_files_processed
+	end
 end # DataFileIterator
+
+def maybe_at(arr, i)
+	return nil if !i
+	return arr[i]
+end
+
+##
+# `output[i] = f(keys[i], values[j]) ? values[j] : check other values`
+# Preserves the order of `keys`. Example:
+#
+# ```
+# keys = ["foo", "bar", "baz", "waldo"]
+# values = [qux, quux, quuz, grault, garply]
+# f = ->(str, obj) {
+#   return str == obj.name()
+# }
+# found_values = find_select_with(keys, values, f)
+# ```
+# So if `found_values = [qux, quuz, nil, grault]` then
+# `qux.name() = "foo", quuz.name() = "bar", grault.name() = "waldo"`. If
+# on object is taken into the result list, it is removed from the
+# values list internally. Thus no object can be listed twice.
+
+def find_select_with(keys, values, f)
+	found = []
+	keys.each do |k|
+		i = values.index { |v| f.call(k, v) }
+		# i can be nil
+		found.append(maybe_at(values, i))
+	end
+	return found
+end
+
+##
+# Merge all hashes to one hash
+
+def merge_all(harray)
+	if harray.class != Array
+		raise ArgumentError, "Give an array with hashes to merge_all! Instead you give #{harray}"
+	end
+	return {} if harray.empty?
+	h = harray.pop
+	DEBUG("Calling merge_all recursively with harray #{harray}")
+	return h.merge(merge_all(harray))
+end
+
+##
+# Denotes the list of lists of hashes for this file. Later we calc the
+# cartesian product of all hashes. Example:
+# ```
+# [
+# # hashes from module A
+#   [
+#     {"foo" => "7", "bar" => "8"},
+#     {"foo" => "9", "bar" => "10"}
+#   ],
+# # hashes from module B
+#   [
+#     {"qux" => "wobble", "quuz" => "flob" },
+#     {"qux" => "xyzzy", "quuz" => "boop" },
+#     {"qux" => "corge", "quuz" => "plugh" }
+#   ]
+# ]
+# ```
+#
+# The resulting lines in the CSV file from this data file is:
+#
+# ```
+# [
+#   {"foo" => "7", "bar" => "8", "qux" => "wobble", "quuz" => "flob" },
+#   {"foo" => "7", "bar" => "8", "qux" => "xyzzy", "quuz" => "boop" },
+#   {"foo" => "7", "bar" => "8", "qux" => "corge", "quuz" => "plugh" },
+#   {"foo" => "9", "bar" => "10", "qux" => "wobble", "quuz" => "flob" },
+#   {"foo" => "9", "bar" => "10", "qux" => "xyzzy", "quuz" => "boop" },
+#   {"foo" => "9", "bar" => "10", "qux" => "corge", "quuz" => "plugh" }
+# ]
+# ```
+
+class ModuleHashes
+
+	def initialize
+		@module_hashes = []
+	end
+
+	def append(hashes)
+		if hashes.class != Array
+			raise ArgumentError, "You must append arrays to ModuleHashes"
+		end
+		hashes.each do |h|
+			if h.class != Hash
+				raise ArgumentError, "You must not append non-Hashes to ModuleHashes object"
+			end
+		end
+		@module_hashes.append(hashes)
+	end
+
+	def get_data
+		return @module_hashes
+	end
+
+	def combine_module_hashes
+		DEBUG("combine_module_hashes[+]:")
+		combs = combinations([@module_hashes])
+		combs.map! { |hashlist| 
+			DEBUG("combs = #{combs}, going to call merge_all with #{hashlist}")
+			merge_all(hashlist)
+		}
+		return combs
+	end
+
+end
 
 # Takes a DataFileIterator to iterate over the contents of the
 # files and searches for the values assigned to the keywords.
@@ -272,76 +331,49 @@ end # DataFileIterator
 def gather(df_it, options = {})
 	DEBUG("[+] gather()")
 
-	options = {
-		:keywords => [],
-		:nokeywords => [],
-	}.merge(options)
+	row_hashes = []
 
-	DEBUG("  - keywords = #{options[:keywords]}")
-	DEBUG("  - nokeywords = #{options[:nokeywords].to_a}")
-
-	# nokeywords take precedence over keywords
-	options[:keywords] -= options[:nokeywords].to_a
-
-	# take a keyword and a string and search for the first
-	# part, which matches the Regexp. From that match we
-	# want to have the first capture, which is not nil
-	grepValue = ->(key, str) {
-		md = str.match(getKeyValueReg(key))
-		return md["value"] if md != nil
-		return nil
-	}
-
-	res = []
-	allkeywords = Set.new(options[:keywords])
-	filesProcessed = 0
-
-	# User gave keywords on the command line
-	if !options[:keywords].empty?
-		DEBUG("  - User gave keywords = #{options[:keywords]}")
-		df_it.each_content_with_pth do |c, pth|
-			row = {}
-			options[:keywords].each do |key|
-				DEBUG("    - now searching for key: #{key}")
-				val = grepValue.call(key, c)
-				DEBUG("    - grepValue = #{val}")
-				row[key] = val unless val == nil
-			end
-			# per default each row ends with the data file path
-			row["data-file-path"] = pth
-			res.push(row)
-			filesProcessed += 1
-		end
-
-	# User gave no keywords on the command line
-	else
-		df_it.each_content_with_pth do |c, pth|
-			md = c.match(getKeyValueReg) # function call (see above)
-			row = {}
-			# Now we search iteratively for matching key value expressions.
-			# In each step we delete the string part with and before the match.
-			while md != nil
-				val = md["value"]
-				key = md["keyword"]
-				if !options[:nokeywords].include?(key) # ignore some keys
-					allkeywords.add(key)
-					row[key] = val
-				end
-				c = md.post_match # remove match and part before match
-				md = c.match(getKeyValueReg) # function call (see above)
-			end
-			# per default each row ends with the data file path
-			row["data-file-path"] = pth
-			filesProcessed += 1
-			res.push(row)
-		end
+	#### take the active modules from all available modules ####
+	active_modules = $available_modules.select do |mod|
+		$options.active_module_names.include?(mod.name)
 	end
 
-	allkeywords.add("data-file-path")
+	name_eq = ->(name, mod) {
+		return name == mod.name()
+	}
 
-	VERBOSE("  - I processed #{filesProcessed} data files")
-	return allkeywords, res
+	active_modules = find_select_with($options.active_module_names, $available_modules, name_eq)
+	nil_index = active_modules.index { |m| m.nil? }
+	if nil_index
+		raise ArgumentError,"Required module with name `#{$options.active_module_names[nil_index]}` does not exist!"
+	end
+	if active_modules.empty?
+		raise ArgumentError,"No active modules"
+	end
+
+	#### apply the modules ####
+	# now we have the active modules in the correct order
+	df_it.each_content_with_pth do |c, pth|
+		all_module_hashes = ModuleHashes.new
+		active_modules.each do |m|
+			DEBUG("Apply module #{m.name}")
+			optargs = $options.active_modules_optargs[m.name]
+			optargs = {} if optargs.nil?
+			if optargs.class != Hash
+				raise ArgumentError, "Wrong format for optional module arguments! Please give a ruby Hash!"
+			end
+			hashes, c = m.apply(c, optargs)
+			all_module_hashes.append(hashes)
+		end
+		all_module_hashes.append([{"data-file-path" => pth}])
+		DEBUG("all_module_hashes.get_data = #{all_module_hashes.get_data}")
+		DEBUG("all_module_hashes.combine modules hashes = #{all_module_hashes.combine_module_hashes}")
+		row_hashes += all_module_hashes.combine_module_hashes
+	end
+
+	VERBOSE("  - mcollector processed #{df_it.num_files_processed} data files")
 	DEBUG("[-] gather()")
+	return row_hashes
 end
 
 def expandSeparator(s)
@@ -352,7 +384,7 @@ end
 #  - opath = path to CSV file
 #  - csvRowHashes = array of hashes containing the data of each row
 #  - allkeywords = set of all keywords in csvRowHashes
-def outputCSV(opath, csvRowHashes, allkeywords, options = {})
+def outputCSV(opath, csvRowHashes, options = {})
 	DEBUG("[+] outputCSV()")
 	DEBUG("  - csvRowHashes = #{csvRowHashes}")
 
@@ -360,13 +392,25 @@ def outputCSV(opath, csvRowHashes, allkeywords, options = {})
 		:sort => false,
 	}.merge(options)
 
+	find_all_column_names = ->(csvRowHashes) {
+		cnames = Set.new
+		csvRowHashes.each do |h|
+			h.each_key do |k|
+				cnames.add(k)
+			end
+		end
+		return cnames
+	}
+
+	column_names = find_all_column_names.call(csvRowHashes)
+
 	# first we convert to simple csvRows
 	csvRows = []
 	DEBUG("  - converting to simple arrays")
 	csvRowHashes.each do |rowHash|
 		rowHash.default = "N/A"
 		currRow = []
-		allkeywords.each do |key|
+		column_names.each do |key|
 			currRow.push(rowHash[key])
 		end
 		csvRows.push(currRow)
@@ -377,9 +421,9 @@ def outputCSV(opath, csvRowHashes, allkeywords, options = {})
 	curr_separator = expandSeparator($options.separator)
 	DEBUG("  - curr separator = #{curr_separator}")
 
-	# add the header and ensure that the keywords have no
+	# add the header and ensure that the column names have no
 	# preceeding and trailing whitespace characters
-	csvStr = "#{allkeywords.map { |k| k.strip }.to_a.join(curr_separator)}\n"
+	csvStr = "#{column_names.map { |k| k.strip }.to_a.join(curr_separator)}\n"
 
 	DEBUG("  - CSV ROWS = #{csvRows}")
 	csvRows.each_with_index do |row, i|
@@ -451,18 +495,16 @@ if __FILE__ == $0
 	df_it = DataFileIterator.new(:dfiles => $options.dfiles)
 
 	# GREP ALL VALUES FROM FILE CONTENTS
-	DEBUG("  - nokeywords = #{$options.nokeywords}")
 	timestamp = Time.now
-	allkeywords, csvRowHashes = gather(df_it,
-	                              :keywords => $options.keywords,
-	                              :nokeywords => $options.nokeywords)
+	csvRowHashes = gather(df_it)
 	gatherT = Time.now - timestamp
 	VERBOSE("  - processing the files took #{gatherT} seconds")
+	DEBUG("  - csvRowHashes = #{csvRowHashes}")
 
 	# OUTPUT THE CSV DATA
 	VERBOSE("  - sorting flag = #{$options.sort}")
 	timestamp = Time.now
-	outputCSV($options.opath, csvRowHashes, allkeywords, :sort => $options.sort)
+	outputCSV($options.opath, csvRowHashes, :sort => $options.sort)
 	csvT = Time.now - timestamp
 	VERBOSE("  - outputting the csv data took #{csvT} seconds")
 end

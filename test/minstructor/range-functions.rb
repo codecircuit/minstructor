@@ -6,6 +6,22 @@ $dataDirPrefix = "#{$thisDir}/data/"
 
 class TestRangeFunctions < Test::Unit::TestCase
 
+	def test_combinations
+		l = [[[1], [2, 3], 4]]
+		c = combinations(l)
+		s = [[1, 2, 4], [1, 3, 4]]
+		assert_equal(s, c)
+
+		l = [[[1], [2, 3]]]
+		c = combinations(l)
+		s = [[1, 2], [1, 3]]
+		assert_equal(s, c)
+
+		l = [[[1], [2]]]
+		c = combinations(l)
+		assert_equal([[1, 2]], c)
+	end
+
 	def test_range
 		assert_equal([0,1,2], range(3))
 		assert_equal([3,4,5], range(3,6))
