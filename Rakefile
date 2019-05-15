@@ -66,6 +66,7 @@ task :install, [:install_d,:man_d] => [:default] do |task,args|
 		"version.rb"
 		"mcollector.rb",
 		"mcollector-modules/akav.rb",
+		"mcollector-modules/csv.rb",
 		"mcollector-modules/kav.rb",
 		"mcollector-modules/base.rb",
 		"mcollector-modules/available-modules.rb",

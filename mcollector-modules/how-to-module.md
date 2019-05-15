@@ -24,4 +24,5 @@ row in the final CSV file.
 
 I recommend to take `./akav.rb` as a starting point
 for your own module. After you finished your class you must register
-your module in `./available-modules.rb`.
+your module in `./available-modules.rb` and add a proper installation
+in `Rakefile`.
