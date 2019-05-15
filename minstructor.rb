@@ -7,6 +7,7 @@ require 'ostruct'
 require 'progressbar'
 
 require_relative './math.rb'
+require_relative './version.rb'
 
 class OptPrs
 
@@ -105,6 +106,11 @@ class OptPrs
 			opts.on_tail("--dry-run", "Just print all commands, which would " \
 			             "be executed") do |dr|
 				options.dry = dr
+			end
+
+			opts.on_tail("--version", "show version") do |v|
+				puts $VERSION
+				exit
 			end
 
 		end

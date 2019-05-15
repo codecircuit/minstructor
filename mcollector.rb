@@ -7,6 +7,7 @@ require 'set'
 
 require_relative './mcollector-modules/available-modules.rb'
 require_relative './math.rb'
+require_relative './version.rb'
 
 def parse_hash(str)
 	begin
@@ -123,6 +124,11 @@ class OptPrs
 			# Boolean switch
 			opts.on_tail("--debug", "Debug mode; includes verbosity") do |d|
 				options.debug = d
+			end
+
+			opts.on_tail("--version", "show version") do |v|
+				puts $VERSION
+				exit
 			end
 
 		end

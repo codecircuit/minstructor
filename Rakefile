@@ -63,6 +63,7 @@ task :install, [:install_d,:man_d] => [:default] do |task,args|
 		"math.rb",
 		"regular-expressions.rb",
 		"minstructor.rb",
+		"version.rb"
 		"mcollector.rb",
 		"mcollector-modules/akav.rb",
 		"mcollector-modules/kav.rb",
