@@ -18,11 +18,12 @@ module MCollectorModule
 
 			opt_args = {
 				:nokeywords => [],
+				:allow_weird_keywords => false,
 				:prune => true,
 			}.merge(opt_args)
 
 			get_md = ->(str) {
-				return str.match(getKeyValueReg)
+				return str.match(getKeyValueReg(:allow_weird_keywords => opt_args[:allow_weird_keywords]))
 			}
 
 			pruned_str = input_str.clone
@@ -50,7 +51,8 @@ module MCollectorModule
 
 		def help()
 			return ' :nokeywords => ["ignorethis", "alsoignorethis"],
-			:prune => true # prune the string for the next module'
+			:prune => true # prune the string for the next module, 
+			:allow_weird_keywords => false # allow the keywords to contain all characters'
 		end
 	end
 
