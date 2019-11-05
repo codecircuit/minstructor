@@ -68,6 +68,22 @@ the **minstructor**(1) to achieve that efficiently.
     print the CSV data to stdout. This flag might result in asking
     for confirmation in case of overwriting a file.
 
+--sql-database *string*
+:   Name of the SQL database. If one sql options is given, the others must also be
+    declared. The collected data is then written to a table in this database.
+
+--sql-table *string*
+:   Name of the SQL table
+
+--sql-user *string*
+:   SQL username
+
+--sql-password *string*
+:   SQL user password
+
+--sql-host *URL*
+:   URL of the host, which has the SQL server running
+
 --separator *string*
 :   If a different separator than ',' is desired it can be chosen here.
 
