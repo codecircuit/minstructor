@@ -544,7 +544,7 @@ if __FILE__ == $0
 	# flatten: [[cmd,cmd,...],[cmd,cmd,...]] -> [cmd,cmd,cmd,cmd,...]
 	expandedCmds = expandedCmds.flatten
 	if expandedCmds.length > linesShowMax && !$options.verbose
-		puts "Here is an random excerpt of your in total " \
+		puts "Here is a random excerpt of your in total " \
 		     "#{expandedCmds.length} generated commands:"
 		expandedCmds.sample(linesShowMax).each { |cmd| puts cmd }
 	else
