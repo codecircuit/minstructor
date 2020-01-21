@@ -23,9 +23,10 @@ line values:
 set expression       | also known as
 ---------------------|--------------------------------------------
 [4,a,8,...]          | simple list
-range(0,20,3)        | python-like range (start, end, step)
+range(0,20,3)        | python-like range (start, end, step=1)
 linspace(0,2,5)      | numpy-like linear range (start, stop, num)
-logspace(2,11,10,2)  | numpy-like log range (start, stop, num, base)
+logspace(2,11,10,2)  | numpy-like log range (start, stop, num, base=10)
+logrange(4,12,3,5)   | similar to logspace but for integers (start, end, step=1, base=2)
 fromfile(./file.txt) | reads linewise from a file
 
 The measurement instructor executes the given *cmd* on the cartesian

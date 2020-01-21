@@ -187,6 +187,25 @@ def logspace(s, e, num=50, base=10.0, precision=6)
 	exponents.map { |exp| (base**exp).round(precision).to_f().try_int(epsilon) }
 end
 
+# start, end, increment, base
+def logrange(s, e=nil, i=1, b=2)
+	if i < 1
+		raise RangeError, "I can not expand range, because increment < 1"
+	end
+	if e == nil
+		arr = (0..s-1).step(i).to_a()
+		return arr.map { |x| b**x }
+	end
+
+	if e <= s
+		raise RangeError, "I can not expand range, because end <= start"
+	end
+
+	i = i.round
+	arr = (s...e).step(i).to_a()
+	return arr.map { |x| b**x }
+end
+
 def fromfile(filename)
 	res = []
 	File.open(filename) do |f|
@@ -215,14 +234,18 @@ $regexOfRangeExpr = {
 # which is not what I want. Using the paranthesis with (?:<rest of pattern>)
 # solves the problem. See also `ri Regexp` chapter Grouping
 	:list   => /\[\s*(?:[^,\s]+\s*,\s*)+[^,\s]+\s*\]/,
-	:range1 => /range\(\s*#{$integerRegex}\s*\)/,
-	:range2 => /range\(\s*#{$integerRegex}\s*,\s*#{$integerRegex}\s*\)/,
-	:range3 => /range\(\s*#{$integerRegex}\s*,\s*#{$integerRegex}\s*,\s*#{$integerRegex}\s*\)/,
+	:range1 => /(?<!log)range\(\s*#{$integerRegex}\s*\)/,
+	:range2 => /(?<!log)range\(\s*#{$integerRegex}\s*,\s*#{$integerRegex}\s*\)/,
+	:range3 => /(?<!log)range\(\s*#{$integerRegex}\s*,\s*#{$integerRegex}\s*,\s*#{$integerRegex}\s*\)/,
 	:linspace2 => /linspace\(\s*#{$floatingPointRegex}\s*,\s*#{$floatingPointRegex}\s*\)/,
 	:linspace3 => /linspace\(\s*#{$floatingPointRegex},\s*#{$floatingPointRegex}\s*,\s*#{$floatingPointRegex}\s*\)/,
 	:logspace2 => /logspace\(\s*#{$floatingPointRegex}\s*,\s*#{$floatingPointRegex}\s*\)/,
 	:logspace3 => /logspace\(\s*#{$floatingPointRegex}\s*,\s*#{$floatingPointRegex}\s*,\s*#{$floatingPointRegex}\s*\)/,
 	:logspace4 => /logspace\(\s*#{$floatingPointRegex}\s*,\s*#{$floatingPointRegex}\s*,\s*#{$floatingPointRegex}\s*,\s*#{$floatingPointRegex}\s*\)/,
+	:logrange1 => /logrange\(\s*#{$integerRegex}\s*\)/,
+	:logrange2 => /logrange\(\s*#{$integerRegex}\s*,\s*#{$integerRegex}\s*\)/,
+	:logrange3 => /logrange\(\s*#{$integerRegex}\s*,\s*#{$integerRegex}\s*,\s*#{$integerRegex}\s*\)/,
+	:logrange4 => /logrange\(\s*#{$integerRegex}\s*,\s*#{$integerRegex}\s*,\s*#{$integerRegex}\s*,\s*#{$integerRegex}\s*\)/,
 	:fromfile => /fromfile\(\s*#{$pathRegex}\s*\)/,
 }
 
