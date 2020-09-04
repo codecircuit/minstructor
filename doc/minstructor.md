@@ -22,7 +22,7 @@ line values:
 
 set expression       | also known as
 ---------------------|--------------------------------------------
-[4,a,8,...]          | simple list
+[4,a,8,...]          | simple list (delimiters [] can be customized)
 range(0,20,3)        | python-like range (start, end, step=1)
 linspace(0,2,5)      | numpy-like linear range (start, stop, num)
 logspace(2,11,10,2)  | numpy-like log range (start, stop, num, base=10)
@@ -81,6 +81,14 @@ and evaluate them. You can use the **mcollector**(1) to achieve that efficiently
 :   Specify additional *backend arguments*. This option depends on your
     choosen backend. E.g. -a "--exclusive -w compute-node.cluster.com" will
     instruct slurm to execute the submitted jobs on host compute-node.cluster.com.
+
+\--left-list-delimiter "*string*"
+:   Specify the list delimiter, which denotes a parsed and expanded set
+    expression
+
+\--right-list-delimiter "*string*"
+:   Specify the list delimiter, which denotes a parsed and expanded set
+    expression
 
 -h, \--help
 :   Show this help message

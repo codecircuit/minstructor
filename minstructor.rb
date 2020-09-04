@@ -26,6 +26,8 @@ class OptPrs
 		options.job_delay = 0.5 # seconds between two job submissions
 		options.disable_progress_bar = false
 		options.backendArgs = ""
+        options.left_list_delimiter = '['
+        options.right_list_delimiter = ']'
 
 		opt_parser = OptionParser.new do |opts|
 			opts.banner = 'Usage: minstructor.rb [OPTIONS] "CMD0" "CMD1"'
@@ -80,6 +82,18 @@ class OptPrs
 			opts.on("-a", '--backend-args "ARGS"',
 			        'E.g. "--exclusive -w HOST" for slurm') do |ba|
 				options.backendArgs = ba
+			end
+
+			opts.on('--left-list-delimiter "STRING"',
+			        "Control the list delimiter, which denotes a parsed and",
+			        "expanded expression") do |d|
+				options.left_list_delimiter = d
+			end
+
+			opts.on('--right-list-delimiter "STRING"',
+			        "Control the list delimiter, which denotes a parsed and",
+			        "expanded expression") do |d|
+				options.right_list_delimiter = d
 			end
 
 			opts.separator ""
@@ -233,7 +247,7 @@ $regexOfRangeExpr = {
 # works than as expected. E.g. "[a,b,33]".scan(/\[(.+,)+.+\]/) = [["a,b,"]]
 # which is not what I want. Using the paranthesis with (?:<rest of pattern>)
 # solves the problem. See also `ri Regexp` chapter Grouping
-	:list   => /\[\s*(?:[^,\s]+\s*,\s*)+[^,\s]+\s*\]/,
+	:list   => /#{Regexp.escape($options.left_list_delimiter)}\s*(?:[^,\s]+\s*,\s*)+[^,\s]+\s*#{Regexp.escape($options.right_list_delimiter)}/,
 	:range1 => /(?<!log)range\(\s*#{$integerRegex}\s*\)/,
 	:range2 => /(?<!log)range\(\s*#{$integerRegex}\s*,\s*#{$integerRegex}\s*\)/,
 	:range3 => /(?<!log)range\(\s*#{$integerRegex}\s*,\s*#{$integerRegex}\s*,\s*#{$integerRegex}\s*\)/,
@@ -276,7 +290,7 @@ def frontend(userInput)
 				# convert to a real list
 				# e.g. '[a,b,33]' --> ['a','b','33']
 				# Add quotation marks around elements
-				l = eval(strList.gsub(/([^\[\],]+)/,'\'\1\''))
+				l = eval('[' + strList.gsub(/([^\[\],]+)/,'\'\1\'').sub($options.left_list_delimiter, '').sub($options.right_list_delimiter, '') + ']')
 				matchToExpansion[strList] = l
 			end
 		elsif k == :fromfile
@@ -499,7 +513,7 @@ def expandCmd(parsedCmds, outFileName_it, backend=:shell)
 				end
 				cmd_str
 			end
-		else 
+		else
 			parsedCmds.map! { |cmd| cmd.join }
 		end
 	end
