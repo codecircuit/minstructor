@@ -1,7 +1,7 @@
 ---
 title: MINSTRUCTOR(1)
 author: Christoph Klein
-date: 2018-08-20
+date: 2020-09-05
 header: User Guide
 ...
 

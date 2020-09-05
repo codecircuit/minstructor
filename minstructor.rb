@@ -247,7 +247,7 @@ $regexOfRangeExpr = {
 # works than as expected. E.g. "[a,b,33]".scan(/\[(.+,)+.+\]/) = [["a,b,"]]
 # which is not what I want. Using the paranthesis with (?:<rest of pattern>)
 # solves the problem. See also `ri Regexp` chapter Grouping
-	:list   => /#{Regexp.escape($options.left_list_delimiter)}\s*(?:[^,\s]+\s*,\s*)+[^,\s]+\s*#{Regexp.escape($options.right_list_delimiter)}/,
+	:list   => /#{Regexp.escape($options.left_list_delimiter)}\s*(?:[^,\s]+\s*,\s*)*[^#{Regexp.escape($options.right_list_delimiter)}#{Regexp.escape($options.left_list_delimiter)},\s]*\s*#{Regexp.escape($options.right_list_delimiter)}/,
 	:range1 => /(?<!log)range\(\s*#{$integerRegex}\s*\)/,
 	:range2 => /(?<!log)range\(\s*#{$integerRegex}\s*,\s*#{$integerRegex}\s*\)/,
 	:range3 => /(?<!log)range\(\s*#{$integerRegex}\s*,\s*#{$integerRegex}\s*,\s*#{$integerRegex}\s*\)/,
@@ -460,6 +460,7 @@ def expandCmd(parsedCmds, outFileName_it, backend=:shell)
 	#     parameter_pos: [1, 3]
 	# This is used to create meaningful job and/or file names.
 	# Add the index to the array elements first
+	parsedCmds.map { |e| e.delete([]) if e.class == Array }
 	parameter_pos = parsedCmds[0].map.with_index { |v, i| [v, i] }
 	# filter for Array positions
 	DEBUG("  - parameter pos = #{parameter_pos}")
@@ -483,6 +484,7 @@ def expandCmd(parsedCmds, outFileName_it, backend=:shell)
 			DEBUG("  - backendArgs = #{$options.backendArgs}")
 			DEBUG("  - frontend(backendArgs) = #{frontend($options.backendArgs)}")
 			DEBUG("  - combinations(frontend(backendArgs)) = #{combinations(frontend($options.backendArgs))}")
+			DEBUG("  - parameter_pos = #{parameter_pos}")
 			combinations([frontend($options.backendArgs)]).each do |curr_backend_arg_list|
 				curr_backend_args = curr_backend_arg_list.join()
 				cmd_str = "sbatch #{curr_backend_args} " + "--wrap '" + cmd.join + "'"

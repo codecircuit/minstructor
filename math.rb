@@ -5,14 +5,19 @@
 #   - [a, b, 0, 4, d]
 #   - [a, c, 0, 3, d]
 #   - [a, c, 0, 4, d]
+#
+# Inner lists can be empty
 def combinations(l)
+
+	# Just delete empty lists
+	l.map { |e| e.delete([]) if e.class == Array }
 	# This helper function takes a list
 	# [a, [c, d], e, [7, 8]] and expands
 	# the first bracket within the list to
 	# [[a, c, e, [7, 8]], [a, d, e, [7,8]]]
 	expand = ->(list) {
 		res = []
-		list.each_index do |i| 
+		list.each_index do |i|
 			if list[i].class == Array
 				list[i].each do |e|
 					copy = Array.new(list)
@@ -37,7 +42,7 @@ def combinations(l)
 		# Is there still something to expand?
 		# then call recursively
 		if l.any? { |list| containsArray.call(list) }
-			return combinations(l.flatten(1)) 
+			return combinations(l.flatten(1))
 		else
 			return l.flatten(1)
 		end
