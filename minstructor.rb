@@ -2,6 +2,7 @@
 
 require 'optparse'
 require 'ostruct'
+require 'yaml'
 
 # Install it via ruby gems
 require 'progressbar'
@@ -26,8 +27,25 @@ class OptPrs
 		options.job_delay = 0.5 # seconds between two job submissions
 		options.disable_progress_bar = false
 		options.backendArgs = ""
-        options.left_list_delimiter = '['
-        options.right_list_delimiter = ']'
+		options.left_list_delimiter = '['
+		options.right_list_delimiter = ']'
+
+		if File.exists?(Dir.home + "/.minstructorrc.yml")
+			cfg = YAML.load_file(Dir.home + "/.minstructorrc.yml")
+			options.verbose = cfg["verbose"] if cfg.has_key?("verbose")
+			options.debug = cfg["debug"] if cfg.has_key?("debug")
+			options.dry = cfg["dry-run"] if cfg.has_key?("dry-run")
+			options.opath = cfg["output-dir"] if cfg.has_key?("output-dir")
+			options.vfnames = cfg["verbose-fnames"] if cfg.has_key?("verbose-fnames")
+			options.backend = :"#{cfg["backend"]}" if cfg.has_key?("backend")
+			options.noprompt = cfg["force-no-prompt"] if cfg.has_key?("force-no-prompt")
+			options.rep = cfg["num-repetitions"] if cfg.has_key?("num-repetitions")
+			options.job_delay = cfg["job-submission-delay"] if cfg.has_key?("job-submission-delay")
+			options.disable_progress_bar = (not cfg["no-progress-bar"]) if cfg.has_key?("no-progress-bar")
+			options.backendArgs = cfg["backend-args"] if cfg.has_key?("backend-args")
+			options.left_list_delimiter = cfg["left-list-delimiter"] if cfg.has_key?("left-list-delimiter")
+			options.right_list_delimiter = cfg["right-list-delimiter"] if cfg.has_key?("right-list-delimiter")
+		end
 
 		opt_parser = OptionParser.new do |opts|
 			opts.banner = 'Usage: minstructor.rb [OPTIONS] "CMD0" "CMD1"'

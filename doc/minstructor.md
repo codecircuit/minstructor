@@ -37,6 +37,9 @@ standard output of your application executions will be saved appropriately.
 To enable multiple simultaneously **minstructor** executions, a new directory for the
 output files must be created, to avoid runtime hazards.
 
+You can also configure default options for your **minstructor** executions
+by providing `~/.minstructorrc.yml` (see below).
+
 Probably you want to collect certain metrics of your application executions
 and evaluate them. You can use the **mcollector**(1) to achieve that efficiently.
 
@@ -105,7 +108,25 @@ and evaluate them. You can use the **mcollector**(1) to achieve that efficiently
 # DEFAULTS
 
 Execute each unique command once with the shell back-end
-and without producing any output files.
+and without producing any output files, or the options specified
+in your `~/.minstructorrc.yml` config file.
+
+# FILES
+
+**~/.minstructorrc.yml**
+
+the YAML config file for the **minstructor**. Each
+optional command line argument can be set to a default value in this config
+file. If the command line argument is given explicitly it overwrites the
+value of the config file. To set a default value in your config file just refer to each
+command line argument by its long version **without** the `--` prefix, e.g.
+
+```
+verbose: true
+force-no-prompt: true
+no-progress-bar: false
+job-submission-delay: 0.3
+```
 
 # EXAMPLE
 
