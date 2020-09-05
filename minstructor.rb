@@ -35,12 +35,12 @@ class OptPrs
 			opts.separator ""
 			opts.separator "Options:"
 
-			opts.on("-n NUM", "Number every unique command " \
+			opts.on("-n", "--num-repetitions NUM", "Number every unique command " \
 			                            "is repeated") do |rep|
 				options.rep = rep.to_i
 			end
 
-			opts.on("-t SECONDS", "Seconds between two job submissions. " \
+			opts.on("-t", "--job-submission-delay SECONDS","Seconds between two job submissions. " \
 			        "Has an effect if some scheduler is chosen as back end.") do |rep|
 				options.job_delay = rep.to_f
 			end
@@ -57,7 +57,7 @@ class OptPrs
 				options.vfnames = vfnames
 			end
 
-			opts.on("-f", "Do not prompt") do |noprompt|
+			opts.on("-f", "--force-no-prompt", "Do not prompt") do |noprompt|
 				options.noprompt = noprompt
 			end
 

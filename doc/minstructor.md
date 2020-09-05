@@ -43,12 +43,12 @@ and evaluate them. You can use the **mcollector**(1) to achieve that efficiently
 
 # OPTIONS
 
--n *repetitions*
+-n, \--num-repetitions *repetitions*
 :   Number every unique command is repeated.  If you want to have multiple
     measurement points for the same constellation of parameters, e.g. to
     calculate reasonable mean values, you can use this parameter (*DEFAULT*=1).
 
--t *seconds*
+-t, \--job-submission-delay *seconds*
 :   Seconds between two job submissions. This flag only has an effect if
     a job scheduling system (e.g. Slurm) is chosen as back end.
 
@@ -65,7 +65,7 @@ and evaluate them. You can use the **mcollector**(1) to achieve that efficiently
     in file names is error-prone. You should better include all
     necessary information in the stdout of your application.
 
--f
+-f, \--force-no-prompt
 :   Do not prompt.
 
 \--no-progress-bar
