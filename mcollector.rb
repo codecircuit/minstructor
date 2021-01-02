@@ -499,9 +499,16 @@ def rowHashes2CSVString(csvRowHashes, sort)
 
 	DEBUG("  - CSV ROWS = #{csvRows}")
 	csvRows.each_with_index do |row, i|
-		DEBUG("  - ROW = #{row}")
-		DEBUG("  - [*row].join(#{curr_separator}) = #{[*row].join(curr_separator)}")
-		csvStr << [*row].join(curr_separator) << "\n"
+		quoted_row = row.map do |e|
+			if not e.include?(curr_separator) then
+				e
+			else
+				"\"#{e}\""
+			end
+		end
+		DEBUG("  - ROW = #{quoted_row}")
+		DEBUG("  - [*quoted_row].join(#{curr_separator}) = #{[*quoted_row].join(curr_separator)}")
+		csvStr << [*quoted_row].join(curr_separator) << "\n"
 	end
 	return csvStr
 end
