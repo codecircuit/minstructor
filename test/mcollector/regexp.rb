@@ -212,4 +212,63 @@ eos
 
 	end
 
+	def test_csvReg2
+
+	csvstr = <<-eos
+
+==4193== NVPROF is profiling process 4193, command: ./build/release/bench -N 16777216 --M 31 --final-stage-solver gpu --num-warmups 200 --num-measurements 1 --pivoting true --N-last-stage 32
+
+# Tridigpu Benchmark Application
+
+  - device = "GeForce GTX 1070"
+  - num_warmups = 200
+  - num_measurements = 1
+  - block_dim_phaseone = 256
+  - block_dim_phasetwo = 256
+  - M = 31
+  - num_sthreads_block = 32
+  - N_last_stage = 32
+  - final_stage = gpu
+  - pivoting = true
+  - epsilon = 0
+  - phaseone_parallel = true
+  - num_redundant_kernel_executions = 1
+  - matrix_path = 
+  - N = 16777216
+  - matrix_init_scheme = model1
+  - read_permutation_init_scheme = none
+  - write_permutation_init_scheme = none
+  - solver = tridigpu
+==4193== Some kernel(s) will be replayed on device 0 in order to collect all events/metrics.
+  - stage_sizes = [16777216, 1082402, 69834, 4506, 292, 20, ]
+
+## Throughputs of the first stages of phase one and phase two
+
+`num_measurements` measurements were taken and the mean time is taken for throughput calculation
+
+  - phaseone-0-copy-kernel-equivalent-throughput = 201.586
+  - phaseone-0-copy-kernel-equivalent-time = 0.00133162
+  - phaseone-0-memcopy-kernel-equivalent-throughput = 196.856
+  - phaseone-0-memcopy-kernel-equivalent-time = 0.00136362
+  - equation_throughput = 37.6037 MRows/s
+==4193== Profiling application: ./build/release/bench -N 16777216 --M 31 --final-stage-solver gpu --num-warmups 200 --num-measurements 1 --pivoting true --N-last-stage 32
+==4193== Profiling result:
+==4193== Metric result:
+"Device","Kernel","Invocations","Metric Name","Metric Description","Min","Max","Avg"
+"GeForce GTX 1070 (0)","void tridigpu::phasetwo_kernel<unsigned int=31, unsigned int=256, unsigned int=32, unsigned int=1, __int64, float, float, float, float, float const , float, float const , float const , float, float, float, float, float, bool=0, bool=0, bool=0>(thrust::zip_iterator<tridigpu::phasetwo_kernel<unsigned int=31, unsigned int=256, unsigned int=32, unsigned int=1, __int64, float, float, float, float, float const , float, float const , float const , float, float, float, float, float, bool=0, bool=0, bool=0>::generate_tuple_type<float const *, unsigned int=1>::type>, float const *, float const *, float const *, thrust<thrust::zip_iterator<float const *, unsigned int=1>::type>, thrust<thrust::zip_iterator<float*, unsigned int=1>::type>, thrust<thrust::zip_iterator<float const *, unsigned int=1>::type>, int const *, int const , __int64, thrust<thrust::zip_iterator<float const *, unsigned int=1>::type>, float)",5,"gld_throughput","Global Load Throughput",715.782047MB/s,159.183110GB/s,154.670076GB/s
+"GeForce GTX 1070 (0)","void tridigpu::phasetwo_kernel<unsigned int=31, unsigned int=256, unsigned int=32, unsigned int=1, __int64, float, float, float, float, float const , float, float const , float const , float, float, float, float, float, bool=0, bool=0, bool=0>(thrust::zip_iterator<tridigpu::phasetwo_kernel<unsigned int=31, unsigned int=256, unsigned int=32, unsigned int=1, __int64, float, float, float, float, float const , float, float const , float const , float, float, float, float, float, bool=0, bool=0, bool=0>::generate_tuple_type<float const *, unsigned int=1>::type>, float const *, float const *, float const *, thrust<thrust::zip_iterator<float const *, unsigned int=1>::type>, thrust<thrust::zip_iterator<float*, unsigned int=1>::type>, thrust<thrust::zip_iterator<float const *, unsigned int=1>::type>, int const *, int const , __int64, thrust<thrust::zip_iterator<float const *, unsigned int=1>::type>, float)",5,"gst_throughput","Global Store Throughput",193.682200MB/s,41.122196GB/s,37.989150GB/s
+
+	eos
+
+	csvpart = <<-eos
+"Device","Kernel","Invocations","Metric Name","Metric Description","Min","Max","Avg"
+"GeForce GTX 1070 (0)","void tridigpu::phasetwo_kernel<unsigned int=31, unsigned int=256, unsigned int=32, unsigned int=1, __int64, float, float, float, float, float const , float, float const , float const , float, float, float, float, float, bool=0, bool=0, bool=0>(thrust::zip_iterator<tridigpu::phasetwo_kernel<unsigned int=31, unsigned int=256, unsigned int=32, unsigned int=1, __int64, float, float, float, float, float const , float, float const , float const , float, float, float, float, float, bool=0, bool=0, bool=0>::generate_tuple_type<float const *, unsigned int=1>::type>, float const *, float const *, float const *, thrust<thrust::zip_iterator<float const *, unsigned int=1>::type>, thrust<thrust::zip_iterator<float*, unsigned int=1>::type>, thrust<thrust::zip_iterator<float const *, unsigned int=1>::type>, int const *, int const , __int64, thrust<thrust::zip_iterator<float const *, unsigned int=1>::type>, float)",5,"gld_throughput","Global Load Throughput",715.782047MB/s,159.183110GB/s,154.670076GB/s
+"GeForce GTX 1070 (0)","void tridigpu::phasetwo_kernel<unsigned int=31, unsigned int=256, unsigned int=32, unsigned int=1, __int64, float, float, float, float, float const , float, float const , float const , float, float, float, float, float, bool=0, bool=0, bool=0>(thrust::zip_iterator<tridigpu::phasetwo_kernel<unsigned int=31, unsigned int=256, unsigned int=32, unsigned int=1, __int64, float, float, float, float, float const , float, float const , float const , float, float, float, float, float, bool=0, bool=0, bool=0>::generate_tuple_type<float const *, unsigned int=1>::type>, float const *, float const *, float const *, thrust<thrust::zip_iterator<float const *, unsigned int=1>::type>, thrust<thrust::zip_iterator<float*, unsigned int=1>::type>, thrust<thrust::zip_iterator<float const *, unsigned int=1>::type>, int const *, int const , __int64, thrust<thrust::zip_iterator<float const *, unsigned int=1>::type>, float)",5,"gst_throughput","Global Store Throughput",193.682200MB/s,41.122196GB/s,37.989150GB/s
+eos
+
+	md = $csvReg.match(csvstr)
+	assert_equal(csvpart, md[0])
+
+	end
+
 end
