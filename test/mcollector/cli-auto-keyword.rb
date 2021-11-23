@@ -67,7 +67,7 @@ class TestCLIAutoKeywordDetection < Test::Unit::TestCase
 			assert(actual_result.include?(l))
 		end
 	end
-	
+
 	def test_newlineIgnore
 		data_dir = $data_dir_pre + "newline-ignore"
 		actual_result = `#{$mcollector} #{data_dir}/*.txt`
@@ -144,4 +144,22 @@ class TestCLIAutoKeywordDetection < Test::Unit::TestCase
 			assert(actualResult.include?(l))
 		end
 	end
+
+	def test_paths
+		data_dir = $data_dir_pre + "paths"
+		# The lines which must be in the correct output
+		lines = ['"/foo/bar/baz/duzzle","/foo bar/baz/duzzle.md"',
+		         '"/foo/bar/baz","/foo bar/baz.md"']
+		# the head of the CSV output
+		head = "path0,path2"
+
+		# the mcollector should output the CSV table to stdout
+		# if we do not specify an output file
+		actual_result = %x(#{$mcollector} #{data_dir}/*.txt)
+		assert(actual_result.lines()[0].include?(head))
+		lines.each do |l|
+			assert(actual_result.include?(l))
+		end
+	end
+
 end

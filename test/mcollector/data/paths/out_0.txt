@@ -1,0 +1,2 @@
+- path0 = "/foo/bar/baz"
+- path2 = "/foo bar/baz.md"
