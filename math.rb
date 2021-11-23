@@ -9,8 +9,15 @@
 # Inner lists can be empty
 def combinations(l)
 
-	# Just delete empty lists
-	l.map { |e| e.delete([]) if e.class == Array }
+	# If the cartesian product contains one empty list, the
+	# complete result is empty
+	l.each do |e|
+		if e.class == Array
+			if e.include?([])
+				return []
+			end
+		end
+	end
 	# This helper function takes a list
 	# [a, [c, d], e, [7, 8]] and expands
 	# the first bracket within the list to

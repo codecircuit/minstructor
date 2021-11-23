@@ -361,6 +361,10 @@ def frontend(userInput)
 			partitionAll.call(e, k)
 		end
 		DEBUG("MATCH TO EXPANSION #{k} => #{v}")
+		if v.empty?
+			puts "Your cartesian product contains an empty set. Therefore, nothing will be executed."
+			exit
+		end
 		partitioned.replace(partitioned.flatten)
 	end
 
