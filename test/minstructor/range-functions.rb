@@ -48,6 +48,13 @@ class TestRangeFunctions < Test::Unit::TestCase
 		assert_raise(RangeError) {logspace(1,3,-1)}
 	end
 
+	def test_logrange
+		assert_equal([1, 2,4,8], logrange(4))
+		assert_equal([10,100,1000], logrange(1,4,1,10))
+		assert_raise(RangeError) {logrange(1,3,0)}
+		assert_raise(RangeError) {logrange(1,3,-1)}
+	end
+
 	def test_fromfile
 		out0 = fromfile("#{$dataDirPrefix}fromfile0.txt")
 		assert_equal(["1", "2", "3"], out0)

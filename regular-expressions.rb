@@ -39,6 +39,7 @@ $dateReg = /(?<value>[0-9]{4}-[0-9]{2}-[0-9]{2})/
 # right with decreasing priority.
 $valReg = /#{$quotationReg}|#{$dateReg}|#{$quantityReg}|#{$wordReg}/
 
-$csvVal = /(#{$wordReg}|#{$quotationReg}|#{$numReg})/
+$nonSpaceValueReg = /(?<value>[^\s]+)/
+$csvVal = /(#{$wordReg}|#{$nonSpaceValueReg}|#{$quotationReg}|#{$numReg})/
 $csvRow = /(#{$csvVal},)+#{$csvVal},?\n/
 $csvReg = /#{$csvRow}{2,}/

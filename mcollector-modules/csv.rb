@@ -9,11 +9,6 @@ end
 
 module MCollectorModule
 
-	##
-	# Automated Key Assignment Value Module
-	#
-	# Searches automatically for KEY ASSIGNMENTSYMBOL VALUE patterns
-
 	class CSV < Base
 
 		def default_args
@@ -36,8 +31,10 @@ module MCollectorModule
 				end
 				return row_hash
 			}
-
 			md = $csvReg.match(input_str)
+			if md == nil # NO CSV data found
+				return [[], input_str]
+			end
 			# We only support one csv pattern per file up to now
 			csvdata = parse_csv(md[0])
 			col_names = csvdata.delete_at(0)

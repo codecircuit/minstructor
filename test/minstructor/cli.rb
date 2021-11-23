@@ -25,7 +25,7 @@ class TestCLI < Test::Unit::TestCase
 	def lineWithWordsExists(words, lines)
 		return false if lines.empty?
 		return true if words.empty?
-		lines.select! { |line| 
+		lines.select! { |line|
 			line.include?(words[0])
 		}
 		return lineWithWordsExists(words[1..-1], lines)
@@ -33,6 +33,61 @@ class TestCLI < Test::Unit::TestCase
 
 	def test_twoLists
 		%x(#{$minstructor} "#{@@dummyScriptFile} [foo,bar] -k [3,4]" -f)
+		f = File.open(@@dummyScriptLogFile, "r")
+		log = f.read()
+		f.close()
+		File.delete(@@dummyScriptLogFile)
+
+		# First we check if the script has been executed with the
+		# wanted parameters. The order in which the command line
+		# arguments are listed should be fixed by the user
+		lines = log.lines.map {|l| l.chomp} # remove \n
+		assert(lines.include?("foo -k 4"))
+		assert(lines.include?("foo -k 3"))
+		assert(lines.include?("bar -k 3"))
+		assert(lines.include?("bar -k 4"))
+		assert_equal(lines.length, 4)
+	end
+
+	def test_twoListsWithEmpty
+		%x(#{$minstructor} "#{@@dummyScriptFile} [foo,bar] [] -k [3,4] []" -f)
+		f = File.open(@@dummyScriptLogFile, "r")
+		log = f.read()
+		f.close()
+		File.delete(@@dummyScriptLogFile)
+
+		# First we check if the script has been executed with the
+		# wanted parameters. The order in which the command line
+		# arguments are listed should be fixed by the user
+		lines = log.lines.map {|l| l.chomp} # remove \n
+		assert(lines.include?("foo -k 4"))
+		assert(lines.include?("foo -k 3"))
+		assert(lines.include?("bar -k 3"))
+		assert(lines.include?("bar -k 4"))
+		assert_equal(lines.length, 4)
+	end
+
+	def test_twoListsWithEmpty2
+		%x(#{$minstructor} "#{@@dummyScriptFile} [foo,bar] [] -k [3,4][]" -f)
+		f = File.open(@@dummyScriptLogFile, "r")
+		log = f.read()
+		f.close()
+		File.delete(@@dummyScriptLogFile)
+
+		# First we check if the script has been executed with the
+		# wanted parameters. The order in which the command line
+		# arguments are listed should be fixed by the user
+		lines = log.lines.map {|l| l.chomp} # remove \n
+		assert(lines.include?("foo -k 4"))
+		assert(lines.include?("foo -k 3"))
+		assert(lines.include?("bar -k 3"))
+		assert(lines.include?("bar -k 4"))
+		assert_equal(lines.length, 4)
+	end
+
+
+	def test_twoListsWithCustomListDelimiter
+		%x(#{$minstructor} --left-list-delimiter "{{" --right-list-delimiter "}}" "#{@@dummyScriptFile} {{ foo,bar}} -k {{3,4}}" -f)
 		f = File.open(@@dummyScriptLogFile, "r")
 		log = f.read()
 		f.close()

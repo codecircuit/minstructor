@@ -1,7 +1,7 @@
 ---
 title: MINSTRUCTOR(1)
 author: Christoph Klein
-date: 2018-08-20
+date: 2020-09-05
 header: User Guide
 ...
 
@@ -22,10 +22,11 @@ line values:
 
 set expression       | also known as
 ---------------------|--------------------------------------------
-[4,a,8,...]          | simple list
-range(0,20,3)        | python-like range (start, end, step)
+[4,a,8,...]          | simple list (delimiters [] can be customized)
+range(0,20,3)        | python-like range (start, end, step=1)
 linspace(0,2,5)      | numpy-like linear range (start, stop, num)
-logspace(2,11,10,2)  | numpy-like log range (start, stop, num, base)
+logspace(2,11,10,2)  | numpy-like log range (start, stop, num, base=10)
+logrange(4,12,3,5)   | similar to logspace but for integers (start, end, step=1, base=2)
 fromfile(./file.txt) | reads linewise from a file
 
 The measurement instructor executes the given *cmd* on the cartesian
@@ -36,18 +37,21 @@ standard output of your application executions will be saved appropriately.
 To enable multiple simultaneously **minstructor** executions, a new directory for the
 output files must be created, to avoid runtime hazards.
 
+You can also configure default options for your **minstructor** executions
+by providing `~/.minstructorrc.yml` (see below).
+
 Probably you want to collect certain metrics of your application executions
 and evaluate them. You can use the **mcollector**(1) to achieve that efficiently.
 
 
 # OPTIONS
 
--n *repetitions*
+-n, \--num-repetitions *repetitions*
 :   Number every unique command is repeated.  If you want to have multiple
     measurement points for the same constellation of parameters, e.g. to
     calculate reasonable mean values, you can use this parameter (*DEFAULT*=1).
 
--t *seconds*
+-t, \--job-submission-delay *seconds*
 :   Seconds between two job submissions. This flag only has an effect if
     a job scheduling system (e.g. Slurm) is chosen as back end.
 
@@ -64,7 +68,7 @@ and evaluate them. You can use the **mcollector**(1) to achieve that efficiently
     in file names is error-prone. You should better include all
     necessary information in the stdout of your application.
 
--f
+-f, \--force-no-prompt
 :   Do not prompt.
 
 \--no-progress-bar
@@ -81,6 +85,14 @@ and evaluate them. You can use the **mcollector**(1) to achieve that efficiently
     choosen backend. E.g. -a "--exclusive -w compute-node.cluster.com" will
     instruct slurm to execute the submitted jobs on host compute-node.cluster.com.
 
+\--left-list-delimiter "*string*"
+:   Specify the list delimiter, which denotes a parsed and expanded set
+    expression
+
+\--right-list-delimiter "*string*"
+:   Specify the list delimiter, which denotes a parsed and expanded set
+    expression
+
 -h, \--help
 :   Show this help message
 
@@ -96,7 +108,25 @@ and evaluate them. You can use the **mcollector**(1) to achieve that efficiently
 # DEFAULTS
 
 Execute each unique command once with the shell back-end
-and without producing any output files.
+and without producing any output files, or the options specified
+in your `~/.minstructorrc.yml` config file.
+
+# FILES
+
+**~/.minstructorrc.yml**
+
+the YAML config file for the **minstructor**. Each
+optional command line argument can be set to a default value in this config
+file. If the command line argument is given explicitly it overwrites the
+value of the config file. To set a default value in your config file just refer to each
+command line argument by its long version **without** the `--` prefix, e.g.
+
+```
+verbose: true
+force-no-prompt: true
+no-progress-bar: false
+job-submission-delay: 0.3
+```
 
 # EXAMPLE
 

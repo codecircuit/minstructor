@@ -26,13 +26,14 @@ E.g. `minstructor -o ./results "./binary --scheme foo --seed=range(3)
 You can specify ranges with various
 patterns:
 
-| **Example**            | **Type**                                              |
-| ---------------------- | ----------------------------------------------------- |
-| `[4,a,8,...]`          | simple lists                                          |
-| `range(0,20,3)`        | python-like ranges (start, end, step)                 |
-| `linspace(0,2,5)`      | python numpy-like linear ranges (start, stop, num)    |
-| `logspace(3,12,10,2)`  | python numpy-like log ranges (start, stop, num, base) |
-| `fromfile(./file.txt)` | reads linewise from a file                            |
+| **Example**            | **Type**                                                          |
+| ---------------------- | ----------------------------------------------------------------- |
+| `[4,a,8,...]`          | simple lists                                                      |
+| `range(0,20,3)`        | python-like ranges (start, end, step=1)                           |
+| `linspace(0,2,5)`      | python numpy-like linear ranges (start, stop, num)                |
+| `logspace(3,12,10,2)`  | python numpy-like log ranges (start, stop, num, base=10)          |
+| `logrange(4,12,3,5)`   | similar to logspace but for integers (start, end, step=1, base=2) |
+| `fromfile(./file.txt)` | reads linewise from a file                                        |
 
 ## Collect execution results
 

@@ -46,6 +46,12 @@ class OptPrs
 		options.separator = ','
 		options.active_module_names = ["akav"]
 		options.active_modules_optargs = {}
+		options.sql = false
+		options.sql_user = ""
+		options.sql_host = "localhost"
+		options.sql_password = ""
+		options.sql_table = ""
+		options.sql_database = "mcollector"
 
 		opt_parser = OptionParser.new do |opts|
 			opts.banner = "Usage: mcollector.rb [OPTIONS] FILE0 FILE1 ..."
@@ -90,6 +96,35 @@ class OptPrs
 			        "If no file is specified the program will",
 			        "stream its output to stdout") do |p|
 				options.opath = p
+			end
+
+			opts.on("--sql-database NAME", "SQL database") do |name|
+				options.sql = true
+				options.sql_database = name
+			end
+
+			opts.on("--sql-table NAME", "SQL table for data insertion") do |name|
+				options.sql = true
+				options.sql_table = name
+			end
+
+			opts.on("--sql-user NAME",
+					"SQL username") do |name|
+				options.sql = true
+				options.sql_user = name
+			end
+
+			opts.on("--sql-host HOST",
+					"SQL host, e.g. `localhost`, `192.168.5.62`,",
+					"or `mydatabase.com`") do |host|
+				options.sql = true
+				options.sql_host = host
+			end
+
+			opts.on("--sql-password PASSWORD",
+					"SQL password") do |pass|
+				options.sql = true
+				options.sql_password = pass
 			end
 
 			opts.on("--separator CHARACTER",
@@ -428,29 +463,18 @@ def expandSeparator(s)
 	s.gsub('\t', "\t")
 end
 
-# either output to stdout or write to file
-#  - opath = path to CSV file
-#  - csvRowHashes = array of hashes containing the data of each row
-#  - allkeywords = set of all keywords in csvRowHashes
-def outputCSV(opath, csvRowHashes, options = {})
-	DEBUG("[+] outputCSV()")
-	DEBUG("  - csvRowHashes = #{csvRowHashes}")
-
-	options = {
-		:sort => false,
-	}.merge(options)
-
-	find_all_column_names = ->(csvRowHashes) {
-		cnames = Set.new
-		csvRowHashes.each do |h|
-			h.each_key do |k|
-				cnames.add(k)
-			end
+def find_all_distinct_keys(array_of_hashes)
+	cnames = Set.new
+	array_of_hashes.each do |h|
+		h.each_key do |k|
+			cnames.add(k)
 		end
-		return cnames
-	}
+	end
+	return cnames
+end
 
-	column_names = find_all_column_names.call(csvRowHashes)
+def rowHashes2CSVString(csvRowHashes, sort)
+	column_names = find_all_distinct_keys(csvRowHashes)
 
 	# first we convert to simple csvRows
 	csvRows = []
@@ -464,7 +488,7 @@ def outputCSV(opath, csvRowHashes, options = {})
 		csvRows.push(currRow)
 	end
 
-	csvRows.sort! if options[:sort]
+	csvRows.sort! if sort
 
 	curr_separator = expandSeparator($options.separator)
 	DEBUG("  - curr separator = #{curr_separator}")
@@ -475,23 +499,200 @@ def outputCSV(opath, csvRowHashes, options = {})
 
 	DEBUG("  - CSV ROWS = #{csvRows}")
 	csvRows.each_with_index do |row, i|
-		DEBUG("  - ROW = #{row}")
-		DEBUG("  - [*row].join(#{curr_separator}) = #{[*row].join(curr_separator)}")
-		csvStr << [*row].join(curr_separator) << "\n"
+		quoted_row = row.map do |e|
+			if not e.include?(curr_separator) then
+				e
+			else
+				"\"#{e}\""
+			end
+		end
+		DEBUG("  - ROW = #{quoted_row}")
+		DEBUG("  - [*quoted_row].join(#{curr_separator}) = #{[*quoted_row].join(curr_separator)}")
+		csvStr << [*quoted_row].join(curr_separator) << "\n"
 	end
+	return csvStr
+end
 
-	# WRITE TO STDOUT
-	if opath.empty?
-		puts csvStr
-		DEBUG("[-] outputCSV()")
-		return
-	end
+#  - opath = path to CSV file
+#  - csvRowHashes = array of hashes containing the data of each row
+def outputCSV(opath, csvRowHashes, options = {})
+	DEBUG("[+] outputCSV()")
+	DEBUG("  - csvRowHashes = #{csvRowHashes}")
+
+	options = {
+		:sort => false,
+	}.merge(options)
+
+	csvStr = rowHashes2CSVString(csvRowHashes, options[:sort])
 
 	# WRITE TO FILE
 	f = File.open(opath, mode="w")
 	f.write(csvStr)
 	f.close
 	DEBUG("[-] outputCSV()")
+end
+
+# String > Float > Integer
+def type_prior(ta, tb)
+	if ta == String or tb == String
+		return String
+	end
+	if ta == Float or tb == Float
+		return Float
+	end
+	return Integer
+end
+
+def deduce_types_of_keys(csvRowHashes)
+	types = {}
+	csvRowHashes.each do |rowHash|
+		rowHash.each do |k,v|
+			begin
+				Integer(v)
+				curr_t = Integer
+			rescue ArgumentError
+				begin
+					Float(v)
+					curr_t = Float
+				rescue ArgumentError
+					curr_t = String
+				end
+			end
+
+			types[k] = type_prior(curr_t, types[k])
+		end
+	end
+	return types
+end
+
+def castHashValsToType(hash_with_vals, hash_with_types)
+	cpy = {}
+	hash_with_vals.each do |k,v|
+		cpy[k] = v.to_i() if hash_with_types[k] == Integer
+		cpy[k] = v.to_s() if hash_with_types[k] == String
+		if hash_with_types[k] == Float
+			f = v.to_f()
+			if f == Float::INFINITY
+				cpy[k] = nil
+			else
+				cpy[k] = f
+			end
+		end
+	end
+	return cpy
+end
+
+def enum_real_type_comp(et, rt)
+	if et == :float and rt == Float
+		return true
+	end
+	if et == :string and rt == String
+		return true
+	end
+	if et == :integer and rt == Integer
+		return true
+	end
+	return false
+end
+
+#  - csvRowHashes = array of hashes containing the data of each row
+def outputSQL(user, host, password, table, database, csvRowHashes, options = {})
+	DEBUG("[+] outputSQL()")
+	DEBUG("  - csvRowHashes = #{csvRowHashes}")
+
+	options = {
+	# :possible_option => true, 
+	}.merge(options)
+
+	column_names = find_all_distinct_keys(csvRowHashes)
+	# Only load the sequel gem when it is actually needed
+	begin
+		require 'sequel'
+	rescue LoadError
+		puts "ERROR: cannot load package `sequel`, which is required for SQL insertion (`$ gem install sequel`)"
+		exit 1
+	end
+
+	begin
+		db = Sequel.mysql2(:host => host, :username => user, :password => password, :database => database)
+	rescue Sequel::AdapterNotFound
+		puts "ERROR: cannot load package `mysql2`, which is required for SQL insertion (`$ gem install mysql2`)"
+		exit 1
+	end
+	if $options.debug
+		require 'logger'
+		db.loggers << Logger.new($stdout)
+	end
+	col_types = deduce_types_of_keys(csvRowHashes)
+	DEBUG("  - col_types = #{col_types}")
+	if db.table_exists?(table)
+		ex = {}
+		db.schema(table).each do |e|
+			ex[e[0]] = e[1]
+		end
+		DEBUG("  - check if sql table already exists = #{ex}")
+		# Add not existing columns
+		col_types.each do |colname, coltype|
+			# Here we have the problem that we just save the colnames as strings
+			# but the Sequel gem saves them as enumeration like `:"colname"`
+			# which is equivalent to just `:colname`
+			sequel_colname = colname.to_sym()
+			if not ex.has_key?(sequel_colname)
+				DEBUG("  - try to add colum #{colname}")
+				db.add_column(table, colname, coltype)
+
+			# If the column already exists it must have the same type
+			elsif not enum_real_type_comp(ex[sequel_colname][:type], coltype)
+				if not $options.noprompt
+					STDERR.puts "CAUTION: The database table `#{table}` already exists and has a " \
+						"column with name `#{colname}` and type `#{ex[sequel_colname][:type]}`, " \
+						"but the type of the current dataset for column `#{colname}` is " \
+						"`#{coltype}`. Should the old table be deleted? [y/N]:"
+					ARGV.clear
+					answer = gets.chomp
+					if not %w[Yes Y y yes].include?(answer)
+						puts "Going to exit..."
+						exit 0
+					end
+				end
+				db.create_table! table do
+					col_types.each do |k, ktype|
+						column(k, ktype)
+					end
+				end
+				break
+			end
+			
+		end
+	else # table does not exist
+		db.create_table table do
+			col_types.each do |k, ktype|
+				column(k, ktype)
+			end
+		end
+	end
+
+	items = db[table.to_sym()]
+	csvRowHashes.each do |csvRowHash|
+		typedRowHash = castHashValsToType(csvRowHash, col_types)
+		items.insert(typedRowHash)
+	end
+
+	DEBUG("[-] outputSQL()")
+end
+
+def outputStdout(csvRowHashes, options = {})
+	DEBUG("[+] outputStdout()")
+	DEBUG("  - csvRowHashes = #{csvRowHashes}")
+
+	options = {
+		:sort => false,
+	}.merge(options)
+
+	csvStr = rowHashes2CSVString(csvRowHashes, options[:sort])
+
+	puts csvStr
+	DEBUG("[-] outputStdout()")
 end
 
 
@@ -552,7 +753,15 @@ if __FILE__ == $0
 	# OUTPUT THE CSV DATA
 	VERBOSE("  - sorting flag = #{$options.sort}")
 	timestamp = Time.now
-	outputCSV($options.opath, csvRowHashes, :sort => $options.sort)
+	if not $options.opath.empty?
+		outputCSV($options.opath, csvRowHashes, :sort => $options.sort)
+	end
+	if $options.sql
+		outputSQL($options.sql_user, $options.sql_host, $options.sql_password, $options.sql_table, $options.sql_database, csvRowHashes)
+	end
+	if $options.opath.empty? and not $options.sql
+		outputStdout(csvRowHashes, :sort => $options.sort)
+	end
 	csvT = Time.now - timestamp
 	VERBOSE("  - outputting the csv data took #{csvT} seconds")
 end

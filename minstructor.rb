@@ -2,6 +2,7 @@
 
 require 'optparse'
 require 'ostruct'
+require 'yaml'
 
 # Install it via ruby gems
 require 'progressbar'
@@ -26,6 +27,25 @@ class OptPrs
 		options.job_delay = 0.5 # seconds between two job submissions
 		options.disable_progress_bar = false
 		options.backendArgs = ""
+		options.left_list_delimiter = '['
+		options.right_list_delimiter = ']'
+
+		if File.exists?(Dir.home + "/.minstructorrc.yml")
+			cfg = YAML.load_file(Dir.home + "/.minstructorrc.yml")
+			options.verbose = cfg["verbose"] if cfg.has_key?("verbose")
+			options.debug = cfg["debug"] if cfg.has_key?("debug")
+			options.dry = cfg["dry-run"] if cfg.has_key?("dry-run")
+			options.opath = cfg["output-dir"] if cfg.has_key?("output-dir")
+			options.vfnames = cfg["verbose-fnames"] if cfg.has_key?("verbose-fnames")
+			options.backend = :"#{cfg["backend"]}" if cfg.has_key?("backend")
+			options.noprompt = cfg["force-no-prompt"] if cfg.has_key?("force-no-prompt")
+			options.rep = cfg["num-repetitions"] if cfg.has_key?("num-repetitions")
+			options.job_delay = cfg["job-submission-delay"] if cfg.has_key?("job-submission-delay")
+			options.disable_progress_bar = (not cfg["no-progress-bar"]) if cfg.has_key?("no-progress-bar")
+			options.backendArgs = cfg["backend-args"] if cfg.has_key?("backend-args")
+			options.left_list_delimiter = cfg["left-list-delimiter"] if cfg.has_key?("left-list-delimiter")
+			options.right_list_delimiter = cfg["right-list-delimiter"] if cfg.has_key?("right-list-delimiter")
+		end
 
 		opt_parser = OptionParser.new do |opts|
 			opts.banner = 'Usage: minstructor.rb [OPTIONS] "CMD0" "CMD1"'
@@ -33,12 +53,12 @@ class OptPrs
 			opts.separator ""
 			opts.separator "Options:"
 
-			opts.on("-n NUM", "Number every unique command " \
+			opts.on("-n", "--num-repetitions NUM", "Number every unique command " \
 			                            "is repeated") do |rep|
 				options.rep = rep.to_i
 			end
 
-			opts.on("-t SECONDS", "Seconds between two job submissions. " \
+			opts.on("-t", "--job-submission-delay SECONDS","Seconds between two job submissions. " \
 			        "Has an effect if some scheduler is chosen as back end.") do |rep|
 				options.job_delay = rep.to_f
 			end
@@ -55,7 +75,7 @@ class OptPrs
 				options.vfnames = vfnames
 			end
 
-			opts.on("-f", "Do not prompt") do |noprompt|
+			opts.on("-f", "--force-no-prompt", "Do not prompt") do |noprompt|
 				options.noprompt = noprompt
 			end
 
@@ -80,6 +100,18 @@ class OptPrs
 			opts.on("-a", '--backend-args "ARGS"',
 			        'E.g. "--exclusive -w HOST" for slurm') do |ba|
 				options.backendArgs = ba
+			end
+
+			opts.on('--left-list-delimiter "STRING"',
+			        "Control the list delimiter, which denotes a parsed and",
+			        "expanded expression") do |d|
+				options.left_list_delimiter = d
+			end
+
+			opts.on('--right-list-delimiter "STRING"',
+			        "Control the list delimiter, which denotes a parsed and",
+			        "expanded expression") do |d|
+				options.right_list_delimiter = d
 			end
 
 			opts.separator ""
@@ -187,6 +219,25 @@ def logspace(s, e, num=50, base=10.0, precision=6)
 	exponents.map { |exp| (base**exp).round(precision).to_f().try_int(epsilon) }
 end
 
+# start, end, increment, base
+def logrange(s, e=nil, i=1, b=2)
+	if i < 1
+		raise RangeError, "I can not expand range, because increment < 1"
+	end
+	if e == nil
+		arr = (0..s-1).step(i).to_a()
+		return arr.map { |x| b**x }
+	end
+
+	if e <= s
+		raise RangeError, "I can not expand range, because end <= start"
+	end
+
+	i = i.round
+	arr = (s...e).step(i).to_a()
+	return arr.map { |x| b**x }
+end
+
 def fromfile(filename)
 	res = []
 	File.open(filename) do |f|
@@ -214,15 +265,19 @@ $regexOfRangeExpr = {
 # works than as expected. E.g. "[a,b,33]".scan(/\[(.+,)+.+\]/) = [["a,b,"]]
 # which is not what I want. Using the paranthesis with (?:<rest of pattern>)
 # solves the problem. See also `ri Regexp` chapter Grouping
-	:list   => /\[\s*(?:[^,\s]+\s*,\s*)+[^,\s]+\s*\]/,
-	:range1 => /range\(\s*#{$integerRegex}\s*\)/,
-	:range2 => /range\(\s*#{$integerRegex}\s*,\s*#{$integerRegex}\s*\)/,
-	:range3 => /range\(\s*#{$integerRegex}\s*,\s*#{$integerRegex}\s*,\s*#{$integerRegex}\s*\)/,
+	:list   => /#{Regexp.escape($options.left_list_delimiter)}\s*(?:[^,\s]+\s*,\s*)*[^#{Regexp.escape($options.right_list_delimiter)}#{Regexp.escape($options.left_list_delimiter)},\s]*\s*#{Regexp.escape($options.right_list_delimiter)}/,
+	:range1 => /(?<!log)range\(\s*#{$integerRegex}\s*\)/,
+	:range2 => /(?<!log)range\(\s*#{$integerRegex}\s*,\s*#{$integerRegex}\s*\)/,
+	:range3 => /(?<!log)range\(\s*#{$integerRegex}\s*,\s*#{$integerRegex}\s*,\s*#{$integerRegex}\s*\)/,
 	:linspace2 => /linspace\(\s*#{$floatingPointRegex}\s*,\s*#{$floatingPointRegex}\s*\)/,
 	:linspace3 => /linspace\(\s*#{$floatingPointRegex},\s*#{$floatingPointRegex}\s*,\s*#{$floatingPointRegex}\s*\)/,
 	:logspace2 => /logspace\(\s*#{$floatingPointRegex}\s*,\s*#{$floatingPointRegex}\s*\)/,
 	:logspace3 => /logspace\(\s*#{$floatingPointRegex}\s*,\s*#{$floatingPointRegex}\s*,\s*#{$floatingPointRegex}\s*\)/,
 	:logspace4 => /logspace\(\s*#{$floatingPointRegex}\s*,\s*#{$floatingPointRegex}\s*,\s*#{$floatingPointRegex}\s*,\s*#{$floatingPointRegex}\s*\)/,
+	:logrange1 => /logrange\(\s*#{$integerRegex}\s*\)/,
+	:logrange2 => /logrange\(\s*#{$integerRegex}\s*,\s*#{$integerRegex}\s*\)/,
+	:logrange3 => /logrange\(\s*#{$integerRegex}\s*,\s*#{$integerRegex}\s*,\s*#{$integerRegex}\s*\)/,
+	:logrange4 => /logrange\(\s*#{$integerRegex}\s*,\s*#{$integerRegex}\s*,\s*#{$integerRegex}\s*,\s*#{$integerRegex}\s*\)/,
 	:fromfile => /fromfile\(\s*#{$pathRegex}\s*\)/,
 }
 
@@ -253,7 +308,7 @@ def frontend(userInput)
 				# convert to a real list
 				# e.g. '[a,b,33]' --> ['a','b','33']
 				# Add quotation marks around elements
-				l = eval(strList.gsub(/([^\[\],]+)/,'\'\1\''))
+				l = eval('[' + strList.gsub(/([^\[\],]+)/,'\'\1\'').sub($options.left_list_delimiter, '').sub($options.right_list_delimiter, '') + ']')
 				matchToExpansion[strList] = l
 			end
 		elsif k == :fromfile
@@ -423,6 +478,7 @@ def expandCmd(parsedCmds, outFileName_it, backend=:shell)
 	#     parameter_pos: [1, 3]
 	# This is used to create meaningful job and/or file names.
 	# Add the index to the array elements first
+	parsedCmds.map { |e| e.delete([]) if e.class == Array }
 	parameter_pos = parsedCmds[0].map.with_index { |v, i| [v, i] }
 	# filter for Array positions
 	DEBUG("  - parameter pos = #{parameter_pos}")
@@ -446,6 +502,7 @@ def expandCmd(parsedCmds, outFileName_it, backend=:shell)
 			DEBUG("  - backendArgs = #{$options.backendArgs}")
 			DEBUG("  - frontend(backendArgs) = #{frontend($options.backendArgs)}")
 			DEBUG("  - combinations(frontend(backendArgs)) = #{combinations(frontend($options.backendArgs))}")
+			DEBUG("  - parameter_pos = #{parameter_pos}")
 			combinations([frontend($options.backendArgs)]).each do |curr_backend_arg_list|
 				curr_backend_args = curr_backend_arg_list.join()
 				cmd_str = "sbatch #{curr_backend_args} " + "--wrap '" + cmd.join + "'"
@@ -476,7 +533,7 @@ def expandCmd(parsedCmds, outFileName_it, backend=:shell)
 				end
 				cmd_str
 			end
-		else 
+		else
 			parsedCmds.map! { |cmd| cmd.join }
 		end
 	end
@@ -544,7 +601,7 @@ if __FILE__ == $0
 	# flatten: [[cmd,cmd,...],[cmd,cmd,...]] -> [cmd,cmd,cmd,cmd,...]
 	expandedCmds = expandedCmds.flatten
 	if expandedCmds.length > linesShowMax && !$options.verbose
-		puts "Here is an random excerpt of your in total " \
+		puts "Here is a random excerpt of your in total " \
 		     "#{expandedCmds.length} generated commands:"
 		expandedCmds.sample(linesShowMax).each { |cmd| puts cmd }
 	else
