@@ -30,7 +30,7 @@ class OptPrs
 		options.left_list_delimiter = '['
 		options.right_list_delimiter = ']'
 
-		if File.exists?(Dir.home + "/.minstructorrc.yml")
+		if File.exist?(Dir.home + "/.minstructorrc.yml")
 			cfg = YAML.load_file(Dir.home + "/.minstructorrc.yml")
 			options.verbose = cfg["verbose"] if cfg.has_key?("verbose")
 			options.debug = cfg["debug"] if cfg.has_key?("debug")
